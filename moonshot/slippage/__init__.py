@@ -1,0 +1,1 @@
+from .fixed import FixedSlippage
