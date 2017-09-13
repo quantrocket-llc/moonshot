@@ -1,0 +1,21 @@
+image: python:3.6
+
+pipelines:
+    default:
+        - step:
+            script:
+                - pip install -U tox
+                - tox -e py36
+    branches:
+        master:
+            - step:
+                script:
+                    - pip install -U tox
+                    - tox -e py36
+    tags:
+        '*':
+            - step:
+                script:
+                    - pip install -U tox wheel twine
+                    - tox -e py36
+                    - ./deploy.bash
