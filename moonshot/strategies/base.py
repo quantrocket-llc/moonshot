@@ -34,7 +34,7 @@ class Moonshot(
     Attributes
     ----------
     CODE : str, required
-        the strategy code (lowercase alphanumerics and hyphens only)
+        the strategy code
 
     DB : str, required
         code of history db to pull data from
@@ -75,6 +75,16 @@ class Moonshot(
         exchanges, or currencies, you can pass a dict mapping tuples of
         (sectype,exchange,currency) to the different commission classes. By default
         no commission is applied.
+
+    SLIPPAGE_CLASSES : iterable of slippage classes
+        one or more slippage classes. By default no slippage is applied.
+
+    SLIPPAGE_BPS : float, optional
+        amount on one-slippage to apply to each trade in BPS (for example, enter 5 to deduct
+        5 BPS)
+
+    BENCHMARK : int, optional
+        the conid of a security in the historical data to use as the benchmark
     """
     CODE = None
     DB = None
