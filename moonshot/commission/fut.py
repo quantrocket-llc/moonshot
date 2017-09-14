@@ -18,7 +18,7 @@ class BaseFuturesCommission(BaseCommission):
     """
     Base class for futures commissions.
 
-    Attributes
+    Parameters
     ----------
     IB_COMMISSION_PER_CONTRACT : float
         the commission per contract
@@ -29,6 +29,19 @@ class BaseFuturesCommission(BaseCommission):
     CARRYING_FEE_PER_CONTRACT : float
         the overnight carrying fee per contract (depends on equity in excess of
         margin requirement)
+
+    Examples
+    --------
+    Example subclass for Globex E-Mini commissions:
+
+    >>> class GlobexEquityEMiniFixedCommission(BaseFuturesCommission):
+    >>>     IB_COMMISSION_PER_CONTRACT = 0.85
+    >>>     EXCHANGE_FEE_PER_CONTRACT = 1.18
+    >>>     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
+    >>>
+    >>>  # then, use this on your strategy:
+    >>>  class MyEminiStrategy(Moonshot):
+    >>>      COMMISSION_CLASS = GlobexEquityEMiniFixedCommission
     """
     IB_COMMISSION_PER_CONTRACT = 0
     EXCHANGE_FEE_PER_CONTRACT = 0

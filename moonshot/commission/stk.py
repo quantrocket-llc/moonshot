@@ -21,7 +21,10 @@ class BaseCostPlusStockCommission(BaseCommission):
     IB Cost-Plus commissions/fees consist of a transaction fee, which is a
     percentage of the trade value, and various per share costs.
 
-    Attributes
+    This class can't be used directly but should be subclassed with the
+    appropriate parameters.
+
+    Parameters
     ----------
     IB_COMMISSION_PER_SHARE : float, required
         the IB commission per share at the lowest volume tier
@@ -50,6 +53,29 @@ class BaseCostPlusStockCommission(BaseCommission):
     TRANSACTION_FEE_RATE : float, optional
         the transaction fee rate as a percentage of trade value
 
+    Examples
+    --------
+    Example subclass for US stock comissions:
+
+    >>> class CostPlusUSStockCommission(BaseCostPlusStockCommission):
+    >>>     IB_COMMISSION_PER_SHARE = (
+    >>>         0.0035 * # IB commission per share
+    >>>         (1
+    >>>          + 0.000175 # NYSE pass-through (% of IB commission)
+    >>>          + 0.00056 # FINRA pass-through (% of IB Commission)
+    >>>         )
+    >>>         + 0.0002 # clearing fee per share
+    >>>         + (0.000119/2) # FINRA activity fee (per share sold)
+    >>>     )
+    >>>     MAKER_FEE_PER_SHARE = -0.002 # exchange rebate (varies)
+    >>>     TAKER_FEE_PER_SHARE = 0.00118 # exchange fee (varies)
+    >>>     MAKER_RATIO = 0 # assume we always take liquidity for this strategy
+    >>>     MIN_COMMISSION = 0.35
+    >>>     TRANSACTION_FEE_RATE = 0.0000221
+    >>>
+    >>>  # then, use this on your strategy:
+    >>>  class MyUSAStrategy(Moonshot):
+    >>>      COMMISSION_CLASS = CostPlusUSStockCommission
     """
 
     IB_COMMISSION_PER_SHARE = None

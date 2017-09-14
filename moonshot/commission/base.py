@@ -65,7 +65,10 @@ class PercentageCommission(BaseCommission):
     (which might vary based on monthly trade volume) plus a fixed exchange
     fee percentage rate.
 
-    Attributes
+    This class can't be used directly but should be subclassed with the
+    appropriate parameters.
+
+    Parameters
     ----------
     IB_COMMISSION_RATE : float, required
         the commission rate (as a percentage of trade value) charged by IB
@@ -83,6 +86,19 @@ class PercentageCommission(BaseCommission):
     MIN_COMMISSION : float, optional
         the minimum commission charged by IB. Only enforced if NLVs are passed
         by the backtest.
+
+    Examples
+    --------
+    Example commission subclass for Tokyo Stock Exchange:
+
+    >>> class JapanStockCommission(PercentageCommission):
+    >>>     IB_COMMISSION_RATE = 0.0005
+    >>>     EXCHANGE_FEE_RATE = 0.000004
+    >>>     MIN_COMMISSION = 80.00 # JPY
+    >>>
+    >>>  # then, use this on your strategy:
+    >>>  class MyJapanStrategy(Moonshot):
+    >>>      COMMISSION_CLASS = JapanStockCommission
     """
     IB_COMMISSION_RATE = None
     IB_COMMISSION_RATE_TIER_2 = None

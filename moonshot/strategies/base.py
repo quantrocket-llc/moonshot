@@ -15,23 +15,34 @@
 import io
 import pandas as pd
 from moonshot.slippage import FixedSlippage
-from moonshot.mixins import PositionWeightMixin, LiquidityConstraintMixin
+from moonshot.mixins import WeightAssignmentMixin, LiquidityConstraintMixin
 from quantrocket.history import download_history_file, get_db_config
 from quantrocket.master import download_master_file
 
 class Moonshot(
     LiquidityConstraintMixin,
-    PositionWeightMixin):
+    WeightAssignmentMixin):
     """
     Base class for Moonshot strategies.
 
-    At a minimum, strategies must implement the following methods in order to
-    backtest and trade:
+    To create a strategy, subclass this class. Implement your trading logic in the class
+    methods, and store your strategy parameters as class attributes.
 
-        Backtest: get_signals -> get_weights -> get_positions -> get_gross_returns
-        Trade:    get_signals -> get_weights -> get_orders
+    Class attributes include built-in Moonshot parameters which you can override, as well
+    as your own custom parameters.
 
-    Attributes
+    To run a backtest, at minimum you must implement `get_signals`, but in general you will
+    want to implement the following methods (which are called in the order shown):
+
+        `get_signals` -> `assign_weights` -> `simulate_positions` -> `simulate_gross_returns`
+
+    To trade (i.e. generate orders intended to be placed, but actually placed by other services
+    than Moonshot), you must also implement `create_orders`. Order generation for trading
+    follows the path shown below:
+
+        `get_signals` -> `assign_weights` -> `create_orders`
+
+    Parameters
     ----------
     CODE : str, required
         the strategy code
@@ -40,7 +51,8 @@ class Moonshot(
         code of history db to pull data from
 
     DB_FIELDS : list of str, optional
-        fields to retrieve from history db (defaults to ["Open", "High", "Low", "Close", "Volume"])
+        fields to retrieve from history db (defaults to ["Open", "High", "Low",
+        "Close", "Volume"])
 
     CONIDS : list of int, optional
         limit history db query to these conids
@@ -85,6 +97,23 @@ class Moonshot(
 
     BENCHMARK : int, optional
         the conid of a security in the historical data to use as the benchmark
+
+    Examples
+    --------
+    Example of a minimal strategy that runs on a history db called "mexi-stk" and buys when
+    the securities are above their 200-day moving average:
+
+    >>> MexicoMovingAverage(Moonshot):
+    >>>
+    >>>     CODE = "mexi-ma"
+    >>>     DB = "mexi-stk"
+    >>>     MAVG_WINDOW = 200
+    >>>
+    >>>     def get_signals(self, prices):
+    >>>         closes = prices.loc["Close"]
+    >>>         mavgs = closes.rolling(self.MAVG_WINDOW).mean()
+    >>>         signals = closes > mavgs.shift()
+    >>>         return signals.astype(int)
     """
     CODE = None
     DB = None
@@ -112,8 +141,10 @@ class Moonshot(
 
     def get_signals(self, prices):
         """
-        Return a DataFrame of signals based on the prices. Signals should be
-        1=long, 0=cash, -1=short.
+        Return a DataFrame of signals based on the prices. By convention,
+        signals should be 1=long, 0=cash, -1=short.
+
+        Must be implemented by strategy subclasses.
 
         Parameters
         ----------
@@ -124,19 +155,36 @@ class Moonshot(
         -------
         DataFrame
             signals
+
+        Examples
+        --------
+        Buy when the close is above yesterday's 50-day moving average:
+
+        >>> def get_signals(self, prices):
+        >>>     closes = prices.loc["Close"]
+        >>>     mavgs = closes.rolling(50).mean()
+        >>>     signals = closes > mavgs.shift()
+        >>>     return signals.astype(int)
         """
         raise NotImplementedError("strategies must implement get_signals")
 
-    def get_weights(self, signals, prices):
+    def assign_weights(self, signals, prices):
         """
         Return a DataFrame of weights based on the signals.
 
-        The weights should align with the signals that generated them,
-        regardless of when the positions will be filled. Weights are used to
-        generate orders, and are also used to generated executed positions
-        for the purpose of backtesting. The position values indicate the
-        direction and size of the position relative to 100% allocation. E.g.
-        -0.5 means a 50% short position.
+        Whereas signals indicate the direction of the trades, weights
+        indicate both the direction and size. For example, -0.5 means a short
+        position equal to 50% of the equity allocated to the strategy.
+
+        Weights are used to help create orders in live trading, and to help
+        simulate executed positions in backtests.
+
+        The default implemention of this method evenly divides allocated
+        capital among the signals each period, but it is intended to be
+        overridden by strategy subclasses.
+
+        A variety of built-in weight assignment algorithms are provided by
+        and documented under `moonshot.mixins.WeightAssignmentMixin`.
 
         Parameters
         ----------
@@ -150,15 +198,29 @@ class Moonshot(
         -------
         DataFrame
             weights
-        """
-        raise NotImplementedError("strategies must implement get_weights")
 
-    def get_positions(self, weights, prices):
+        Examples
+        --------
+        The default implementation is shown below:
+
+        >>> def assign_weights(self, signals, prices):
+        >>>     weights = self.assign_equal_weights(signals) # provided by moonshot.mixins.WeightAssignmentMixin
+        >>>     return weights
         """
-        Return a DataFrame of positions based on the weights.
+        weights = self.assign_equal_weights(signals)
+        return weights
+
+    def simulate_positions(self, weights, prices):
+        """
+        Return a DataFrame of simulated positions based on the assigned
+        weights.
 
         The positions should shift the weights based on when the weights
         would be filled in live trading.
+
+        By default, assumes the position are taken in the period after the
+        weights were assigned. Intended to be overridden by strategy
+        subclasses.
 
         Parameters
         ----------
@@ -172,12 +234,26 @@ class Moonshot(
         -------
         DataFrame
             positions
-        """
-        raise NotImplementedError("strategies must implement get_positions")
 
-    def get_gross_returns(self, positions, prices):
+        Examples
+        --------
+        The default implemention is shown below (enter position in the period after
+        signal generation/weight assignment):
+
+        >>> def simulate_positions(self, weights, prices):
+        >>>     positions = weights.shift()
+        >>>     return positions
+        """
+        positions = weights.shift()
+        return positions
+
+    def simulate_gross_returns(self, positions, prices):
         """
         Returns a DataFrame of returns before commissions and slippage.
+
+        By default, assumes entry on the close on the period the position is
+        taken and calculates the return through the following period's close.
+        Intended to be overridden by strategy subclasses.
 
         Parameters
         ----------
@@ -191,14 +267,25 @@ class Moonshot(
         -------
         DataFrame
             gross returns
-        """
-        raise NotImplementedError("strategies must implement get_gross_returns")
 
-    def get_orders(self, order_stubs, prices):
+        Examples
+        --------
+        The default implementation is shown below:
+
+        >>> def simulate_gross_returns(self, positions, prices):
+        >>>     closes = prices.loc["Close"]
+        >>>     gross_returns = closes.pct_change().shift()
+        >>>     return gross_returns
+        """
+        closes = prices.loc["Close"]
+        gross_returns = closes.pct_change().shift()
+        return gross_returns
+
+    def create_orders(self, order_stubs, prices):
         """
         Creates detailed orders from the order stubs.
         """
-        raise NotImplementedError("strategies must implement get_orders")
+        raise NotImplementedError("strategies must implement create_orders")
 
     def _get_nlv(self):
         """
@@ -221,7 +308,7 @@ class Moonshot(
         """
         Returns a DataFrame of 1-period returns, after commissions and slippage.
         """
-        gross_returns = self.get_gross_returns(positions, prices)
+        gross_returns = self.simulate_gross_returns(positions, prices)
         commissions = self._get_commissions(positions, prices)
         slippage = self._get_slippage(positions, prices)
 
@@ -473,6 +560,9 @@ class Moonshot(
         """
         Backtest a strategy and return a DataFrame of results.
 
+        Typically you'll run backtests via the QuantRocket client and won't
+        call this method directly.
+
         Parameters
         ----------
         start_date : str (YYYY-MM-DD), optional
@@ -499,10 +589,10 @@ class Moonshot(
         prices = self._get_historical_prices(start_date, end_date, nlv=nlv)
 
         signals = self.get_signals(prices)
-        weights = self.get_weights(signals, prices)
+        weights = self.assign_weights(signals, prices)
         weights = weights * allocation
         weights = self._constrain_weights(weights, prices)
-        positions = self.get_positions(weights, prices)
+        positions = self.simulate_positions(weights, prices)
         returns = self._get_returns(positions, prices)
         trades = self._get_trades(positions)
         commissions = self._get_commissions(positions, prices)
