@@ -16,14 +16,33 @@ class LiquidityConstraintMixin(object):
     """
     Mixin class providing reduction of backtest weights based on available
     liquidity.
+
+    Parameters
+    ----------
+    LIQUDITY_VOLUME_WINDOW : int, optional
+        the number of periods over which to compute median volume (default 15)
+
+    MAX_PERIOD_VOLUME_PCT : float, required
+        the max percentage of the median volume to take (for example, 0.01 for 1%)
     """
     LIQUDITY_VOLUME_WINDOW = 15 # Window for computing median volume
     MAX_PERIOD_VOLUME_PCT = None
 
     def get_max_allowed_quantities(self, prices):
         """
-        Returns the allowed quantity based on available liquidity, reducing
-        quantity by MAX_PERIOD_VOLUME_PCT.
+        Returns a DataFrame of the maximum allowable position size (in number of shares
+        or contracts) based on available liquidity, such that no more than `MAX_PERIOD_VOLUME_PCT`
+        of the recent median volume is taken.
+
+        Parameters
+        ----------
+        prices : DataFrame, required
+            multiindex (Field, Date) DataFrame of price/market data
+
+        Returns
+        -------
+        DataFrame
+            DataFrame of maximum allowable position size for each period
         """
         max_allowed_quantities = super(LiquidityConstraintMixin, self).get_max_allowed_quantities(prices)
 
