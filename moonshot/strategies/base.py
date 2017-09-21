@@ -274,11 +274,11 @@ class Moonshot(
 
         >>> def simulate_gross_returns(self, positions, prices):
         >>>     closes = prices.loc["Close"]
-        >>>     gross_returns = closes.pct_change().shift()
+        >>>     gross_returns = closes.pct_change() * positions.shift()
         >>>     return gross_returns
         """
         closes = prices.loc["Close"]
-        gross_returns = closes.pct_change().shift()
+        gross_returns = closes.pct_change() * positions.shift()
         return gross_returns
 
     def create_orders(self, order_stubs, prices):
