@@ -14,7 +14,7 @@
 
 from moonshot.commission.base import BaseCommission, PercentageCommission
 
-class BaseFuturesCommission(BaseCommission):
+class FuturesCommission(BaseCommission):
     """
     Base class for futures commissions.
 
@@ -34,7 +34,7 @@ class BaseFuturesCommission(BaseCommission):
     --------
     Example subclass for Globex E-Mini commissions:
 
-    >>> class GlobexEquityEMiniFixedCommission(BaseFuturesCommission):
+    >>> class GlobexEquityEMiniFixedCommission(FuturesCommission):
     >>>     IB_COMMISSION_PER_CONTRACT = 0.85
     >>>     EXCHANGE_FEE_PER_CONTRACT = 1.18
     >>>     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
@@ -62,7 +62,7 @@ class BaseFuturesCommission(BaseCommission):
 
         return commissions
 
-class GlobexEquityEMiniFixedCommission(BaseFuturesCommission):
+class GlobexEquityEMiniFixedCommission(FuturesCommission):
     """
     Fixed commission for Globex Equity E-Minis.
     """
@@ -70,7 +70,7 @@ class GlobexEquityEMiniFixedCommission(BaseFuturesCommission):
     EXCHANGE_FEE_PER_CONTRACT = 1.18
     CARRYING_FEE_PER_CONTRACT = 0
 
-class CanadaCADFuturesTieredCommission(BaseFuturesCommission):
+class CanadaCADFuturesTieredCommission(FuturesCommission):
     """
     Tiered/Cost-Plus commission for Canada futures denominated in CAD, for US
     customers.

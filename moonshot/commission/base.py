@@ -100,11 +100,11 @@ class PercentageCommission(BaseCommission):
     >>>  class MyJapanStrategy(Moonshot):
     >>>      COMMISSION_CLASS = JapanStockCommission
     """
-    IB_COMMISSION_RATE = None
+    IB_COMMISSION_RATE = 0
     IB_COMMISSION_RATE_TIER_2 = None
     TIER_2_RATIO = None
-    EXCHANGE_FEE_RATE = None
-    MIN_COMMISSION = None
+    EXCHANGE_FEE_RATE = 0
+    MIN_COMMISSION = 0
 
     @classmethod
     def get_commissions(cls, contract_values, trades, nlvs=None):

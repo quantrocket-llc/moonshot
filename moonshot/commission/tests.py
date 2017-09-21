@@ -15,10 +15,10 @@
 import unittest
 import pandas as pd
 from moonshot.commission import (
-    BaseFuturesCommission, BaseCostPlusStockCommission, NoCommission)
+    FuturesCommission, CostPlusStockCommission, NoCommission)
 from moonshot.commission.fx import SpotForexCommission
 
-class TestFuturesCommission(BaseFuturesCommission):
+class TestFuturesCommission(FuturesCommission):
     IB_COMMISSION_PER_CONTRACT = 0.85
     EXCHANGE_FEE_PER_CONTRACT = 1.20
     CARRYING_FEE_PER_CONTRACT = 0
@@ -49,7 +49,7 @@ class FuturesCommissionTestCase(unittest.TestCase):
         self.assertEqual(round(commissions.loc[0, "NQ201609"], 9), 0.000003514)
         self.assertEqual(round(commissions.loc[1, "NQ201609"], 9), 0.000006248)
 
-class TestStockCommission(BaseCostPlusStockCommission):
+class TestStockCommission(CostPlusStockCommission):
     IB_COMMISSION_PER_SHARE = 0.0035 # IB commission per share
     MAKER_FEE_PER_SHARE = -0.002 # exchange rebate
     TAKER_FEE_PER_SHARE = 0.00118 # exchange fee

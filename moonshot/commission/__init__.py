@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .fut import BaseFuturesCommission
+from .fut import FuturesCommission
 from .base import PercentageCommission, NoCommission
-from .stk import BaseCostPlusStockCommission
+from .stk import CostPlusStockCommission
 from .fx import SpotForexCommission

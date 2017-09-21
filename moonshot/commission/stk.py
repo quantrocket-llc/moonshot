@@ -14,7 +14,7 @@
 
 from moonshot.commission.base import BaseCommission, PercentageCommission
 
-class BaseCostPlusStockCommission(BaseCommission):
+class CostPlusStockCommission(BaseCommission):
     """
     Base class for IB Cost-Plus stock commissions.
 
@@ -57,7 +57,7 @@ class BaseCostPlusStockCommission(BaseCommission):
     --------
     Example subclass for US stock comissions:
 
-    >>> class CostPlusUSStockCommission(BaseCostPlusStockCommission):
+    >>> class CostPlusUSStockCommission(CostPlusStockCommission):
     >>>     IB_COMMISSION_PER_SHARE = (
     >>>         0.0035 * # IB commission per share
     >>>         (1
@@ -144,7 +144,7 @@ class BaseCostPlusStockCommission(BaseCommission):
 
         return commissions
 
-class CostPlusUSStockCommission(BaseCostPlusStockCommission):
+class CostPlusUSStockCommission(CostPlusStockCommission):
 
     IB_COMMISSION_PER_SHARE = (
         0.0035 * # IB commission per share
@@ -167,7 +167,7 @@ class AustraliaStockCommission(PercentageCommission):
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 5.00
 
-class CanadaStockCommission(BaseCostPlusStockCommission):
+class CanadaStockCommission(CostPlusStockCommission):
 
     IB_COMMISSION_PER_SHARE = (
         0.008 # IB commission per share
