@@ -15,13 +15,13 @@
 import io
 import pandas as pd
 from moonshot.slippage import FixedSlippage
-from moonshot.mixins import WeightAssignmentMixin, LiquidityConstraintMixin
+from moonshot.mixins import WeightAllocationMixin, LiquidityConstraintMixin
 from quantrocket.history import download_history_file, get_db_config
 from quantrocket.master import download_master_file
 
 class Moonshot(
     LiquidityConstraintMixin,
-    WeightAssignmentMixin):
+    WeightAllocationMixin):
     """
     Base class for Moonshot strategies.
 
@@ -34,13 +34,13 @@ class Moonshot(
     To run a backtest, at minimum you must implement `get_signals`, but in general you will
     want to implement the following methods (which are called in the order shown):
 
-        `get_signals` -> `assign_weights` -> `simulate_positions` -> `simulate_gross_returns`
+        `get_signals` -> `allocate_weights` -> `simulate_positions` -> `simulate_gross_returns`
 
     To trade (i.e. generate orders intended to be placed, but actually placed by other services
     than Moonshot), you must also implement `create_orders`. Order generation for trading
     follows the path shown below:
 
-        `get_signals` -> `assign_weights` -> `create_orders`
+        `get_signals` -> `allocate_weights` -> `create_orders`
 
     Parameters
     ----------
@@ -168,7 +168,7 @@ class Moonshot(
         """
         raise NotImplementedError("strategies must implement get_signals")
 
-    def assign_weights(self, signals, prices):
+    def allocate_weights(self, signals, prices):
         """
         Return a DataFrame of weights based on the signals.
 
@@ -183,8 +183,8 @@ class Moonshot(
         capital among the signals each period, but it is intended to be
         overridden by strategy subclasses.
 
-        A variety of built-in weight assignment algorithms are provided by
-        and documented under `moonshot.mixins.WeightAssignmentMixin`.
+        A variety of built-in weight allocation algorithms are provided by
+        and documented under `moonshot.mixins.WeightAllocationMixin`.
 
         Parameters
         ----------
@@ -203,23 +203,23 @@ class Moonshot(
         --------
         The default implementation is shown below:
 
-        >>> def assign_weights(self, signals, prices):
-        >>>     weights = self.assign_equal_weights(signals) # provided by moonshot.mixins.WeightAssignmentMixin
+        >>> def allocate_weights(self, signals, prices):
+        >>>     weights = self.allocate_equal_weights(signals) # provided by moonshot.mixins.WeightAllocationMixin
         >>>     return weights
         """
-        weights = self.assign_equal_weights(signals)
+        weights = self.allocate_equal_weights(signals)
         return weights
 
     def simulate_positions(self, weights, prices):
         """
-        Return a DataFrame of simulated positions based on the assigned
+        Return a DataFrame of simulated positions based on the allocated
         weights.
 
         The positions should shift the weights based on when the weights
         would be filled in live trading.
 
         By default, assumes the position are taken in the period after the
-        weights were assigned. Intended to be overridden by strategy
+        weights were allocated. Intended to be overridden by strategy
         subclasses.
 
         Parameters
@@ -238,7 +238,7 @@ class Moonshot(
         Examples
         --------
         The default implemention is shown below (enter position in the period after
-        signal generation/weight assignment):
+        signal generation/weight allocation):
 
         >>> def simulate_positions(self, weights, prices):
         >>>     positions = weights.shift()
@@ -589,7 +589,7 @@ class Moonshot(
         prices = self._get_historical_prices(start_date, end_date, nlv=nlv)
 
         signals = self.get_signals(prices)
-        weights = self.assign_weights(signals, prices)
+        weights = self.allocate_weights(signals, prices)
         weights = weights * allocation
         weights = self._constrain_weights(weights, prices)
         positions = self.simulate_positions(weights, prices)

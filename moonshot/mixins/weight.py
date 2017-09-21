@@ -15,11 +15,11 @@
 import pandas as pd
 import numpy as np
 
-class WeightAssignmentMixin(object):
+class WeightAllocationMixin(object):
     """
     Mixin class with utilities for turning signals into weights.
     """
-    def assign_equal_weights(self, signals, cap=1.0):
+    def allocate_equal_weights(self, signals, cap=1.0):
         """
         For multi-security strategies. Given a dataframe of whole number
         signals (-1, 0, 1), reduces the position size so that the absolute
@@ -31,19 +31,19 @@ class WeightAssignmentMixin(object):
         divisor = np.where(signals_count != 0, signals_count, 1)
         return signals.div(divisor, axis=0) * cap / 1.0
 
-    def assign_fixed_weights(self, signals, weight):
+    def allocate_fixed_weights(self, signals, weight):
         """
         Applies the specified fixed weight to the signals.
         """
         return signals * weight
 
-    def assign_fixed_weights_capped(self, signals, weight, cap=1.0):
+    def allocate_fixed_weights_capped(self, signals, weight, cap=1.0):
         """
         Applies fixed weights, but if the sum of the weights exceeds the cap,
         applies equal weights.
         """
-        equal_weighted = self.assign_equal_weights(signals, cap=cap)
-        fixed_weighted = self.assign_fixed_weights(signals, weight)
+        equal_weighted = self.allocate_equal_weights(signals, cap=cap)
+        fixed_weighted = self.allocate_fixed_weights(signals, weight)
         fixed_sum = fixed_weighted.abs().sum(axis=1)
         fixed_sum = pd.DataFrame(dict(
             [(column, fixed_sum.copy()) for column in signals.columns]),
@@ -52,7 +52,7 @@ class WeightAssignmentMixin(object):
             np.where(fixed_sum > cap, equal_weighted, fixed_weighted),
             index=signals.index, columns=signals.columns)
 
-    def assign_market_neutral_fixed_weights_capped(self, signals, weight, cap=1.0,
+    def allocate_market_neutral_fixed_weights_capped(self, signals, weight, cap=1.0,
                                                   neutralize_weights=True):
         """
         Applies fixed capped weights to the long and short side separately to
@@ -61,8 +61,8 @@ class WeightAssignmentMixin(object):
         long_signals = signals.where(signals > 0, 0)
         short_signals = signals.where(signals < 0, 0)
         cap_per_side = cap * 0.5
-        long_weights = self.assign_fixed_weights_capped(long_signals, weight, cap=cap_per_side)
-        short_weights = self.assign_fixed_weights_capped(short_signals, weight, cap=cap_per_side)
+        long_weights = self.allocate_fixed_weights_capped(long_signals, weight, cap=cap_per_side)
+        short_weights = self.allocate_fixed_weights_capped(short_signals, weight, cap=cap_per_side)
         weights = long_weights.where(long_weights > 0, short_weights)
         if neutralize_weights:
             weights = self.neutralize_weights(weights)
@@ -94,7 +94,7 @@ class WeightAssignmentMixin(object):
         weights = long_weights.where(long_weights > 0, short_weights)
         return weights
 
-    def assign_capped_weights(self, weights, weight_cap=None, total_cap=1.0):
+    def allocate_capped_weights(self, weights, weight_cap=None, total_cap=1.0):
         """
         Proportionately reduces the weights if their sum exceeds the cap.
         """
@@ -113,7 +113,7 @@ class WeightAssignmentMixin(object):
 
         return weights
 
-    def assign_constant_volatility_weights(self, weights, price_panel,
+    def allocate_constant_volatility_weights(self, weights, price_panel,
                                           target_std, std_window):
         """
         Applies constant volatility weights to the weights, based on the

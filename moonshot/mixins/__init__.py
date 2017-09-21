@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .weight import WeightAssignmentMixin
+from .weight import WeightAllocationMixin
 from .liquidity import LiquidityConstraintMixin
