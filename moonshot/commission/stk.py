@@ -14,12 +14,10 @@
 
 from moonshot.commission.base import BaseCommission, PercentageCommission
 
-class CostPlusStockCommission(BaseCommission):
+class PerShareCommission(BaseCommission):
     """
-    Base class for IB Cost-Plus stock commissions.
-
-    IB Cost-Plus commissions/fees consist of a transaction fee, which is a
-    percentage of the trade value, and various per share costs.
+    Base class for IB commissions which are primarily based on the number of
+    shares.
 
     This class can't be used directly but should be subclassed with the
     appropriate parameters.
@@ -35,6 +33,10 @@ class CostPlusStockCommission(BaseCommission):
     TIER_2_RATIO : float, optional
         ratio of monthly trades at volume tier 2
 
+    EXCHANGE_FEE_PER_SHARE : float, optional
+        the sum of all exchange fees which are assessed per share (excluding maker-taker
+        fees, if defined separately)
+
     MAKER_FEE_PER_SHARE : float, optional
         the "maker" fee from the exchange for adding liquidity. Use a negative value
         to indicate a rebate
@@ -46,32 +48,41 @@ class CostPlusStockCommission(BaseCommission):
         the ratio of trades that earn the maker fee (for example if 75% of trades add
         liquidty and 25% remove liqudity, this value should be 0.75)
 
+    PERCENTAGE_FEE_RATE : float, optional
+        the sum of all fees which are assessed as a percentage of trade value
+
+    COMMISSION_PERCENTAGE_FEE_RATE : float, optional
+        the sum of all fees which are assessed as a percentage of the IB commission
+
     MIN_COMMISSION : float, optional
         the minimum commission charged by IB. Only enforced if NLVs are passed
         by the backtest.
 
-    TRANSACTION_FEE_RATE : float, optional
-        the transaction fee rate as a percentage of trade value
-
     Examples
     --------
-    Example subclass for US stock comissions:
+    Example subclass for US stock comission with fixed pricing:
 
-    >>> class CostPlusUSStockCommission(CostPlusStockCommission):
-    >>>     IB_COMMISSION_PER_SHARE = (
-    >>>         0.0035 * # IB commission per share
-    >>>         (1
-    >>>          + 0.000175 # NYSE pass-through (% of IB commission)
-    >>>          + 0.00056 # FINRA pass-through (% of IB Commission)
-    >>>         )
-    >>>         + 0.0002 # clearing fee per share
-    >>>         + (0.000119/2) # FINRA activity fee (per share sold)
-    >>>     )
+    >>> class USStockCommission(PerShareCommission):
+    >>>     IB_COMMISSION_PER_SHARE = 0.005
+    >>>     MIN_COMMISSION = 1.00
+    >>>
+    >>>  # then, use this on your strategy:
+    >>>  class MyUSAStrategy(Moonshot):
+    >>>      COMMISSION_CLASS = USStockCommission
+
+    Example subclass for US Cost-Plus stock comissions:
+
+    >>> class CostPlusUSStockCommission(PerShareCommission):
+    >>>     IB_COMMISSION_PER_SHARE = 0.0035
+    >>>     EXCHANGE_FEE_PER_SHARE = (0.0002 # clearing fee per share
+    >>>                              + (0.000119/2)) # FINRA activity fee (per share sold)
     >>>     MAKER_FEE_PER_SHARE = -0.002 # exchange rebate (varies)
     >>>     TAKER_FEE_PER_SHARE = 0.00118 # exchange fee (varies)
-    >>>     MAKER_RATIO = 0 # assume we always take liquidity for this strategy
+    >>>     MAKER_RATIO = 0.25 # assume 25% of our trades add liquidity, 75% take liquidity
+    >>>     COMMISSION_PERCENTAGE_FEE_RATE = (0.000175 # NYSE pass-through (% of IB commission)
+    >>>                                      + 0.00056) # FINRA pass-through (% of IB Commission)
+    >>>     PERCENTAGE_FEE_RATE = 0.0000231 # Transaction fees
     >>>     MIN_COMMISSION = 0.35
-    >>>     TRANSACTION_FEE_RATE = 0.0000221
     >>>
     >>>  # then, use this on your strategy:
     >>>  class MyUSAStrategy(Moonshot):
@@ -81,11 +92,13 @@ class CostPlusStockCommission(BaseCommission):
     IB_COMMISSION_PER_SHARE = None
     IB_COMMISSION_PER_SHARE_TIER_2 = None
     TIER_2_RATIO = 0
+    EXCHANGE_FEE_PER_SHARE = 0
     MAKER_FEE_PER_SHARE = 0
     TAKER_FEE_PER_SHARE = 0
     MAKER_RATIO = 0 # ratio of maker trades, between 0 and 1
+    PERCENTAGE_FEE_RATE = 0
+    COMMISSION_PERCENTAGE_FEE_RATE = 0
     MIN_COMMISSION = 0
-    TRANSACTION_FEE_RATE = 0
 
     @classmethod
     def get_commissions(cls, contract_values, trades, nlvs=None):
@@ -116,62 +129,62 @@ class CostPlusStockCommission(BaseCommission):
         trades = trades.abs()
 
         taker_ratio = 1 - cls.MAKER_RATIO
-        exchange_fee_per_share = (cls.MAKER_RATIO * cls.MAKER_FEE_PER_SHARE) + (taker_ratio * cls.TAKER_FEE_PER_SHARE)
+        exchange_fee_per_share = cls.EXCHANGE_FEE_PER_SHARE + (cls.MAKER_RATIO * cls.MAKER_FEE_PER_SHARE) + (taker_ratio * cls.TAKER_FEE_PER_SHARE)
 
         # Calculate commissions as a percent of the share price.
         if cls.TIER_2_RATIO:
-            commission_per_share = (
+            ib_commission_per_share = (
                 ((1 - cls.TIER_2_RATIO) * cls.IB_COMMISSION_PER_SHARE)
                 + (cls.TIER_2_RATIO * cls.IB_COMMISSION_PER_SHARE_TIER_2)
             )
         else:
-            commission_per_share = cls.IB_COMMISSION_PER_SHARE
+            ib_commission_per_share = cls.IB_COMMISSION_PER_SHARE
 
-        share_based_commission_rates = float(commission_per_share)/contract_values
+        commission_per_share_with_fees = ib_commission_per_share * (1 + cls.COMMISSION_PERCENTAGE_FEE_RATE)
+
+        ib_commission_rates = float(ib_commission_per_share)/contract_values
 
         # Multiply the commissions by the trades.
-        share_based_commissions = share_based_commission_rates * trades
+        ib_commissions = ib_commission_rates * trades
 
         if nlvs is not None and cls.MIN_COMMISSION:
-            share_based_commissions = cls._enforce_min_commissions(share_based_commissions, nlvs=nlvs)
+            ib_commissions = cls._enforce_min_commissions(ib_commissions, nlvs=nlvs)
 
         share_based_exchange_fee_rates = exchange_fee_per_share/contract_values
         share_based_exchange_fees = share_based_exchange_fee_rates * trades
 
-        value_based_fees = cls.TRANSACTION_FEE_RATE * trades
+        value_based_fees = cls.PERCENTAGE_FEE_RATE * trades
 
-        commissions = share_based_commissions + share_based_exchange_fees + value_based_fees
+        commission_based_fees = cls.COMMISSION_PERCENTAGE_FEE_RATE * ib_commissions
+
+        commissions = ib_commissions + share_based_exchange_fees + value_based_fees + commission_based_fees
 
         return commissions
 
-class CostPlusUSStockCommission(CostPlusStockCommission):
+class DemoUSStockCommission(PerShareCommission):
 
-    IB_COMMISSION_PER_SHARE = (
-        0.0035 * # IB commission per share
-        (1
-         + 0.000175 # NYSE pass-through (% of IB commission)
-         + 0.00056 # FINRA pass-through (% of IB Commission)
-        )
-        + 0.0002 # clearing fee per share
-        + (0.000119/2) # FINRA activity fee (per share sold)
-    )
+    IB_COMMISSION_PER_SHARE = 0.005
+    MIN_COMMISSION = 1.00
+
+class DemoCostPlusUSStockCommission(PerShareCommission):
+
+    IB_COMMISSION_PER_SHARE = 0.0035
+    EXCHANGE_FEE_PER_SHARE = (0.0002 # clearing fee per share
+                              + (0.000119/2)) # FINRA activity fee (per share sold)
     MAKER_FEE_PER_SHARE = -0.002 # exchange rebate (varies)
     TAKER_FEE_PER_SHARE = 0.00118 # exchange fee (varies)
     MAKER_RATIO = 0
+    COMMISSION_PERCENTAGE_FEE_RATE = (0.000175 # NYSE pass-through (% of IB commission)
+                                      + 0.00056) # FINRA pass-through (% of IB Commission)
+    PERCENTAGE_FEE_RATE = 0.0000231 # Transaction fees
     MIN_COMMISSION = 0.35
-    TRANSACTION_FEE_RATE = 0.0000221
 
-class AustraliaStockCommission(PercentageCommission):
 
-    IB_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 5.00
+class DemoCostPlusCanadaStockCommission(PerShareCommission):
 
-class CanadaStockCommission(CostPlusStockCommission):
-
-    IB_COMMISSION_PER_SHARE = (
-        0.008 # IB commission per share
-        + 0.00017 # clearing fee per share
+    IB_COMMISSION_PER_SHARE = 0.008
+    EXCHANGE_FEE_PER_SHARE = (
+        0.00017 # clearing fee per share
         + 0.00011 # transaction fee per share
         )
     MAKER_FEE_PER_SHARE = -0.0019 # varies
@@ -180,19 +193,25 @@ class CanadaStockCommission(CostPlusStockCommission):
     MIN_COMMISSION = 1.00
     TRANSACTION_FEE_RATE = 0
 
-class FranceStockCommission(PercentageCommission):
+class DemoAustraliaStockCommission(PercentageCommission):
+
+    IB_COMMISSION_RATE = 0.0008
+    EXCHANGE_FEE_RATE = 0
+    MIN_COMMISSION = 5.00
+
+class DemoFranceStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0008
     EXCHANGE_FEE_RATE = 0.000095 # 0.95 bps exchange fee
     MIN_COMMISSION = 1.25 # EUR
 
-class GermanyStockCommission(PercentageCommission):
+class DemoGermanyStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0008
     EXCHANGE_FEE_RATE = 0.000048 + 0.00001 # 0.48 bps exchange fee + 0.1 bps clearing fee
     MIN_COMMISSION = 1.25 # EUR
 
-class HongKongStockCommission(PercentageCommission):
+class DemoHongKongStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0008
     EXCHANGE_FEE_RATE = (
@@ -203,25 +222,25 @@ class HongKongStockCommission(PercentageCommission):
     )
     MIN_COMMISSION = 18.00 # HKD
 
-class JapanStockCommission(PercentageCommission):
+class DemoJapanStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0005
     EXCHANGE_FEE_RATE = 0.000004
     MIN_COMMISSION = 80.00 # JPY
 
-class MexicoStockCommission(PercentageCommission):
+class DemoMexicoStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0010
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 60.00 # MXN
 
-class SingaporeStockCommission(PercentageCommission):
+class DemoSingaporeStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0008
     EXCHANGE_FEE_RATE = 0.00034775 + 0.00008025 # transaction fee + access fee
     MIN_COMMISSION = 2.50 # SGD
 
-class UKStockCommission(PercentageCommission):
+class DemoUKStockCommission(PercentageCommission):
 
     IB_COMMISSION_RATE = 0.0008
     EXCHANGE_FEE_RATE = 0.000045 + 0.0025 # 0.45 bps + 0.5% stamp tax on purchases > 1000 GBP

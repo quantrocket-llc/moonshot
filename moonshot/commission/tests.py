@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# To run: python3 -m unittest discover -t . -s . -p test*.py
+
 import unittest
 import pandas as pd
 from moonshot.commission import (
-    FuturesCommission, CostPlusStockCommission, NoCommission)
+    FuturesCommission, PerShareCommission, NoCommission)
 from moonshot.commission.fx import SpotForexCommission
 
 class TestFuturesCommission(FuturesCommission):
@@ -49,16 +51,17 @@ class FuturesCommissionTestCase(unittest.TestCase):
         self.assertEqual(round(commissions.loc[0, "NQ201609"], 9), 0.000003514)
         self.assertEqual(round(commissions.loc[1, "NQ201609"], 9), 0.000006248)
 
-class TestStockCommission(CostPlusStockCommission):
+class TestStockCommission(PerShareCommission):
     IB_COMMISSION_PER_SHARE = 0.0035 # IB commission per share
+    EXCHANGE_FEE_PER_SHARE = 0.0003
     MAKER_FEE_PER_SHARE = -0.002 # exchange rebate
     TAKER_FEE_PER_SHARE = 0.00118 # exchange fee
-    MAKER_RATIO = 0
+    MAKER_RATIO = 0.4
     MIN_COMMISSION = 0.35
-    MIN_COMMISSION_CURRENCY = "USD"
-    TRANSACTION_FEE_RATE = 0.00002
+    COMMISSION_PERCENTAGE_FEE_RATE = 0.056
+    PERCENTAGE_FEE_RATE = 0.00002
 
-class CostPlusStockCommissionTestCase(unittest.TestCase):
+class PerShareCommissionTestCase(unittest.TestCase):
 
     def test_min_commission(self):
 
@@ -79,8 +82,11 @@ class CostPlusStockCommissionTestCase(unittest.TestCase):
             nlvs=nlvs)
 
         # expected commission
-        # 0.35 IB min commission + (0.00118 * 50) + (250 * 50 * 0.00002) = 0.659 / 220000 = 0.000002995
-        self.assertEqual(round(commission.loc[0, "LVS"], 9), 0.000002995)
+        # exchange fees = 0.0003 + (0.4 * -0.002) + (0.6 * 0.00118) = 0.000208 * 50 shares = 0.0104
+        # percentage fees = 0.00002 * 50 * 250 = 0.25
+        # commission based fees = 0.00056 * 0.35 = 0.0196
+        # 0.35 IB min commission + 0.0104 + 0.25 + 0.0196 = 0.63 / 220000 = 0.000002864
+        self.assertEqual(round(commission.loc[0, "LVS"], 9), 0.000002864)
 
     def test_maker_commissions(self):
 
@@ -103,8 +109,8 @@ class CostPlusStockCommissionTestCase(unittest.TestCase):
             nlvs=nlvs)
 
         # expected commission
-        # (0.0035 - 0.002) * 500000 * 0.1 / 90 = 0.83 + (500000 * 0.1 * 0.00002) = $1.83 / $500000 = 0.00000366
-        self.assertEqual(round(commissions.loc[0, "AAPL"], 8), 0.00000367)
+        # (0.0035 - 0.002 + 0.0003 + (0.0035 * 0.056)) * 500000 * 0.1 / 90 = 1.108888889 + (500000 * 0.1 * 0.00002) = $2.108888 / $500000 = 0.000004218
+        self.assertEqual(round(commissions.loc[0, "AAPL"], 9), 0.000004218)
 
     def test_taker_commissions(self):
 
@@ -127,13 +133,13 @@ class CostPlusStockCommissionTestCase(unittest.TestCase):
             nlvs=nlvs)
 
         # expected commission
-        # (0.0035 + 0.00118) * 500000 * 0.1 / 90 = 2.60 + (500000 * 0.1 * 0.00002) = $3.60 / $500000 = 0.0000072
-        self.assertEqual(round(commissions.loc[0, "AAPL"], 7), 0.0000072)
+        # (0.0035 + 0.00118 + 0.0003 + (0.0035 * 0.056)) * 500000 * 0.1 / 90 = 2.87555 + (500000 * 0.1 * 0.00002) = $3.8755 / $500000 = 0.000007751
+        self.assertEqual(round(commissions.loc[0, "AAPL"], 9), 0.000007751)
 
     def test_maker_taker_commissions(self):
 
         class TestMakerTakerCommission(TestStockCommission):
-            MAKER_RATIO = 0.5
+            MAKER_RATIO = 0.60
 
         trades = pd.DataFrame(
             {"AAPL": [0.1]},
@@ -151,8 +157,8 @@ class CostPlusStockCommissionTestCase(unittest.TestCase):
             nlvs=nlvs)
 
         # expected commission
-        # (0.0035 + (0.00118 - 0.002)/2 * 500000 * 0.1 / 90 = 1.72 + (500000 * 0.1 * 0.00002) = $2.72 / $500000 = 0.000005433
-        self.assertEqual(round(commissions.loc[0, "AAPL"], 9), 0.000005433)
+        # (0.0035 + (0.00118*0.4) + (-0.002 * 0.6) + 0.0003 + (0.0035 * 0.056)) * 500000 * 0.1 / 90 = $1.8155 + (500000 * 0.1 * 0.00002) = $2.8155 / $500000 = 0.000005631
+        self.assertEqual(round(commissions.loc[0, "AAPL"], 9), 0.000005631)
 
 class NoCommissionTestCase(unittest.TestCase):
 

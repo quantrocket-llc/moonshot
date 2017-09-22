@@ -62,7 +62,7 @@ class FuturesCommission(BaseCommission):
 
         return commissions
 
-class GlobexEquityEMiniFixedCommission(FuturesCommission):
+class DemoGlobexEquityEMiniFixedCommission(FuturesCommission):
     """
     Fixed commission for Globex Equity E-Minis.
     """
@@ -70,7 +70,7 @@ class GlobexEquityEMiniFixedCommission(FuturesCommission):
     EXCHANGE_FEE_PER_CONTRACT = 1.18
     CARRYING_FEE_PER_CONTRACT = 0
 
-class CanadaCADFuturesTieredCommission(FuturesCommission):
+class DemoCanadaCADFuturesTieredCommission(FuturesCommission):
     """
     Tiered/Cost-Plus commission for Canada futures denominated in CAD, for US
     customers.
@@ -84,7 +84,7 @@ class CanadaCADFuturesTieredCommission(FuturesCommission):
     )
     CARRYING_FEE_PER_CONTRACT = 0
 
-class KoreaFuturesCommission(PercentageCommission):
+class DemoKoreaFuturesCommission(PercentageCommission):
     """
     Fixed rate commission for Korea futures excluding stock futures.
     """
@@ -94,7 +94,7 @@ class KoreaFuturesCommission(PercentageCommission):
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 0
 
-class KoreaStockFuturesCommission(PercentageCommission):
+class DemoKoreaStockFuturesCommission(PercentageCommission):
     """
     Fixed rate commission for Korea stock futures.
     """

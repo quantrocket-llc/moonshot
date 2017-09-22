@@ -14,5 +14,5 @@
 
 from .fut import FuturesCommission
 from .base import PercentageCommission, NoCommission
-from .stk import CostPlusStockCommission
+from .stk import PerShareCommission
 from .fx import SpotForexCommission
