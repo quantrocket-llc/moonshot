@@ -15,13 +15,18 @@
 import io
 import pandas as pd
 from moonshot.slippage import FixedSlippage
-from moonshot.mixins import WeightAllocationMixin, LiquidityConstraintMixin
+from moonshot.mixins import (
+    WeightAllocationMixin,
+    LiquidityConstraintMixin,
+    ReutersFundamentalsMixin
+)
 from quantrocket.history import download_history_file, get_db_config
 from quantrocket.master import download_master_file
 
 class Moonshot(
     LiquidityConstraintMixin,
-    WeightAllocationMixin):
+    WeightAllocationMixin,
+    ReutersFundamentalsMixin):
     """
     Base class for Moonshot strategies.
 

@@ -14,3 +14,4 @@
 
 from .weight import WeightAllocationMixin
 from .liquidity import LiquidityConstraintMixin
+from .fundamental import ReutersFundamentalsMixin
