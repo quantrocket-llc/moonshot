@@ -14,6 +14,7 @@
 
 import io
 import pandas as pd
+import numpy as np
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
@@ -22,6 +23,8 @@ from moonshot.mixins import (
 )
 from quantrocket.history import download_history_file, get_db_config
 from quantrocket.master import download_master_file
+from quantrocket.account import download_account_balances, download_exchange_rates
+from quantrocket.blotter import list_positions
 
 class Moonshot(
     LiquidityConstraintMixin,
@@ -286,11 +289,131 @@ class Moonshot(
         gross_returns = closes.pct_change() * positions.shift()
         return gross_returns
 
-    def create_orders(self, order_stubs, prices):
+    def create_orders(self, orders, prices):
         """
-        Creates detailed orders from the order stubs.
+        From a DataFrame of order stubs, creates a DataFrame of fully
+        specified orders.
+
+        Parameters
+        ----------
+        orders : DataFrame
+            a DataFrame of order stubs, with columns ConId, Account, Action,
+            OrderRef, and TotalQuantity
+
+        prices : DataFrame
+            multiindex (Field, Date) DataFrame of price/market data
+
+        Returns
+        -------
+        DataFrame
+            a DataFrame of fully specified orders, with (at minimum) columns
+            Exchange, Tif, OrderType added
+
+        Examples
+        --------
+        The orders DataFrame provided to this method resembles the following:
+
+        >>> print(orders)
+            ConId  Account Action     OrderRef  TotalQuantity
+        0   12345   U12345   SELL  my-strategy            100
+        1   12345   U55555   SELL  my-strategy             50
+        2   23456   U12345    BUY  my-strategy            100
+        3   23456   U55555    BUY  my-strategy             50
+        4   34567   U12345    BUY  my-strategy            200
+        5   34567   U55555    BUY  my-strategy            100
+
+        The default implemention creates MKT DAY orders routed to SMART and is
+        shown below:
+
+        >>> def create_orders(self, orders, prices):
+        >>>     orders["Exchange"] = "SMART"
+        >>>     orders["OrderType"] = "MKT"
+        >>>     orders["Tif"] = "DAY"
+        >>>     return orders
+
+        Set a limit price equal to the prior closing price:
+
+        >>> closes = prices.loc["Close"]
+        >>> prior_closes = closes.shift()
+        >>> prior_closes = self.reindex_like_orders(prior_closes, orders)
+        >>> orders["OrderType"] = "LMT"
+        >>> orders["LmtPrice"] = prior_closes
         """
-        raise NotImplementedError("strategies must implement create_orders")
+        orders["Exchange"] = "SMART"
+        orders["OrderType"] = "MKT"
+        orders["Tif"] = "DAY"
+        return orders
+
+    def reindex_like_orders(self, df, orders):
+        """
+        Reindexes a DataFrame (having ConIds as columns and dates as index)
+        to match the shape of the orders DataFrame.
+
+        Parameters
+        ----------
+        df : DataFrame, required
+            a DataFrame of arbitrary values with ConIds as columns and
+            dates as index
+
+        orders : DataFrame, required
+            an orders DataFrame with a ConId column
+
+        Returns
+        -------
+        Series
+            a Series with an index matching orders
+
+        Examples
+        --------
+        Calculate prior closes and reindex like orders:
+
+        >>> closes = prices.loc["Close"]
+        >>> prior_closes = closes.shift()
+        >>> prior_closes = self.reindex_like_orders(prior_closes, orders)
+        """
+        signal_date = self._get_signal_date(df.index)
+        df = df.loc[signal_date]
+        df.name = "_MoonshotOther"
+        df = orders.join(df, on="ConId")._MoonshotOther
+        df.name = None
+        return df
+
+    def _create_order_stubs(self, quantities):
+        """
+        From a DataFrame of quantities to be ordered (with ConIds as index,
+        Accounts as columns), returns a DataFrame of order stubs.
+
+        quantities in:
+
+        Account   U12345  U55555
+        ConId
+        12345       -100     -50
+        23456        100      50
+        34567        200     100
+
+        order_stubs out:
+
+            ConId  Account Action     OrderRef  TotalQuantity
+        0   12345   U12345   SELL  my-strategy            100
+        1   12345   U55555   SELL  my-strategy             50
+        2   23456   U12345    BUY  my-strategy            100
+        3   23456   U55555    BUY  my-strategy             50
+        4   34567   U12345    BUY  my-strategy            200
+        5   34567   U55555    BUY  my-strategy            100
+
+        """
+        quantities.index.name = "ConId"
+        quantities.columns.name = "Account"
+        quantities = quantities.stack()
+        quantities.name = "Quantity"
+        order_stubs = quantities.to_frame().reset_index()
+        order_stubs["Action"] = np.where(order_stubs.Quantity > 0, "BUY", "SELL")
+        order_stubs = order_stubs.loc[order_stubs.Quantity != 0].copy()
+        order_stubs["OrderRef"] = self.CODE
+        order_stubs["TotalQuantity"] = order_stubs.Quantity.abs()
+        order_stubs = order_stubs.drop("Quantity",axis=1)
+
+        return order_stubs
 
     def _get_nlv(self):
         """
@@ -400,14 +523,6 @@ class Moonshot(
         """
         Constrains the weights by the max and min allowed quantities (as
         dictated by available liquidity, contract size, etc.).
-
-        For live trading, constraints are normally applied by the
-        QUANTITY_CALCULATOR, but this method is used for backtests to make
-        them resemble live trading. This method can't be used for live
-        trading because constraints depend in part on account size and
-        backtests don't support multiple accounts (whereas
-        QUANTITY_CALCULATORs do). This method applies constraints based on
-        the NLV of self.backtest_account.
         """
         max_allowed_quantities = self.get_max_allowed_quantities(prices)
         min_allowed_quantities = self.get_min_allowed_quantities(prices)
@@ -494,7 +609,7 @@ class Moonshot(
             days=cls.LOOKBACK_WINDOW*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
-    def _get_historical_prices(self, start_date, end_date, nlv=None):
+    def _get_historical_prices(self, start_date, end_date=None, nlv=None):
         """
         Downloads historical prices from a history db. Downloads security
         details from the master db and broadcasts the values to be shaped
@@ -621,21 +736,213 @@ class Moonshot(
 
         return results
 
-    def trade(self, prices):
+    def trade(self, allocations):
         """
         Run the strategy and create orders.
 
         Parameters
         ----------
-        prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
+        allocations : dict, required
+            dict of account:allocation to strategy (expressed as a percentage of NLV)
 
         Returns
         -------
         DataFrame
             orders
         """
-        raise NotImplementedError()
+        self.is_trade = True
+
+        start_date = pd.Timestamp.today()
+
+        prices = self._get_historical_prices(start_date)
+
+        signals = self.get_signals(prices)
+
+        signal_date = self._get_signal_date(signals.index)
+
+        weights = self.allocate_weights(signals, prices)
+
+        # get the latest date's weights; this results in a Series of weights by ConId:
+        # ConId
+        # 12345  -0.2
+        # 23456     0
+        # 34567   0.1
+        weights = weights.loc[signal_date]
+
+        allocations = pd.Series(allocations)
+        # Out:
+        # U12345    0.25
+        # U55555    0.50
+
+        # Multiply weights times allocations
+        weights = weights.apply(lambda x: x * allocations)
+
+        # Out:
+        #        U12345  U55555
+        # 12345  -0.050   -0.10
+        # 23456   0.000    0.00
+        # 34567   0.025    0.05
+
+        contract_values = self._get_contract_values(prices)
+        contract_values = contract_values.fillna(method="ffill").loc[signal_date]
+        contract_values = allocations.apply(lambda x: contract_values).T
+        # Out:
+        #          U12345    U55555
+        # 12345     95.68     95.68
+        # 23456   1500.00   1500.00
+        # 34567   3600.00   3600.00
+
+        currencies = prices.loc["Currency"].loc[signal_date]
+        sec_types = prices.loc["SecType"].loc[signal_date]
+
+        # For FX, exchange rate conversions should be based on the symbol,
+        # not the currency (i.e. 100 EUR.USD = 100 EUR, not 100 USD)
+        if (sec_types == "CASH").any():
+            symbols = prices.loc["Symbol"].loc[signal_date]
+            currencies = currencies.where(sec_types != "CASH", symbols)
+
+        f = io.StringIO()
+        download_account_balances(
+            f,
+            latest=True,
+            accounts=list(allocations.index),
+            fields=["NetLiquidation"])
+
+        balances = pd.read_csv(f, index_col="Account")
+
+        f = io.StringIO()
+        download_exchange_rates(
+            f, latest=True,
+            base_currencies=list(balances.Currency.unique()),
+            quote_currencies=list(currencies.unique()))
+        exchange_rates = pd.read_csv(f)
+
+        nlvs = balances.NetLiquidation.reindex(allocations.index)
+        # Out:
+        # U12345 1000000
+        # U55555  500000
+
+        nlvs = weights.apply(lambda x: nlvs, axis=1)
+        # Out:
+        #        U12345 U55555
+        # 12345 1000000 500000
+        # 23456 1000000 500000
+        # 34567 1000000 500000
+
+        base_currencies = balances.Currency.reindex(allocations.index)
+        # Out:
+        # U12345 USD
+        # U55555 EUR
+
+        base_currencies = weights.apply(lambda x: base_currencies, axis=1)
+        # Out:
+        #        U12345 U55555
+        # 12345     USD    EUR
+        # 23456     USD    EUR
+        # 34567     USD    EUR
+
+        trade_currencies = allocations.apply(lambda x: currencies).T
+        # Out:
+        #        U12345 U55555
+        # 12345     USD    USD
+        # 23456     JPY    JPY
+        # 34567     JPY    JPY
+
+        base_currencies = base_currencies.stack()
+        trade_currencies= trade_currencies.stack()
+        base_currencies.name = "BaseCurrency"
+        trade_currencies.name = "QuoteCurrency"
+        currencies = pd.concat((base_currencies,trade_currencies), axis=1)
+        # Out:
+        #              BaseCurrency QuoteCurrency
+        # 12345 U12345          USD           USD
+        #       U55555          EUR           USD
+        # 23456 U12345          USD           JPY
+        #       U55555          EUR           JPY
+        # 34567 U12345          USD           JPY
+        #       U55555          EUR           JPY
+
+        exchange_rates = pd.merge(currencies, exchange_rates, how="left",
+                                  on=["BaseCurrency","QuoteCurrency"])
+        exchange_rates.index = currencies.index
+        exchange_rates.loc[(exchange_rates.BaseCurrency == exchange_rates.QuoteCurrency), "Rate"] = 1
+        exchange_rates = exchange_rates.Rate.unstack()
+        # Out:
+        #        U12345  U55555
+        # 12345    1.00    1.15
+        # 23456  107.02  127.12
+        # 34567  107.02  127.12
+
+        target_quantities = self._get_target_quantities(
+            weights, nlvs, exchange_rates, contract_values)
+
+        positions = list_positions(
+            order_refs=[self.CODE],
+            accounts=list(allocations.index),
+            conids=list(target_quantities.index)
+        )
+
+        if not positions:
+            net_quantities = target_quantities
+        else:
+            positions = pd.DataFrame(positions)
+            positions = positions.set_index(["ConId","Account"]).Quantity
+            target_quantities = target_quantities.stack()
+            target_quantities.index.set_names(["ConId","Account"], inplace=True)
+            positions = positions.reindex(target_quantities.index).fillna(0)
+            net_quantities = target_quantities - positions
+            net_quantities = net_quantities.unstack()
+
+        if (net_quantities == 0).all().all():
+            return
+
+        # contrain quantities
+        max_allowed_quantities = self.get_max_allowed_quantities(prices)
+        if max_allowed_quantities is not None:
+            max_allowed_quantities = max_allowed_quantities.loc[signal_date]
+            max_allowed_quantities = allocations.apply(lambda x: max_allowed_quantities).T
+            net_quantities = net_quantities.where(
+                net_quantities.abs() <= max_allowed_quantities,
+                max_allowed_quantities.where(net_quantities > 0, -max_allowed_quantities))
+
+        min_allowed_quantities = self.get_min_allowed_quantities(prices)
+        if min_allowed_quantities is not None:
+            min_allowed_quantities = min_allowed_quantities.loc[signal_date]
+            min_allowed_quantities = allocations.apply(lambda x: min_allowed_quantities).T
+            net_quantities = net_quantities.where(
+                net_quantities.abs() >= min_allowed_quantities,
+                min_allowed_quantities.where(net_quantities > 0, -min_allowed_quantities))
+
+        order_stubs = self._create_order_stubs(net_quantities)
+        orders = self.create_orders(order_stubs, prices)
+
+        # TODO: where/how is price rounding handled?
+        return orders
+
+    def _get_target_quantities(self, weights, nlvs, exchange_rates, contract_values):
+        """
+        Converts a DataFrame of target percentage weights to a DataFrame of
+        target quantities.
+
+        Parameters
+        ----------
+        weights : DataFrame, required
+            DataFrame of target percentage weights
+
+        nlvs : DataFrame, required
+            DataFrame of net liquidation values
+
+        exchange_rates : DataFrame, required
+            DataFrame of exchange rates
+
+        contract_values : DataFrame, required
+            DataFrame of contract values (price / magnifier * multiplier)
+
+        """
+        target_trade_values_in_base_currency = weights * nlvs
+        target_trade_values_in_trade_currency = target_trade_values_in_base_currency * exchange_rates
+        target_quantities = target_trade_values_in_trade_currency / contract_values
+        return target_quantities.round().fillna(0).astype(int)
 
     def _get_contract_values(self, prices):
         """
