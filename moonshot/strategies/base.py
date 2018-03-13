@@ -15,6 +15,7 @@
 import io
 import pandas as pd
 import numpy as np
+import warnings
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
@@ -39,16 +40,16 @@ class Moonshot(
     Class attributes include built-in Moonshot parameters which you can override, as well
     as your own custom parameters.
 
-    To run a backtest, at minimum you must implement `get_signals`, but in general you will
+    To run a backtest, at minimum you must implement `prices_to_signals`, but in general you will
     want to implement the following methods (which are called in the order shown):
 
-        `get_signals` -> `allocate_weights` -> `simulate_positions` -> `simulate_gross_returns`
+        `prices_to_signals` -> `signals_to_target_weights` -> `target_weights_to_positions` -> `positions_to_gross_returns`
 
     To trade (i.e. generate orders intended to be placed, but actually placed by other services
-    than Moonshot), you must also implement `create_orders`. Order generation for trading
+    than Moonshot), you must also implement `order_stubs_to_orders`. Order generation for trading
     follows the path shown below:
 
-        `get_signals` -> `allocate_weights` -> `create_orders`
+        `prices_to_signals` -> `signals_to_target_weights` -> `order_stubs_to_orders`
 
     Parameters
     ----------
@@ -120,7 +121,7 @@ class Moonshot(
     >>>     DB = "mexi-stk"
     >>>     MAVG_WINDOW = 200
     >>>
-    >>>     def get_signals(self, prices):
+    >>>     def prices_to_signals(self, prices):
     >>>         closes = prices.loc["Close"]
     >>>         mavgs = closes.rolling(self.MAVG_WINDOW).mean()
     >>>         signals = closes > mavgs.shift()
@@ -151,9 +152,33 @@ class Moonshot(
         self.is_trade = False
         self.is_backtest = False
 
-    def get_signals(self, prices):
+        if hasattr(self, "get_signals"):
+            warnings.warn(
+                "method name get_signals is deprecated and will be removed in a "
+                "future release, please use prices_to_signals instead", DeprecationWarning)
+            self.prices_to_signals = self.get_signals
+
+        if hasattr(self, "allocate_weights"):
+            warnings.warn(
+                "method name allocate_weights is deprecated and will be removed in a "
+                "future release, please use signals_to_target_weights instead", DeprecationWarning)
+            self.signals_to_target_weights = self.allocate_weights
+
+        if hasattr(self, "simulate_positions"):
+            warnings.warn(
+                "method name simulate_positions is deprecated and will be removed in a "
+                "future release, please use target_weights_to_positions instead", DeprecationWarning)
+            self.target_weights_to_positions = self.simulate_positions
+
+        if hasattr(self, "simulate_gross_returns"):
+            warnings.warn(
+                "method name simulate_gross_returns is deprecated and will be removed in a "
+                "future release, please use positions_to_gross_returns instead", DeprecationWarning)
+            self.positions_to_gross_returns = self.simulate_gross_returns
+
+    def prices_to_signals(self, prices):
         """
-        Return a DataFrame of signals based on the prices. By convention,
+        From a DataFrame of prices, return a DataFrame of signals. By convention,
         signals should be 1=long, 0=cash, -1=short.
 
         Must be implemented by strategy subclasses.
@@ -172,17 +197,17 @@ class Moonshot(
         --------
         Buy when the close is above yesterday's 50-day moving average:
 
-        >>> def get_signals(self, prices):
+        >>> def prices_to_signals(self, prices):
         >>>     closes = prices.loc["Close"]
         >>>     mavgs = closes.rolling(50).mean()
         >>>     signals = closes > mavgs.shift()
         >>>     return signals.astype(int)
         """
-        raise NotImplementedError("strategies must implement get_signals")
+        raise NotImplementedError("strategies must implement prices_to_signals")
 
-    def allocate_weights(self, signals, prices):
+    def signals_to_target_weights(self, signals, prices):
         """
-        Return a DataFrame of weights based on the signals.
+        From a DataFrame of signals, return a DataFrame of target weights.
 
         Whereas signals indicate the direction of the trades, weights
         indicate both the direction and size. For example, -0.5 means a short
@@ -215,17 +240,17 @@ class Moonshot(
         --------
         The default implementation is shown below:
 
-        >>> def allocate_weights(self, signals, prices):
+        >>> def signals_to_target_weights(self, signals, prices):
         >>>     weights = self.allocate_equal_weights(signals) # provided by moonshot.mixins.WeightAllocationMixin
         >>>     return weights
         """
         weights = self.allocate_equal_weights(signals)
         return weights
 
-    def simulate_positions(self, weights, prices):
+    def target_weights_to_positions(self, weights, prices):
         """
-        Return a DataFrame of simulated positions based on the allocated
-        weights.
+        From a DataFrame of target weights, return a DataFrame of simulated
+        positions.
 
         The positions should shift the weights based on when the weights
         would be filled in live trading.
@@ -252,16 +277,17 @@ class Moonshot(
         The default implemention is shown below (enter position in the period after
         signal generation/weight allocation):
 
-        >>> def simulate_positions(self, weights, prices):
+        >>> def target_weights_to_positions(self, weights, prices):
         >>>     positions = weights.shift()
         >>>     return positions
         """
         positions = weights.shift()
         return positions
 
-    def simulate_gross_returns(self, positions, prices):
+    def positions_to_gross_returns(self, positions, prices):
         """
-        Returns a DataFrame of returns before commissions and slippage.
+        From a DataFrame of positions, return a DataFrame of returns before
+        commissions and slippage.
 
         By default, assumes entry on the close on the period the position is
         taken and calculates the return through the following period's close.
@@ -284,7 +310,7 @@ class Moonshot(
         --------
         The default implementation is shown below:
 
-        >>> def simulate_gross_returns(self, positions, prices):
+        >>> def positions_to_gross_returns(self, positions, prices):
         >>>     closes = prices.loc["Close"]
         >>>     gross_returns = closes.pct_change() * positions.shift()
         >>>     return gross_returns
@@ -293,7 +319,7 @@ class Moonshot(
         gross_returns = closes.pct_change() * positions.shift()
         return gross_returns
 
-    def create_orders(self, orders, prices):
+    def order_stubs_to_orders(self, orders, prices):
         """
         From a DataFrame of order stubs, creates a DataFrame of fully
         specified orders.
@@ -329,7 +355,7 @@ class Moonshot(
         The default implemention creates MKT DAY orders routed to SMART and is
         shown below:
 
-        >>> def create_orders(self, orders, prices):
+        >>> def order_stubs_to_orders(self, orders, prices):
         >>>     orders["Exchange"] = "SMART"
         >>>     orders["OrderType"] = "MKT"
         >>>     orders["Tif"] = "DAY"
@@ -382,7 +408,7 @@ class Moonshot(
         df.name = None
         return df
 
-    def _create_order_stubs(self, quantities):
+    def _quantities_to_order_stubs(self, quantities):
         """
         From a DataFrame of quantities to be ordered (with ConIds as index,
         Accounts as columns), returns a DataFrame of order stubs.
@@ -426,7 +452,7 @@ class Moonshot(
         """
         return self.NLV
 
-    def _get_trades(self, positions):
+    def _positions_to_trades(self, positions):
         """
         Given a dataframe of positions, returns a dataframe of trades. 0
         indicates no trade; 1 indicates going from 100% short to cash or cash
@@ -436,11 +462,11 @@ class Moonshot(
         trades = positions.diff()
         return trades
 
-    def _get_returns(self, positions, prices):
+    def _positions_to_net_returns(self, positions, prices):
         """
         Returns a DataFrame of 1-period returns, after commissions and slippage.
         """
-        gross_returns = self.simulate_gross_returns(positions, prices)
+        gross_returns = self.positions_to_gross_returns(positions, prices)
         commissions = self._get_commissions(positions, prices)
         slippage = self._get_slippage(positions, prices)
 
@@ -461,7 +487,7 @@ class Moonshot(
         if not self.COMMISSION_CLASS:
             return pd.DataFrame(0, index=positions.index, columns=positions.columns)
 
-        trades = self._get_trades(positions)
+        trades = self._positions_to_trades(positions)
         contract_values = self._get_contract_values(prices)
 
         fields = prices.index.get_level_values("Field").unique()
@@ -512,7 +538,7 @@ class Moonshot(
         """
         Returns the slippage to be subtracted from the returns.
         """
-        trades = self._get_trades(positions)
+        trades = self._positions_to_trades(positions)
         slippage = pd.DataFrame(0, index=trades.index, columns=trades.columns)
 
         for slippage_class in self.SLIPPAGE_CLASSES:
@@ -549,7 +575,8 @@ class Moonshot(
             min_allowed_quantities = target_quantities
 
         # Get trades because we only constrain weights if we're entering a trade
-        trades = self._get_trades(weights)
+        positions = self.target_weights_to_positions(weights, prices)
+        trades = self._positions_to_trades(positions)
 
         reduce_weights = ((target_quantities > max_allowed_quantities) & (trades.abs() > 0)).fillna(False)
         weights = weights.where(reduce_weights == False, weights * max_allowed_quantities/target_quantities.replace(0, 1))
@@ -613,7 +640,7 @@ class Moonshot(
             days=cls.LOOKBACK_WINDOW*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
-    def _get_historical_prices(self, start_date, end_date=None, nlv=None):
+    def get_historical_prices(self, start_date, end_date=None, nlv=None):
         """
         Downloads historical prices from a history db. Downloads security
         details from the master db and broadcasts the values to be shaped
@@ -729,15 +756,15 @@ class Moonshot(
         self.is_backtest = True
         allocation = allocation or 1.0
 
-        prices = self._get_historical_prices(start_date, end_date, nlv=nlv)
+        prices = self.get_historical_prices(start_date, end_date, nlv=nlv)
 
-        signals = self.get_signals(prices)
-        weights = self.allocate_weights(signals, prices)
+        signals = self.prices_to_signals(prices)
+        weights = self.signals_to_target_weights(signals, prices)
         weights = weights * allocation
         weights = self._constrain_weights(weights, prices)
-        positions = self.simulate_positions(weights, prices)
-        returns = self._get_returns(positions, prices)
-        trades = self._get_trades(positions)
+        positions = self.target_weights_to_positions(weights, prices)
+        returns = self._positions_to_net_returns(positions, prices)
+        trades = self._positions_to_trades(positions)
         commissions = self._get_commissions(positions, prices)
 
         backtest_results = pd.concat(
@@ -777,13 +804,13 @@ class Moonshot(
 
         start_date = pd.Timestamp.today()
 
-        prices = self._get_historical_prices(start_date)
+        prices = self.get_historical_prices(start_date)
 
-        signals = self.get_signals(prices)
+        signals = self.prices_to_signals(prices)
 
         signal_date = self._get_signal_date(signals.index)
 
-        weights = self.allocate_weights(signals, prices)
+        weights = self.signals_to_target_weights(signals, prices)
 
         # get the latest date's weights; this results in a Series of weights by ConId:
         # ConId
@@ -896,7 +923,7 @@ class Moonshot(
         # 23456  107.02  127.12
         # 34567  107.02  127.12
 
-        target_quantities = self._get_target_quantities(
+        target_quantities = self._weights_to_quantities(
             weights, nlvs, exchange_rates, contract_values)
 
         positions = list_positions(
@@ -936,13 +963,13 @@ class Moonshot(
                 net_quantities.abs() >= min_allowed_quantities,
                 min_allowed_quantities.where(net_quantities > 0, -min_allowed_quantities))
 
-        order_stubs = self._create_order_stubs(net_quantities)
-        orders = self.create_orders(order_stubs, prices)
+        order_stubs = self._quantities_to_order_stubs(net_quantities)
+        orders = self.order_stubs_to_orders(order_stubs, prices)
 
         # TODO: where/how is price rounding handled?
         return orders
 
-    def _get_target_quantities(self, weights, nlvs, exchange_rates, contract_values):
+    def _weights_to_quantities(self, weights, nlvs, exchange_rates, contract_values):
         """
         Converts a DataFrame of target percentage weights to a DataFrame of
         target quantities.
