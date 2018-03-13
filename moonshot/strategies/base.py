@@ -632,9 +632,17 @@ class Moonshot(
             fields=self.DB_FIELDS,
             tz_naive=False)
 
-        prices = pd.read_csv(f, parse_dates=["Date"])
+        prices = pd.read_csv(f)
+
         prices = prices.pivot(index="ConId", columns="Date").T
         prices.index.set_names(["Field", "Date"], inplace=True)
+
+        dates = pd.to_datetime(prices.index.get_level_values("Date"))
+        dates = dates.tz_localize("UTC")
+        prices.index = pd.MultiIndex.from_arrays((
+            prices.index.get_level_values("Field"),
+            dates
+        ), names=("Field", "Date"))
 
         # Next, get the master file
         universes = self.UNIVERSES
