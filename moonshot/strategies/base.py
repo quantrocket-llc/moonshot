@@ -106,6 +106,9 @@ class Moonshot(
     BENCHMARK : int, optional
         the conid of a security in the historical data to use as the benchmark
 
+    TIMEZONE : str, optional
+        convert timestamps to this timezone (default UTC)
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "mexi-stk" and buys when
@@ -142,6 +145,7 @@ class Moonshot(
     SLIPPAGE_CLASSES = ()
     SLIPPAGE_BPS = 0
     BENCHMARK = None
+    TIMEZONE = None
 
     def __init__(self):
         self.is_trade = False
@@ -639,6 +643,8 @@ class Moonshot(
 
         dates = pd.to_datetime(prices.index.get_level_values("Date"))
         dates = dates.tz_localize("UTC")
+        if self.TIMEZONE:
+            dates = dates.tz_convert(self.TIMEZONE)
         prices.index = pd.MultiIndex.from_arrays((
             prices.index.get_level_values("Field"),
             dates
@@ -681,6 +687,15 @@ class Moonshot(
 
         broadcast_securities = securities.reindex(index=idx, level="Field")
         prices = pd.concat((prices, broadcast_securities))
+
+        # Split date and time
+        dts = prices.index.get_level_values("Date")
+        prices.index = pd.MultiIndex.from_arrays(
+            (prices.index.get_level_values("Field"),
+             dts.date,
+             dts.strftime("%H:%M:%S")),
+            names=["Field", "Date", "Time"]
+        )
 
         return prices
 
