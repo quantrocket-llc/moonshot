@@ -724,9 +724,11 @@ class Moonshot(
 
         # Split date and time
         dts = prices.index.get_level_values("Date")
+        dates = pd.to_datetime(dts.date)
+        dates.tz = self.TIMEZONE or "UTC"
         prices.index = pd.MultiIndex.from_arrays(
             (prices.index.get_level_values("Field"),
-             dts.date,
+             dates,
              dts.strftime("%H:%M:%S")),
             names=["Field", "Date", "Time"]
         )
