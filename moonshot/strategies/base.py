@@ -726,7 +726,8 @@ class Moonshot(
 
         return prices
 
-    def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0):
+    def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0,
+                 label_conids=False):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -747,6 +748,9 @@ class Moonshot(
 
         allocation : float
             how much to allocate to the strategy
+
+        label_conids : bool
+            replace <ConId> with <Symbol>(<ConId>) in columns (default True)
 
         Returns
         -------
@@ -783,7 +787,10 @@ class Moonshot(
             all_results,
             names=["Field","Date"])
 
-        results = pd.concat((backtest_results, prices))
+        if label_conids:
+            symbols = prices.loc["Symbol"].iloc[-1]
+            symbols_with_conids = symbols.astype(str) + "(" + symbols.index.astype(str) + ")"
+            results.rename(columns=symbols_with_conids.to_dict(), inplace=True)
 
         # truncate at requested start_date
         if start_date:
