@@ -681,11 +681,14 @@ class Moonshot(
             dates
         ), names=("Field", "Date"))
 
+
+        db_config = get_db_config(self.DB)
+
         # Next, get the master file
         universes = self.UNIVERSES
         conids = self.CONIDS
         if not conids and not universes:
-            universes = get_db_config(self.DB).get("universes", None)
+            universes = db_config.get("universes", None)
             if not universes:
                 conids = list(prices.columns)
 
@@ -727,6 +730,9 @@ class Moonshot(
              dts.strftime("%H:%M:%S")),
             names=["Field", "Date", "Time"]
         )
+
+        if db_config.get("bar_size", None) in ("1 day", "1 week", "1 month"):
+            prices.index = prices.index.droplevel("Time")
 
         return prices
 
