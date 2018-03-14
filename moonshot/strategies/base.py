@@ -151,6 +151,7 @@ class Moonshot(
     def __init__(self):
         self.is_trade = False
         self.is_backtest = False
+        self._backtest_results = {}
 
         if hasattr(self, "get_signals"):
             warnings.warn(
@@ -668,8 +669,7 @@ class Moonshot(
         prices = prices.pivot(index="ConId", columns="Date").T
         prices.index.set_names(["Field", "Date"], inplace=True)
 
-        dates = pd.to_datetime(prices.index.get_level_values("Date"))
-        dates = dates.tz_localize("UTC")
+        dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
         if self.TIMEZONE:
             dates = dates.tz_convert(self.TIMEZONE)
         prices.index = pd.MultiIndex.from_arrays((
@@ -767,14 +767,20 @@ class Moonshot(
         trades = self._positions_to_trades(positions)
         commissions = self._get_commissions(positions, prices)
 
-        backtest_results = pd.concat(
-            dict(
-                Signal=signals,
-                Weight=weights,
-                Position=positions,
-                Trade=trades,
-                Commission=commissions,
-                Return=returns),
+        all_results = dict(
+            Signal=signals,
+            Weight=weights,
+            AbsWeight=weights.abs(),
+            AbsExposure=positions.abs(),
+            NetExposure=positions,
+            Trade=trades,
+            Commission=commissions,
+            Return=returns)
+
+        all_results.update(self._backtest_results)
+
+        results = pd.concat(
+            all_results,
             names=["Field","Date"])
 
         results = pd.concat((backtest_results, prices))
@@ -785,6 +791,48 @@ class Moonshot(
                 results.index.get_level_values("Date") >= pd.Timestamp(start_date)]
 
         return results
+
+    def save_to_results(self, name, df):
+        """
+        Saves the DataFrame to the backtest results output.
+
+        DataFrame should have a Date index with ConIds as columns.
+
+        Parameters
+        ----------
+        name : str, required
+            the name to assign to the DataFrame
+
+        df : DataFrame, required
+            the DataFrame to save
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        Save moving averages of closing prices to results:
+
+        >>> closes = prices.loc["Close"]
+        >>> mavgs = closes.rolling(50).mean()
+        >>> self.save_to_results("MAvg", mavgs)
+        """
+        reserved_names = [
+            "Signal",
+            "Weight",
+            "AbsWeight",
+            "AbsExposure",
+            "NetExposure",
+            "Trade",
+            "Commission",
+            "Return",
+            "Benchmark"
+        ]
+        if name in reserved_names:
+            raise ValueError("name {0} is a reserved name".format(name))
+
+        self._backtest_results[name] = df
 
     def trade(self, allocations):
         """
