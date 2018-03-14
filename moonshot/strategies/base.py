@@ -22,6 +22,7 @@ from moonshot.mixins import (
     LiquidityConstraintMixin,
     ReutersFundamentalsMixin
 )
+from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.history import download_history_file, get_db_config
 from quantrocket.master import download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
@@ -107,6 +108,9 @@ class Moonshot(
     BENCHMARK : int, optional
         the conid of a security in the historical data to use as the benchmark
 
+    BENCHMARK_TIME : str (HH:MM:SS), optional
+        use prices from this time of day for benchmark, if using intraday prices
+
     TIMEZONE : str, optional
         convert timestamps to this timezone (default UTC)
 
@@ -141,11 +145,11 @@ class Moonshot(
         "Currency", "MinTick", "Multiplier", "PriceMagnifier",
         "PrimaryExchange", "SecType", "Symbol", "Timezone"]
     NLV = None
-    QUANTITY_CALCULATOR = None
     COMMISSION_CLASS = None
     SLIPPAGE_CLASSES = ()
     SLIPPAGE_BPS = 0
     BENCHMARK = None
+    BENCHMARK_TIME = None
     TIMEZONE = None
 
     def __init__(self):
@@ -783,6 +787,9 @@ class Moonshot(
 
         all_results.update(self._backtest_results)
 
+        if self.BENCHMARK:
+            all_results["Benchmark"] = self._get_benchmark(prices)
+
         results = pd.concat(
             all_results,
             names=["Field","Date"])
@@ -798,6 +805,36 @@ class Moonshot(
                 results.index.get_level_values("Date") >= pd.Timestamp(start_date)]
 
         return results
+
+    def _get_benchmark(self, prices):
+        field = None
+        fields = prices.index.get_level_values("Field").unique()
+        candidate_fields = ("Close", "Open", "Bid", "Ask", "High", "Low")
+        for candidate in candidate_fields:
+            if candidate in fields:
+                field = candidate
+                break
+            else:
+                raise MoonshotParameterError("Cannot extract BENCHMARK {0} from {1} without one of {2}".format(
+                    self.BENCHMARK, self.CODE, ", ".join(candidate_fields)))
+        try:
+            benchmark = prices.loc[field][self.BENCHMARK]
+        except KeyError:
+            raise MoonshotError("{0} BENCHMARK ConId {1} is not in backtest data".format(
+                self.CODE, self.BENCHMARK))
+
+        if "Time" in prices.index.names:
+            if not self.BENCHMARK_TIME:
+                raise MoonshotParameterError(
+                    "Cannot extract BENCHMARK {0} from {1} because prices contains intraday "
+                    "prices but no BENCHMARK_TIME specified".format(self.BENCHMARK, self.CODE))
+            try:
+                benchmark = benchmark.xs(self.BENCHMARK_TIME, level="Time")
+            except KeyError:
+                raise MoonshotError("{0} BENCHMARK_TIME {1} is not in backtest data".format(
+                    self.CODE, self.BENCHMARK_TIME))
+
+        return pd.DataFrame(benchmark)
 
     def save_to_results(self, name, df):
         """
