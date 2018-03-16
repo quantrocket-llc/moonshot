@@ -400,11 +400,20 @@ class Moonshot(
 
         Examples
         --------
-        Calculate prior closes and reindex like orders:
+        Calculate prior closes (assuming daily bars) and reindex like
+        orders:
 
         >>> closes = prices.loc["Close"]
         >>> prior_closes = closes.shift()
         >>> prior_closes = self.reindex_like_orders(prior_closes, orders)
+
+        Calculate prior closes (assuming 30-min bars) and reindex like
+        orders:
+
+        >>> session_closes = prices.loc["Close"].xs("15:30:00", level="Time")
+        >>> prior_closes = session_closes.shift()
+        >>> prior_closes = self.reindex_like_orders(prior_closes, orders)
+
         """
         signal_date = self._get_signal_date(df.index)
         df = df.loc[signal_date]
@@ -905,6 +914,7 @@ class Moonshot(
         start_date = pd.Timestamp.today()
 
         prices = self.get_historical_prices(start_date)
+        is_intraday = "Time" in prices.index.names
 
         signals = self.prices_to_signals(prices)
 
@@ -935,6 +945,8 @@ class Moonshot(
 
         contract_values = self._get_contract_values(prices)
         contract_values = contract_values.fillna(method="ffill").loc[signal_date]
+        if is_intraday:
+            contract_values = contract_values.iloc[-1]
         contract_values = allocations.apply(lambda x: contract_values).T
         # Out:
         #          U12345    U55555
@@ -944,11 +956,16 @@ class Moonshot(
 
         currencies = prices.loc["Currency"].loc[signal_date]
         sec_types = prices.loc["SecType"].loc[signal_date]
+        if is_intraday:
+            currencies = currencies.iloc[-1]
+            sec_types = sec_types.iloc[-1]
 
         # For FX, exchange rate conversions should be based on the symbol,
         # not the currency (i.e. 100 EUR.USD = 100 EUR, not 100 USD)
         if (sec_types == "CASH").any():
             symbols = prices.loc["Symbol"].loc[signal_date]
+            if is_intraday:
+                symbols = symbols.iloc[-1]
             currencies = currencies.where(sec_types != "CASH", symbols)
 
         f = io.StringIO()
