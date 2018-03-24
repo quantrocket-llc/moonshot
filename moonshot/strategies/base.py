@@ -695,21 +695,51 @@ class Moonshot(
         if start_date:
             start_date = self._get_start_date_with_lookback(start_date)
 
-        f = io.StringIO()
-        download_history_file(
-            self.DB, f,
-            start_date=start_date,
-            end_date=end_date,
-            universes=self.UNIVERSES,
-            conids=self.CONIDS,
-            exclude_universes=self.EXCLUDE_UNIVERSES,
-            exclude_conids=self.EXCLUDE_CONIDS,
-            times=self.DB_TIME_FILTERS,
-            cont_fut=self.CONT_FUT,
-            fields=self.DB_FIELDS,
-            tz_naive=False)
+        dbs = self.DB
+        if not isinstance(dbs, (list, tuple)):
+            dbs = [self.DB]
 
-        prices = pd.read_csv(f)
+        db_universes = set()
+        db_bar_sizes = set()
+        for db in dbs:
+            db_config = get_db_config(db)
+            universes = db_config.get("universes", None)
+            if universes:
+                db_universes.update(set(universes))
+            bar_size = db_config.get("bar_size")
+            db_bar_sizes.add(bar_size)
+
+        db_universes = list(db_universes)
+        db_bar_sizes = list(db_bar_sizes)
+
+        if len(db_bar_sizes) > 1:
+            raise MoonshotParameterError(
+                "databases must contain same bar size but have different bar sizes "
+                "(databases: {0}; bar sizes: {1})".format(
+                    ", ".join(dbs), ", ".join(db_bar_sizes))
+            )
+
+        all_prices = []
+
+        for db in dbs:
+            f = io.StringIO()
+            download_history_file(
+                db, f,
+                start_date=start_date,
+                end_date=end_date,
+                universes=self.UNIVERSES,
+                conids=self.CONIDS,
+                exclude_universes=self.EXCLUDE_UNIVERSES,
+                exclude_conids=self.EXCLUDE_CONIDS,
+                times=self.DB_TIME_FILTERS,
+                cont_fut=self.CONT_FUT,
+                fields=self.DB_FIELDS,
+                tz_naive=False)
+
+            prices = pd.read_csv(f)
+            all_prices.append(prices)
+
+        prices = pd.concat(all_prices)
 
         prices = prices.pivot(index="ConId", columns="Date").T
         prices.index.set_names(["Field", "Date"], inplace=True)
@@ -718,7 +748,7 @@ class Moonshot(
         universes = self.UNIVERSES
         conids = self.CONIDS
         if not conids and not universes:
-            universes = db_config.get("universes", None)
+            universes = db_universes
             if not universes:
                 conids = list(prices.columns)
 
@@ -773,7 +803,7 @@ class Moonshot(
             names=["Field", "Date", "Time"]
         )
 
-        if db_config.get("bar_size", None) in ("1 day", "1 week", "1 month"):
+        if db_bar_sizes[0] in ("1 day", "1 week", "1 month"):
             prices.index = prices.index.droplevel("Time")
 
         return prices
