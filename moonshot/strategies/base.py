@@ -112,7 +112,8 @@ class Moonshot(
         use prices from this time of day for benchmark, if using intraday prices
 
     TIMEZONE : str, optional
-        convert timestamps to this timezone (default UTC)
+        convert timestamps to this timezone (if not provided, will be inferred
+        from securities universe if possible)
 
     ASSUME_INTRADAY_POSITIONS : bool
         if True, positions in backtests that fall on adjacent days are assumed to
@@ -666,6 +667,25 @@ class Moonshot(
             days=cls.LOOKBACK_WINDOW*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
+    def _infer_timezone(self, prices):
+        """
+        Infers the strategy timezone from the component securities if possible.
+        """
+        if "Timezone" not in prices.index.get_level_values("Field"):
+            raise MoonshotParameterError(
+                "Cannot infer strategy timezone because Timezone field is missing, "
+                "please set TIMEZONE parameter or include Timezone in MASTER_FIELDS")
+
+        timezones = prices.loc["Timezone"].stack().unique()
+
+        if len(timezones) > 1:
+            raise MoonshotParameterError(
+                "cannot infer strategy timezone because multiple timezones are present "
+                "in data, please set TIMEZONE parameter explicitly (timezones: {0})".format(
+                    ", ".join(timezones)))
+
+        return timezones[0]
+
     def get_historical_prices(self, start_date, end_date=None, nlv=None):
         """
         Downloads historical prices from a history db. Downloads security
@@ -693,17 +713,6 @@ class Moonshot(
 
         prices = prices.pivot(index="ConId", columns="Date").T
         prices.index.set_names(["Field", "Date"], inplace=True)
-
-        dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
-        if self.TIMEZONE:
-            dates = dates.tz_convert(self.TIMEZONE)
-        prices.index = pd.MultiIndex.from_arrays((
-            prices.index.get_level_values("Field"),
-            dates
-        ), names=("Field", "Date"))
-
-
-        db_config = get_db_config(self.DB)
 
         # Next, get the master file
         universes = self.UNIVERSES
@@ -743,10 +752,20 @@ class Moonshot(
         broadcast_securities = securities.reindex(index=idx, level="Field")
         prices = pd.concat((prices, broadcast_securities))
 
+        timezone = self.TIMEZONE or self._infer_timezone(prices)
+
+        dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
+        dates = dates.tz_convert(timezone)
+
+        prices.index = pd.MultiIndex.from_arrays((
+            prices.index.get_level_values("Field"),
+            dates
+        ), names=("Field", "Date"))
+
         # Split date and time
         dts = prices.index.get_level_values("Date")
         dates = pd.to_datetime(dts.date)
-        dates.tz = self.TIMEZONE or "UTC"
+        dates.tz = timezone
         prices.index = pd.MultiIndex.from_arrays(
             (prices.index.get_level_values("Field"),
              dates,

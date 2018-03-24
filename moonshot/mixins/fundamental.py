@@ -88,9 +88,9 @@ class ReutersFundamentalsMixin(object):
         source_dates = financials.SourceDate.dt.tz_localize("UTC")
         period_end_dates = financials.FiscalPeriodEndDate.dt.tz_localize("UTC")
 
-        if self.TIMEZONE:
-            source_dates = source_dates.dt.tz_convert(self.TIMEZONE)
-            period_end_dates = period_end_dates.dt.tz_convert(self.TIMEZONE)
+        timezone = reindex_like.index.tz
+        source_dates = source_dates.dt.tz_convert(timezone)
+        period_end_dates = period_end_dates.dt.tz_convert(timezone)
 
         financials.loc[:, "SourceDate"] = source_dates
         financials.loc[:, "FiscalPeriodEndDate"] = period_end_dates
