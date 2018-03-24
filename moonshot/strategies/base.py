@@ -114,6 +114,12 @@ class Moonshot(
     TIMEZONE : str, optional
         convert timestamps to this timezone (default UTC)
 
+    ASSUME_INTRADAY_POSITIONS : bool
+        if True, positions in backtests that fall on adjacent days are assumed to
+        be closed out and reopened each day rather than held continuously; this
+        impacts commission and slippage calculations (default is False, meaning
+        adjacent positions are assumed to be held continuously)
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "mexi-stk" and buys when
@@ -151,6 +157,7 @@ class Moonshot(
     BENCHMARK = None
     BENCHMARK_TIME = None
     TIMEZONE = None
+    ASSUME_INTRADAY_POSITIONS = False
 
     def __init__(self):
         self.is_trade = False
@@ -473,7 +480,12 @@ class Moonshot(
         to 100% long, and vice versa; and 2 indicates going from 100% short
         to %100 long. Fractional positions can result in fractional trades.
         """
-        trades = positions.diff()
+        # Intraday trades are opened and closed each day there's a position,
+        # so the trades are twice the positions.
+        if self.ASSUME_INTRADAY_POSITIONS:
+            trades = positions * 2
+        else:
+            trades = positions.diff()
         return trades
 
     def _positions_to_net_returns(self, positions, prices):
