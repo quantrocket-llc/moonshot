@@ -519,7 +519,7 @@ class Moonshot(
 
         fields = prices.index.get_level_values("Field").unique()
         if "Nlv" in fields:
-            nlvs = prices.loc["Nlv"]
+            nlvs = prices.loc["Nlv"].reindex(contract_values.index, method="ffill")
         else:
             nlvs = None
 
@@ -536,9 +536,9 @@ class Moonshot(
             commission_classes[tuple(sec_group)] = commission_cls
 
         defined_sec_groups = set([tuple(k) for k in commission_classes.keys()])
-        sec_types = prices.loc["SecType"]
-        exchanges = prices.loc["PrimaryExchange"]
-        currencies = prices.loc["Currency"]
+        sec_types = prices.loc["SecType"].reindex(contract_values.index, method="ffill")
+        exchanges = prices.loc["PrimaryExchange"].reindex(contract_values.index, method="ffill")
+        currencies = prices.loc["Currency"].reindex(contract_values.index, method="ffill")
         required_sec_groups = set([
             tuple(s.split("|")) for s in (sec_types+"|"+exchanges+"|"+currencies).iloc[-1].unique()])
         missing_sec_groups = required_sec_groups - defined_sec_groups
@@ -591,7 +591,7 @@ class Moonshot(
         if "Nlv" not in prices.index.get_level_values("Field").unique():
             raise ValueError("must provide NLVs to constrain weights")
 
-        target_trade_values = weights.abs() * prices.loc["Nlv"]
+        target_trade_values = weights.abs() * prices.loc["Nlv"].reindex(weights.index, method="ffill")
         contract_values = self._get_contract_values(prices)
         target_quantities = target_trade_values / contract_values.shift()
 
@@ -773,14 +773,15 @@ class Moonshot(
 
             securities['Nlv'] = securities.apply(lambda row: nlv.get(row.Currency, None), axis=1)
 
+        # Append securities, indexed to the min date, to allow easy ffill on demand
         securities = pd.DataFrame(securities.T, columns=prices.columns)
         securities.index.name = "Field"
         idx = pd.MultiIndex.from_product(
-            (securities.index, prices.index.get_level_values("Date").unique()),
+            (securities.index, [prices.index.get_level_values("Date").min()]),
             names=["Field", "Date"])
 
-        broadcast_securities = securities.reindex(index=idx, level="Field")
-        prices = pd.concat((prices, broadcast_securities))
+        securities = securities.reindex(index=idx, level="Field")
+        prices = pd.concat((prices, securities))
 
         timezone = self.TIMEZONE or self._infer_timezone(prices)
 
@@ -1015,18 +1016,13 @@ class Moonshot(
         # 23456   1500.00   1500.00
         # 34567   3600.00   3600.00
 
-        currencies = prices.loc["Currency"].loc[signal_date]
-        sec_types = prices.loc["SecType"].loc[signal_date]
-        if is_intraday:
-            currencies = currencies.iloc[-1]
-            sec_types = sec_types.iloc[-1]
+        currencies = prices.loc["Currency"].iloc[-1]
+        sec_types = prices.loc["SecType"].iloc[-1]
 
         # For FX, exchange rate conversions should be based on the symbol,
         # not the currency (i.e. 100 EUR.USD = 100 EUR, not 100 USD)
         if (sec_types == "CASH").any():
-            symbols = prices.loc["Symbol"].loc[signal_date]
-            if is_intraday:
-                symbols = symbols.iloc[-1]
+            symbols = prices.loc["Symbol"].iloc[-1]
             currencies = currencies.where(sec_types != "CASH", symbols)
 
         f = io.StringIO()
@@ -1190,7 +1186,7 @@ class Moonshot(
                 ", ".join(candidate_fields)))
 
         closes = prices.loc[field]
-        price_magnifiers = prices.loc["PriceMagnifier"]
-        multipliers = prices.loc["Multiplier"]
-        contract_values = closes / price_magnifiers.fillna(1) * multipliers.fillna(1)
+        price_magnifiers = prices.loc["PriceMagnifier"].fillna(1).reindex(closes.index, method="ffill")
+        multipliers = prices.loc["Multiplier"].fillna(1).reindex(closes.index, method="ffill")
+        contract_values = closes / price_magnifiers * multipliers
         return contract_values
