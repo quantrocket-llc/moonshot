@@ -22,6 +22,7 @@ from moonshot.mixins import (
     LiquidityConstraintMixin,
     ReutersFundamentalsMixin
 )
+from moonshot.cache import HistoryCache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.history import download_history_file, get_db_config
 from quantrocket.master import download_master_file
@@ -686,7 +687,8 @@ class Moonshot(
 
         return timezones[0]
 
-    def get_historical_prices(self, start_date, end_date=None, nlv=None):
+    def get_historical_prices(self, start_date, end_date=None, nlv=None,
+                              max_cache=None):
         """
         Downloads historical prices from a history db. Downloads security
         details from the master db and broadcasts the values to be shaped
@@ -722,9 +724,8 @@ class Moonshot(
         all_prices = []
 
         for db in dbs:
-            f = io.StringIO()
-            download_history_file(
-                db, f,
+
+            kwargs = dict(
                 start_date=start_date,
                 end_date=end_date,
                 universes=self.UNIVERSES,
@@ -734,7 +735,21 @@ class Moonshot(
                 times=self.DB_TIME_FILTERS,
                 cont_fut=self.CONT_FUT,
                 fields=self.DB_FIELDS,
-                tz_naive=False)
+                tz_naive=False
+                )
+
+            if max_cache:
+                prices = HistoryCache.load(db, kwargs, max_cache)
+
+                if prices is not None:
+                    all_prices.append(prices)
+                    continue
+
+            if max_cache:
+                f = HistoryCache.get_filepath(db, kwargs)
+            else:
+                f = io.StringIO()
+            download_history_file(db, f, **kwargs)
 
             prices = pd.read_csv(f)
             all_prices.append(prices)
@@ -810,7 +825,7 @@ class Moonshot(
         return prices
 
     def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0,
-                 label_conids=False):
+                 label_conids=False, history_cache="24H"):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -835,6 +850,10 @@ class Moonshot(
         label_conids : bool
             replace <ConId> with <Symbol>(<ConId>) in columns (default True)
 
+        history_cache : str
+             cache history CSVs on disk and re-use them for up to this long
+             (use a pandas Timedelta string, default "24H")
+
         Returns
         -------
         DataFrame
@@ -843,7 +862,8 @@ class Moonshot(
         self.is_backtest = True
         allocation = allocation or 1.0
 
-        prices = self.get_historical_prices(start_date, end_date, nlv=nlv)
+        prices = self.get_historical_prices(start_date, end_date, nlv=nlv,
+                                            max_cache=history_cache)
 
         signals = self.prices_to_signals(prices)
         weights = self.signals_to_target_weights(signals, prices)
