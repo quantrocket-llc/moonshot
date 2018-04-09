@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
-import pandas as pd
-from quantrocket.fundamental import download_reuters_financials
+import warnings
+from quantrocket.fundamental import reindex_reuters_financials_like
 
 class ReutersFundamentalsMixin(object):
     """
@@ -74,63 +73,10 @@ class ReutersFundamentalsMixin(object):
         >>> book_values_per_share = (tot_assets - tot_liabilities)/shares_out
 
         """
-        conids = list(reindex_like.columns)
-        start_date = reindex_like.index.min().date().isoformat()
-        end_date = reindex_like.index.max().date().isoformat()
+        warnings.warn(
+            "this method has been deprecated and will be removed in a "
+            "future release, please use quantrocket.fundamental.reindex_reuters_financials_like "
+            "instead", DeprecationWarning)
 
-        f = io.StringIO()
-        download_reuters_financials(
-            coa_codes, f, conids=conids, start_date=start_date, end_date=end_date,
-            fields=fields, interim=interim)
-        financials = pd.read_csv(
-            f, parse_dates=["SourceDate","FiscalPeriodEndDate"])
-
-        source_dates = financials.SourceDate.dt.tz_localize("UTC")
-        period_end_dates = financials.FiscalPeriodEndDate.dt.tz_localize("UTC")
-
-        timezone = reindex_like.index.tz
-        source_dates = source_dates.dt.tz_convert(timezone)
-        period_end_dates = period_end_dates.dt.tz_convert(timezone)
-
-        financials.loc[:, "SourceDate"] = source_dates
-        financials.loc[:, "FiscalPeriodEndDate"] = period_end_dates
-
-        # Rename SourceDate to match price history index name
-        financials = financials.rename(columns={"SourceDate": "Date"})
-
-        # Drop any fields we don't need
-        needed_fields = set(fields)
-        needed_fields.update(set(("ConId", "Date", "CoaCode")))
-        unneeded_fields = set(financials.columns) - needed_fields
-        if unneeded_fields:
-            financials = financials.drop(unneeded_fields, axis=1)
-
-        # Create a unioned index of input DataFrame and statement SourceDates
-        source_dates = pd.to_datetime(financials.Date.unique())
-        union_date_idx = reindex_like.index.union(source_dates).sort_values()
-
-        all_financials = {}
-        for code in coa_codes:
-            financials_for_code = financials.loc[financials.CoaCode == code]
-            if "CoaCode" not in fields:
-                financials_for_code = financials_for_code.drop("CoaCode", axis=1)
-            financials_for_code = financials_for_code.pivot(index="ConId",columns="Date").T
-            multiidx = pd.MultiIndex.from_product(
-                (financials_for_code.index.get_level_values(0).unique(), union_date_idx),
-                names=["Field", "Date"])
-            financials_for_code = financials_for_code.reindex(index=multiidx, columns=reindex_like.columns)
-
-            # financial values are sparse so ffill
-            financials_for_code = financials_for_code.fillna(method="ffill")
-
-            # In cases the statements included dates not in the input
-            # DataFrame, drop those now that we've ffilled
-            extra_dates = union_date_idx.difference(reindex_like.index)
-            if not extra_dates.empty:
-                financials_for_code.drop(extra_dates, axis=0, level="Date", inplace=True)
-
-            all_financials[code] = financials_for_code
-
-        financials = pd.concat(all_financials, names=["CoaCode", "Field", "Date"])
-
-        return financials
+        return reindex_reuters_financials_like(
+            reindex_like, coa_codes, fields=fields, interim=interim)
