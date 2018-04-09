@@ -23,24 +23,24 @@ TMP_DIR = os.environ.get("MOONSHOT_CACHE_DIR", "/tmp")
 class HistoryCache(object):
 
     @classmethod
-    def get_filepath(cls, db, kwargs):
+    def get_filepath(cls, kwargs):
         """
-        Returns a filepath to use for caching a history CSV. The filename
-        contains the db code and a hex digest of the query kwargs, ensuring
-        that the cache won't be used if the kwargs change.
+        Returns a filepath to use for caching a history pickle. The filename
+        contains a hex digest of the query kwargs, ensuring that the cache
+        won't be used if the kwargs change.
         """
         digest = hashlib.sha224(pickle.dumps(kwargs)).hexdigest()
-        filepath = "{tmpdir}/moonshot_history_{db}_{digest}.csv".format(
-            tmpdir=TMP_DIR, db=db, digest=digest)
+        filepath = "{tmpdir}/moonshot_history_{digest}.pkl".format(
+            tmpdir=TMP_DIR, digest=digest)
         return filepath
 
     @classmethod
-    def load(cls, db, kwargs, max_cache_age):
+    def load(cls, kwargs, max_cache_age, timezone=None):
         """
-        Loads from a CSV if the CSV exists and is newer than max_cache_age.
+        Loads from a pickle if the pickle exists and is newer than max_cache_age.
         """
 
-        filepath = cls.get_filepath(db, kwargs)
+        filepath = cls.get_filepath(kwargs)
         if not os.path.exists(filepath):
             return None
 
@@ -52,5 +52,13 @@ class HistoryCache(object):
         if fileage > allowed_age.total_seconds():
             return None
 
-        prices = pd.read_csv(filepath)
+        prices = pd.read_pickle(filepath)
         return prices
+
+    @classmethod
+    def dump(cls, prices, kwargs):
+        """
+        Dumps a prices DataFrame to a pickle.
+        """
+        filepath = cls.get_filepath(kwargs)
+        prices.to_pickle(filepath)

@@ -24,7 +24,7 @@ from moonshot.mixins import (
 )
 from moonshot.cache import HistoryCache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
-from quantrocket.history import download_history_file, get_db_config
+from quantrocket.history import get_historical_prices
 from quantrocket.master import download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions
@@ -668,25 +668,6 @@ class Moonshot(
             days=cls.LOOKBACK_WINDOW*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
-    def _infer_timezone(self, prices):
-        """
-        Infers the strategy timezone from the component securities if possible.
-        """
-        if "Timezone" not in prices.index.get_level_values("Field"):
-            raise MoonshotParameterError(
-                "Cannot infer strategy timezone because Timezone field is missing, "
-                "please set TIMEZONE parameter or include Timezone in MASTER_FIELDS")
-
-        timezones = prices.loc["Timezone"].stack().unique()
-
-        if len(timezones) > 1:
-            raise MoonshotParameterError(
-                "cannot infer strategy timezone because multiple timezones are present "
-                "in data, please set TIMEZONE parameter explicitly (timezones: {0})".format(
-                    ", ".join(timezones)))
-
-        return timezones[0]
-
     def get_historical_prices(self, start_date, end_date=None, nlv=None,
                               max_cache=None):
         """
@@ -697,130 +678,60 @@ class Moonshot(
         if start_date:
             start_date = self._get_start_date_with_lookback(start_date)
 
-        dbs = self.DB
-        if not isinstance(dbs, (list, tuple)):
-            dbs = [self.DB]
+        codes = self.DB
+        if not isinstance(codes, (list, tuple)):
+            codes = [self.DB]
 
-        db_universes = set()
-        db_bar_sizes = set()
-        for db in dbs:
-            db_config = get_db_config(db)
-            universes = db_config.get("universes", None)
-            if universes:
-                db_universes.update(set(universes))
-            bar_size = db_config.get("bar_size")
-            db_bar_sizes.add(bar_size)
-
-        db_universes = list(db_universes)
-        db_bar_sizes = list(db_bar_sizes)
-
-        if len(db_bar_sizes) > 1:
-            raise MoonshotParameterError(
-                "databases must contain same bar size but have different bar sizes "
-                "(databases: {0}; bar sizes: {1})".format(
-                    ", ".join(dbs), ", ".join(db_bar_sizes))
-            )
-
-        all_prices = []
-
-        for db in dbs:
-
-            kwargs = dict(
-                start_date=start_date,
-                end_date=end_date,
-                universes=self.UNIVERSES,
-                conids=self.CONIDS,
-                exclude_universes=self.EXCLUDE_UNIVERSES,
-                exclude_conids=self.EXCLUDE_CONIDS,
-                times=self.DB_TIME_FILTERS,
-                cont_fut=self.CONT_FUT,
-                fields=self.DB_FIELDS,
-                tz_naive=False
-                )
-
-            if max_cache:
-                prices = HistoryCache.load(db, kwargs, max_cache)
-
-                if prices is not None:
-                    all_prices.append(prices)
-                    continue
-
-            if max_cache:
-                f = HistoryCache.get_filepath(db, kwargs)
-            else:
-                f = io.StringIO()
-            download_history_file(db, f, **kwargs)
-
-            prices = pd.read_csv(f)
-            all_prices.append(prices)
-
-        prices = pd.concat(all_prices)
-
-        prices = prices.pivot(index="ConId", columns="Date").T
-        prices.index.set_names(["Field", "Date"], inplace=True)
-
-        # Next, get the master file
-        universes = self.UNIVERSES
-        conids = self.CONIDS
-        if not conids and not universes:
-            universes = db_universes
-            if not universes:
-                conids = list(prices.columns)
-
-        f = io.StringIO()
-        download_master_file(
-            f,
-            conids=conids,
-            universes=universes,
-            exclude_conids=self.EXCLUDE_CONIDS,
+        kwargs = dict(
+            codes=codes,
+            start_date=start_date,
+            end_date=end_date,
+            universes=self.UNIVERSES,
+            conids=self.CONIDS,
             exclude_universes=self.EXCLUDE_UNIVERSES,
-            fields=self.MASTER_FIELDS
+            exclude_conids=self.EXCLUDE_CONIDS,
+            times=self.DB_TIME_FILTERS,
+            cont_fut=self.CONT_FUT,
+            fields=self.DB_FIELDS,
+            master_fields=self.MASTER_FIELDS,
+            timezone=self.TIMEZONE
         )
-        securities = pd.read_csv(f, index_col="ConId")
 
-        nlv = nlv or self._get_nlv()
-        if nlv:
-            missing_nlvs = set(securities.Currency) - set(nlv.keys())
+        if not self.TIMEZONE:
+            if "Timezone" not in self.MASTER_FIELDS:
+                raise MoonshotParameterError(
+                    "cannot determine strategy timezone, please set TIMEZONE parameter "
+                    "or include 'Timezone' in MASTER_FIELDS")
+            kwargs["infer_timezone"] = True
+
+        prices = None
+
+        if max_cache:
+            # try to load from cache
+            prices = HistoryCache.load(kwargs, max_cache, timezone=self.TIMEZONE)
+
+        if prices is None:
+            prices = get_historical_prices(**kwargs)
+            if max_cache:
+                HistoryCache.dump(prices, kwargs)
+
+        # Append NLV if applicable
+        nlvs = nlv or self._get_nlv()
+        if nlvs:
+            missing_nlvs = set(prices.loc["Currency"].iloc[0]) - set(nlvs.keys())
             if missing_nlvs:
                 raise ValueError(
                     "NLV dict is missing values for required currencies: {0}".format(
                         ", ".join(missing_nlvs)))
 
-            securities['Nlv'] = securities.apply(lambda row: nlv.get(row.Currency, None), axis=1)
+            nlvs = prices.loc["Currency"].applymap(lambda currency: nlvs.get(currency, None))
+            nlvs["Field"] = "Nlv"
+            levels = ["Field"]
+            levels.extend(list(nlvs.index.names))
 
-        # Append securities, indexed to the min date, to allow easy ffill on demand
-        securities = pd.DataFrame(securities.T, columns=prices.columns)
-        securities.index.name = "Field"
-        idx = pd.MultiIndex.from_product(
-            (securities.index, [prices.index.get_level_values("Date").min()]),
-            names=["Field", "Date"])
-
-        securities = securities.reindex(index=idx, level="Field")
-        prices = pd.concat((prices, securities))
-
-        timezone = self.TIMEZONE or self._infer_timezone(prices)
-
-        dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
-        dates = dates.tz_convert(timezone)
-
-        prices.index = pd.MultiIndex.from_arrays((
-            prices.index.get_level_values("Field"),
-            dates
-        ), names=("Field", "Date"))
-
-        # Split date and time
-        dts = prices.index.get_level_values("Date")
-        dates = pd.to_datetime(dts.date)
-        dates.tz = timezone
-        prices.index = pd.MultiIndex.from_arrays(
-            (prices.index.get_level_values("Field"),
-             dates,
-             dts.strftime("%H:%M:%S")),
-            names=["Field", "Date", "Time"]
-        )
-
-        if db_bar_sizes[0] in ("1 day", "1 week", "1 month"):
-            prices.index = prices.index.droplevel("Time")
+            nlvs.set_index('Field', append=True, inplace=True)
+            nlvs = nlvs.reorder_levels(levels)
+            prices = prices.append(nlvs)
 
         return prices
 
