@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import warnings
-from quantrocket.fundamental import reindex_reuters_financials_like
+from quantrocket.fundamental import get_reuters_financials_reindexed_like
 
 class ReutersFundamentalsMixin(object):
     """
@@ -75,8 +75,8 @@ class ReutersFundamentalsMixin(object):
         """
         warnings.warn(
             "this method has been deprecated and will be removed in a "
-            "future release, please use quantrocket.fundamental.reindex_reuters_financials_like "
+            "future release, please use quantrocket.fundamental.get_reuters_financials_reindexed_like "
             "instead", DeprecationWarning)
 
-        return reindex_reuters_financials_like(
+        return get_reuters_financials_reindexed_like(
             reindex_like, coa_codes, fields=fields, interim=interim)
