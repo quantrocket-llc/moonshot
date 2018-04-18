@@ -803,6 +803,7 @@ class Moonshot(
         returns = self._positions_to_net_returns(positions, prices)
         trades = self._positions_to_trades(positions)
         commissions = self._get_commissions(positions, prices)
+        slippages = self._get_slippage(positions, prices)
 
         all_results = dict(
             Signal=signals,
@@ -812,6 +813,7 @@ class Moonshot(
             NetExposure=positions,
             Trade=trades,
             Commission=commissions,
+            Slippage=slippages,
             Return=returns)
 
         all_results.update(self._backtest_results)
