@@ -518,9 +518,18 @@ class Moonshot(
         trades = self._positions_to_trades(positions)
         contract_values = self._get_contract_values(prices)
 
+        is_intraday = "Time" in prices.index.names
+
+        if is_intraday:
+            contract_values = contract_values.groupby(
+                contract_values.index.get_level_values("Date")).first()
+
         fields = prices.index.get_level_values("Field").unique()
         if "Nlv" in fields:
-            nlvs = prices.loc["Nlv"].reindex(contract_values.index, method="ffill")
+            nlvs = prices.loc["Nlv"]
+            if is_intraday:
+                nlvs = nlvs.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
+            nlvs = nlvs.reindex(contract_values.index, method="ffill")
         else:
             nlvs = None
 
@@ -537,9 +546,19 @@ class Moonshot(
             commission_classes[tuple(sec_group)] = commission_cls
 
         defined_sec_groups = set([tuple(k) for k in commission_classes.keys()])
-        sec_types = prices.loc["SecType"].reindex(contract_values.index, method="ffill")
-        exchanges = prices.loc["PrimaryExchange"].reindex(contract_values.index, method="ffill")
-        currencies = prices.loc["Currency"].reindex(contract_values.index, method="ffill")
+        sec_types = prices.loc["SecType"]
+        exchanges = prices.loc["PrimaryExchange"]
+        currencies = prices.loc["Currency"]
+
+        if is_intraday:
+            sec_types = sec_types.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
+            exchanges = exchanges.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
+            currencies = currencies.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
+
+        sec_types = sec_types.reindex(contract_values.index, method="ffill")
+        exchanges = sec_types.reindex(contract_values.index, method="ffill")
+        currencies = sec_types.reindex(contract_values.index, method="ffill")
+
         required_sec_groups = set([
             tuple(s.split("|")) for s in (sec_types+"|"+exchanges+"|"+currencies).iloc[-1].unique()])
         missing_sec_groups = required_sec_groups - defined_sec_groups
