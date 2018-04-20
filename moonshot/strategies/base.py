@@ -556,8 +556,8 @@ class Moonshot(
             currencies = currencies.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
 
         sec_types = sec_types.reindex(contract_values.index, method="ffill")
-        exchanges = sec_types.reindex(contract_values.index, method="ffill")
-        currencies = sec_types.reindex(contract_values.index, method="ffill")
+        exchanges = exchanges.reindex(contract_values.index, method="ffill")
+        currencies = currencies.reindex(contract_values.index, method="ffill")
 
         required_sec_groups = set([
             tuple(s.split("|")) for s in (sec_types+"|"+exchanges+"|"+currencies).iloc[-1].unique()])
