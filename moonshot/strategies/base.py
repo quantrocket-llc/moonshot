@@ -431,6 +431,50 @@ class Moonshot(
         df.name = None
         return df
 
+    def orders_to_child_orders(self, orders):
+        """
+        From a DataFrame of orders, returns a DataFrame of child orders
+        (bracket orders) to be submitted if the parent orders fill.
+
+        An OrderId column will be added to the orders DataFrame, and child
+        orders will be linked to it via a ParentId column. The Action
+        (BUY/SELL) will be reversed on the child orders but otherwise the
+        child orders will be identical to the parent orders.
+
+        Parameters
+        ----------
+        orders : DataFrame, required
+            an orders DataFrame
+
+        Returns
+        -------
+        DataFrame
+            a DataFrame of child orders
+
+        Examples
+        --------
+        >>> orders.head()
+            ConId   Action  TotalQuantity Exchange OrderType  Tif
+        0   12345      BUY            200    SMART       MKT  Day
+        1   23456      BUY            400    SMART       MKT  Day
+        >>> child_orders = self.orders_to_child_orders(orders)
+        >>> child_orders.loc[:, "OrderType"] = "MOC"
+        >>> orders = pd.concat([orders,child_orders])
+        >>> orders.head()
+            ConId   Action  TotalQuantity Exchange OrderType  Tif  OrderId  ParentId
+        0   12345      BUY            200    SMART       MKT  Day        0       NaN
+        1   23456      BUY            400    SMART       MKT  Day        1       NaN
+        0   12345     SELL            200    SMART       MOC  Day      NaN         0
+        1   23456     SELL            400    SMART       MOC  Day      NaN         1
+        """
+        if "OrderId" not in orders.columns:
+            orders["OrderId"] = orders.index
+        child_orders = orders.copy()
+        child_orders.rename(columns={"OrderId":"ParentId"}, inplace=True)
+        child_orders.loc[orders.Action=="BUY", "Action"] = "SELL"
+        child_orders.loc[orders.Action=="SELL", "Action"] = "BUY"
+        return child_orders
+
     def _quantities_to_order_stubs(self, quantities):
         """
         From a DataFrame of quantities to be ordered (with ConIds as index,
