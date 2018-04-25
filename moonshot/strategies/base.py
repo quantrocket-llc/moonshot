@@ -123,7 +123,7 @@ class Moonshot(
         to the last date the exchange was open will be used. If no calendar is specified,
         today's signals will be used.
 
-    ASSUME_INTRADAY_POSITIONS : bool
+    POSITIONS_CLOSED_DAILY : bool
         if True, positions in backtests that fall on adjacent days are assumed to
         be closed out and reopened each day rather than held continuously; this
         impacts commission and slippage calculations (default is False, meaning
@@ -167,7 +167,7 @@ class Moonshot(
     BENCHMARK_TIME = None
     TIMEZONE = None
     CALENDAR = None
-    ASSUME_INTRADAY_POSITIONS = False
+    POSITIONS_CLOSED_DAILY = False
 
     def __init__(self):
         self.is_trade = False
@@ -537,7 +537,7 @@ class Moonshot(
         """
         # Intraday trades are opened and closed each day there's a position,
         # so the trades are twice the positions.
-        if self.ASSUME_INTRADAY_POSITIONS:
+        if self.POSITIONS_CLOSED_DAILY:
             trades = positions * 2
         else:
             trades = positions.diff()
