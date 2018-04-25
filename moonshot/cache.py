@@ -35,7 +35,7 @@ class HistoryCache(object):
         return filepath
 
     @classmethod
-    def load(cls, kwargs, max_cache_age, timezone=None):
+    def load(cls, kwargs, max_cache_age):
         """
         Loads from a pickle if the pickle exists and is newer than max_cache_age.
         """

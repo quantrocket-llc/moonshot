@@ -25,7 +25,7 @@ from moonshot.mixins import (
 from moonshot.cache import HistoryCache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.history import get_historical_prices
-from quantrocket.master import download_master_file
+from quantrocket.master import download_master_file, list_calendar_statuses
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions
 
@@ -116,6 +116,13 @@ class Moonshot(
         convert timestamps to this timezone (if not provided, will be inferred
         from securities universe if possible)
 
+    CALENDAR : str, optional
+        use this exchange's trading calendar to determine which date's signals
+        should be used for live trading. If the exchange is currently open,
+        today's signals will be used. If currently closed, the signals corresponding
+        to the last date the exchange was open will be used. If no calendar is specified,
+        today's signals will be used.
+
     ASSUME_INTRADAY_POSITIONS : bool
         if True, positions in backtests that fall on adjacent days are assumed to
         be closed out and reopened each day rather than held continuously; this
@@ -159,12 +166,14 @@ class Moonshot(
     BENCHMARK = None
     BENCHMARK_TIME = None
     TIMEZONE = None
+    CALENDAR = None
     ASSUME_INTRADAY_POSITIONS = False
 
     def __init__(self):
         self.is_trade = False
         self.is_backtest = False
         self._backtest_results = {}
+        self._inferred_timezone = None
 
         if hasattr(self, "get_signals"):
             warnings.warn(
@@ -424,7 +433,7 @@ class Moonshot(
         >>> prior_closes = self.reindex_like_orders(prior_closes, orders)
 
         """
-        signal_date = self._get_signal_date(df.index)
+        signal_date = self._get_signal_date()
         df = df.loc[signal_date]
         df.name = "_MoonshotOther"
         df = orders.join(df, on="ConId")._MoonshotOther
@@ -545,12 +554,30 @@ class Moonshot(
         returns = gross_returns - commissions - slippage
         return returns
 
-    def _get_signal_date(self, index):
+    def _get_signal_date(self):
         """
-        Returns the index value that should be used for today's trading. By
-        default this the last date.
+        Returns the date that contains the signals that should be used for
+        today's trading. By default this is today.
         """
-        return index[-1]
+        # Use trading calendar if provided
+        if self.CALENDAR:
+            status = list_calendar_statuses([self.CALENDAR])[self.CALENDAR]
+            # If the exchange if closed, the signals should correspond to the
+            # date the exchange was last open
+            if status["status"] == "closed":
+                dt = pd.Timestamp(status["since"])
+            # If the exchange is open, the signals should correspond to
+            # today's date
+            else:
+                dt = pd.Timestamp.now(tz=status["timezone"])
+        # If no trading calendar, use today's date (in strategy timezone)
+        else:
+            tz = self.TIMEZONE or self._inferred_timezone
+            dt = pd.Timestamp.now(tz=tz)
+
+        # Keep only the date
+        dt = pd.Timestamp(dt.date())
+        return dt
 
     def _get_commissions(self, positions, prices):
         """
@@ -771,12 +798,15 @@ class Moonshot(
 
         if max_cache:
             # try to load from cache
-            prices = HistoryCache.load(kwargs, max_cache, timezone=self.TIMEZONE)
+            prices = HistoryCache.load(kwargs, max_cache)
 
         if prices is None:
             prices = get_historical_prices(**kwargs)
             if max_cache:
                 HistoryCache.dump(prices, kwargs)
+
+        if not self.TIMEZONE:
+            self._inferred_timezone = prices.loc["Timezone"].iloc[0].iloc[0]
 
         # Append NLV if applicable
         nlvs = nlv or self._get_nlv()
@@ -976,7 +1006,7 @@ class Moonshot(
 
         signals = self.prices_to_signals(prices)
 
-        signal_date = self._get_signal_date(signals.index)
+        signal_date = self._get_signal_date()
 
         weights = self.signals_to_target_weights(signals, prices)
 
@@ -985,7 +1015,14 @@ class Moonshot(
         # 12345  -0.2
         # 23456     0
         # 34567   0.1
-        weights = weights.loc[signal_date]
+        try:
+            weights = weights.loc[signal_date]
+        except KeyError as e:
+            raise MoonshotError(
+                "expected signal date {0} not found in weights DataFrame, "
+                "is the underlying data up-to-date? (max date is {1})".format(
+                    signal_date.date().isoformat(),
+                    weights.index.max().date().isoformat()))
 
         allocations = pd.Series(allocations)
         # Out:
