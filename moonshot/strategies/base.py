@@ -967,6 +967,11 @@ class Moonshot(
         >>> mavgs = closes.rolling(50).mean()
         >>> self.save_to_results("MAvg", mavgs)
         """
+
+        # No-op if trading
+        if self.is_trade:
+            return
+
         reserved_names = [
             "Signal",
             "Weight",
