@@ -171,6 +171,7 @@ class Moonshot(
 
     def __init__(self):
         self.is_trade = False
+        self.review_date = None # see trade() docstring
         self.is_backtest = False
         self._backtest_results = {}
         self._inferred_timezone = None
@@ -559,8 +560,12 @@ class Moonshot(
         Returns the date that contains the signals that should be used for
         today's trading. By default this is today.
         """
-        # Use trading calendar if provided
-        if self.CALENDAR:
+        # Use review_date if set
+        if self.review_date:
+            dt = pd.Timestamp(self.review_date)
+
+        # Else use trading calendar if provided
+        elif self.CALENDAR:
             status = list_calendar_statuses([self.CALENDAR])[self.CALENDAR]
             # If the exchange if closed, the signals should correspond to the
             # date the exchange was last open
@@ -570,6 +575,7 @@ class Moonshot(
             # today's date
             else:
                 dt = pd.Timestamp.now(tz=status["timezone"])
+
         # If no trading calendar, use today's date (in strategy timezone)
         else:
             tz = self.TIMEZONE or self._inferred_timezone
@@ -852,7 +858,8 @@ class Moonshot(
             how much to allocate to the strategy
 
         label_conids : bool
-            replace <ConId> with <Symbol>(<ConId>) in columns (default True)
+            replace <ConId> with <Symbol>(<ConId>) in columns in output
+            for better readability (default True)
 
         history_cache : str
              cache history CSVs on disk and re-use them for up to this long
@@ -988,7 +995,7 @@ class Moonshot(
 
         self._backtest_results[name] = df
 
-    def trade(self, allocations):
+    def trade(self, allocations, review_date=None):
         """
         Run the strategy and create orders.
 
@@ -997,14 +1004,18 @@ class Moonshot(
         allocations : dict, required
             dict of account:allocation to strategy (expressed as a percentage of NLV)
 
+        review_date : str (YYYY-MM-DD), optional
+            generate orders as if it were this date, rather than using the latest date
+
         Returns
         -------
         DataFrame
             orders
         """
         self.is_trade = True
+        self.review_date = review_date
 
-        start_date = pd.Timestamp.today()
+        start_date = review_date or pd.Timestamp.today()
 
         prices = self.get_historical_prices(start_date)
         is_intraday = "Time" in prices.index.names
@@ -1178,7 +1189,6 @@ class Moonshot(
         order_stubs = self._quantities_to_order_stubs(net_quantities)
         orders = self.order_stubs_to_orders(order_stubs, prices)
 
-        # TODO: where/how is price rounding handled?
         return orders
 
     def _weights_to_quantities(self, weights, nlvs, exchange_rates, contract_values):
