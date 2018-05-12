@@ -81,8 +81,10 @@ class Moonshot(
         pass this cont_fut option to history db query (default None)
 
     LOOKBACK_WINDOW : int, optional
-        get this much additional data prior to the backtest start date or trade date
-        to account for rolling windows (default 0)
+        get this many days additional data prior to the backtest start date or trade date
+        to account for rolling windows. If set to None (the default), will use the largest
+        value of any attributes ending with `_WINDOW`, or 252 if no such attributes. Set
+        to 0 to disable.
 
     MASTER_FIELDS : list of str, optional
         get these fields from the securities master service (defaults to ["Currency",
@@ -155,7 +157,7 @@ class Moonshot(
     EXCLUDE_CONIDS = None
     EXCLUDE_UNIVERSES = None
     CONT_FUT = None
-    LOOKBACK_WINDOW = 0
+    LOOKBACK_WINDOW = None
     MASTER_FIELDS = [
         "Currency", "MinTick", "Multiplier", "PriceMagnifier",
         "PrimaryExchange", "SecType", "Symbol", "Timezone"]
@@ -751,6 +753,20 @@ class Moonshot(
         return None
 
     @classmethod
+    def _get_lookback_window(cls):
+        """
+        Returns cls.LOOKBACK_WINDOW if set, otherwise infers the lookback
+        window from `_WINDOW` attributes, defaulting to 252.
+        """
+        if cls.LOOKBACK_WINDOW is not None:
+            return cls.LOOKBACK_WINDOW
+
+        window_attrs = [getattr(cls, attr) for attr in dir(cls) if attr.endswith("_WINDOW")]
+        windows = [attr for attr in window_attrs if isinstance(attr, int)]
+        lookback_window = max(windows) if windows else 252
+        return lookback_window
+
+    @classmethod
     def _get_start_date_with_lookback(cls, start_date):
         """
         Returns the start_date adjusted to incorporate the LOOKBACK_WINDOW,
@@ -759,9 +775,10 @@ class Moonshot(
         to calendar days, assuming 25 holidays (NYSE has ~9 per year, TSEJ
         has ~19), plus a 10 day buffer to be safe.
         """
+        lookback_window = cls._get_lookback_window()
 
         start_date = pd.Timestamp(start_date) - pd.Timedelta(
-            days=cls.LOOKBACK_WINDOW*365.0/(260 - 25) + 10)
+            days=lookback_window*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
     def get_historical_prices(self, start_date, end_date=None, nlv=None,
