@@ -19,6 +19,9 @@ class ReutersFundamentalsMixin(object):
     """
     Moonshot mixin class providing utility functions for working with Reuters
     fundamentals.
+
+    NOTE: This class is deprecated, please use
+    `quantrocket.fundamental.get_reuters_financials_reindexed_like` instead.
     """
 
     def get_reuters_financials(self, coa_codes, reindex_like, fields=["Amount"], interim=False):

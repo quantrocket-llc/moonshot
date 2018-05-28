@@ -13,5 +13,4 @@
 # limitations under the License.
 
 from .weight import WeightAllocationMixin
-from .liquidity import LiquidityConstraintMixin
 from .fundamental import ReutersFundamentalsMixin

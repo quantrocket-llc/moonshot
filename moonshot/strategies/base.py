@@ -19,7 +19,6 @@ import warnings
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
-    LiquidityConstraintMixin,
     ReutersFundamentalsMixin
 )
 from moonshot.cache import HistoryCache
@@ -30,7 +29,6 @@ from quantrocket.account import download_account_balances, download_exchange_rat
 from quantrocket.blotter import list_positions
 
 class Moonshot(
-    LiquidityConstraintMixin,
     WeightAllocationMixin,
     ReutersFundamentalsMixin):
     """
@@ -677,48 +675,86 @@ class Moonshot(
 
     def _constrain_weights(self, weights, prices):
         """
-        Constrains the weights by the max and min allowed quantities (as
-        dictated by available liquidity, contract size, etc.).
+        Constrains the weights by the quantity constraints defined in
+        limit_position_sizes.
         """
-        max_allowed_quantities = self.get_max_allowed_quantities(prices)
-        min_allowed_quantities = self.get_min_allowed_quantities(prices)
 
-        if max_allowed_quantities is None and min_allowed_quantities is None:
-            # no constraints
+        max_quantities_for_longs, max_quantities_for_shorts = self.limit_position_sizes(prices)
+        if max_quantities_for_longs is None and max_quantities_for_shorts is None:
             return weights
 
         if "Nlv" not in prices.index.get_level_values("Field").unique():
-            raise ValueError("must provide NLVs to constrain weights")
+            raise MoonshotParameterError("must provide NLVs if using limit_position_sizes")
 
-        target_trade_values = weights.abs() * prices.loc["Nlv"].reindex(weights.index, method="ffill")
         contract_values = self._get_contract_values(prices)
-        target_quantities = target_trade_values / contract_values.shift()
+        contract_values = contract_values.fillna(method="ffill")
+        nlvs_in_trade_currency = prices.loc["Nlv"].reindex(contract_values.index, method="ffill")
 
-        if max_allowed_quantities is None:
-            max_allowed_quantities = target_quantities
+        is_intraday = "Time" in prices.index.names
+        if is_intraday:
+            latest_time = prices.index.get_level_values("Time").unique().max()
+            contract_values = contract_values.xs(latest_time, level="Time")
+            nlvs_in_trade_currency = nlvs_in_trade_currency.xs(latest_time, level="Time")
 
-        if min_allowed_quantities is None:
-            min_allowed_quantities = target_quantities
+        # Convert weights to quantities
+        trade_values_in_trade_currency = weights * nlvs_in_trade_currency
+        quantities = trade_values_in_trade_currency / contract_values
+        quantities = quantities.round().fillna(0).astype(int)
 
-        # Get trades because we only constrain weights if we're entering a trade
-        positions = self.target_weights_to_positions(weights, prices)
-        trades = self._positions_to_trades(positions)
+        # Constrain quantities
+        if max_quantities_for_longs is not None:
+            max_quantities_for_longs = max_quantities_for_longs.abs()
+            quantities = max_quantities_for_longs.where(
+                quantities > max_quantities_for_longs, quantities)
+        if max_quantities_for_shorts is not None:
+            max_quantities_for_shorts = -max_quantities_for_shorts.abs()
+            quantities = max_quantities_for_shorts.where(
+                quantities < max_quantities_for_shorts, quantities)
 
-        reduce_weights = ((target_quantities > max_allowed_quantities) & (trades.abs() > 0)).fillna(False)
-        weights = weights.where(reduce_weights == False, weights * max_allowed_quantities/target_quantities.replace(0, 1))
-
-        increase_weights = ((target_quantities < min_allowed_quantities) & (trades.abs() > 0)).fillna(False)
-        weights = weights.where(increase_weights == False, weights * min_allowed_quantities/target_quantities.replace(0, 1))
+        # Convert quantities back to weights
+        target_trade_values_in_trade_currency = quantities * contract_values
+        weights = target_trade_values_in_trade_currency / nlvs_in_trade_currency
 
         return weights
 
-    def get_max_allowed_quantities(self, prices):
+    def limit_position_sizes(self, prices):
         """
-        Return a DataFrame of max allowed quantities based on constraints
-        such as available liquidity.
+        This method should return a tuple of DataFrames:
 
-        This method is a hook for subclasses. Return None to indicate no
-        constraint.
+            return max_quantities_for_longs, max_quantities_for_shorts
+
+        where the DataFrames define the maximum number of shares/contracts
+        that can be held long and short, respectively. Maximum limits might
+        be based on available liquidity (recent volume), shortable shares
+        available, etc.
+
+        The shape and alignment of the returned DataFrames should match that of the
+        target_weights returned by `signals_to_target_weights`. Target weights will be
+        reduced, if necessary, based on max_quantities_for_longs and max_quantities_for_shorts.
+
+        Return None for one or both DataFrames to indicate "no limits."
+        For example to limit shorts but not longs:
+
+            return None, max_quantities_for_shorts
+
+        Within a DataFrame, any None or NaNs will be treated as "no limit" for that
+        particular security and date.
+
+        Note that max_quantities_for_shorts can equivalently be represented with
+        positive or negative numbers. This is OK:
+
+                        AAPL
+            2018-05-18   100
+            2018-05-19   100
+
+        This is also OK:
+
+                        AAPL
+            2018-05-18  -100
+            2018-05-19  -100
+
+        Both of the above DataFrames would mean: short no more than 100 shares of
+        AAPL.
 
         Parameters
         ----------
@@ -727,30 +763,25 @@ class Moonshot(
 
         Returns
         -------
-        DataFrame
-            quantities
+        tuple of (DataFrame, DataFrame)
+            max quantities for long, max quantities for shorts
+
+        Examples
+        --------
+        Limit quantities to 1% of 15-day average daily volume:
+
+        >>> def limit_position_sizes(self, prices):
+        >>>     # assumes end-of-day bars, for intraday bars, use `.xs` to
+        >>>     # select a time of day
+        >>>     volumes = prices.loc["Volume"]
+        >>>     mean_volumes = volumes.rolling(15).mean()
+        >>>     max_shares = (mean_volumes * 0.01).round()
+        >>>     max_quantities_for_longs = max_quantities_for_shorts = max_shares
+        >>>     return max_quantities_for_longs, max_quantities_for_shorts
         """
-        return None
-
-    def get_min_allowed_quantities(self, prices):
-        """
-        Returns a DataFrame of min allowed quantities based on constraints
-        such as contract size, etc.
-
-        This method is a hook for subclasses. Return None to indicate no
-        constraint.
-
-        Parameters
-        ----------
-        prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
-
-        Returns
-        -------
-        DataFrame
-            quantities
-        """
-        return None
+        max_quantities_for_longs = None
+        max_quantities_for_shorts = None
+        return max_quantities_for_longs, max_quantities_for_shorts
 
     @classmethod
     def _get_lookback_window(cls):
@@ -834,13 +865,22 @@ class Moonshot(
         # Append NLV if applicable
         nlvs = nlv or self._get_nlv()
         if nlvs:
-            missing_nlvs = set(prices.loc["Currency"].iloc[0]) - set(nlvs.keys())
+            currencies = prices.loc["Currency"]
+            sec_types = prices.loc["SecType"]
+
+            # For Forex, store NLV based on the Symbol not Currency (100
+            # EUR.USD = 100 EUR, not 100 USD)
+            if "CASH" in sec_types.iloc[0].values:
+                symbols = prices.loc["Symbol"]
+                currencies = symbols.where(sec_types=="CASH", currencies)
+
+            missing_nlvs = set(currencies.iloc[0]) - set(nlvs.keys())
             if missing_nlvs:
-                raise ValueError(
+                raise MoonshotParameterError(
                     "NLV dict is missing values for required currencies: {0}".format(
                         ", ".join(missing_nlvs)))
 
-            nlvs = prices.loc["Currency"].applymap(lambda currency: nlvs.get(currency, None))
+            nlvs = currencies.applymap(lambda currency: nlvs.get(currency, None))
             nlvs["Field"] = "Nlv"
             levels = ["Field"]
             levels.extend(list(nlvs.index.names))
@@ -1163,9 +1203,28 @@ class Moonshot(
         # 23456  107.02  127.12
         # 34567  107.02  127.12
 
-        target_quantities = self._weights_to_quantities(
-            weights, nlvs, exchange_rates, contract_values)
+        # Convert weights to quantities
+        target_trade_values_in_base_currency = weights * nlvs
+        target_trade_values_in_trade_currency = target_trade_values_in_base_currency * exchange_rates
+        target_quantities = target_trade_values_in_trade_currency / contract_values
+        target_quantities = target_quantities.round().fillna(0).astype(int)
 
+        # Constrain quantities (we do this before applying the position diff in order to
+        # mirror backtesting)
+        max_quantities_for_longs, max_quantities_for_shorts = self.limit_position_sizes(prices)
+        if max_quantities_for_longs is not None:
+            max_quantities_for_longs = max_quantities_for_longs.loc[signal_date]
+            max_quantities_for_longs = allocations.apply(lambda x: max_quantities_for_longs.abs()).T
+            target_quantities = max_quantities_for_longs.where(
+                target_quantities > max_quantities_for_longs, target_quantities)
+
+        if max_quantities_for_shorts is not None:
+            max_quantities_for_shorts = max_quantities_for_shorts.loc[signal_date]
+            max_quantities_for_shorts = allocations.apply(lambda x: -max_quantities_for_shorts.abs()).T
+            target_quantities = max_quantities_for_shorts.where(
+                target_quantities < max_quantities_for_shorts, target_quantities)
+
+        # Adjust quantities based on existing positions
         positions = list_positions(
             order_refs=[self.CODE],
             accounts=list(allocations.index),
@@ -1186,52 +1245,10 @@ class Moonshot(
         if (net_quantities == 0).all().all():
             return
 
-        # contrain quantities
-        max_allowed_quantities = self.get_max_allowed_quantities(prices)
-        if max_allowed_quantities is not None:
-            max_allowed_quantities = max_allowed_quantities.loc[signal_date]
-            max_allowed_quantities = allocations.apply(lambda x: max_allowed_quantities).T
-            net_quantities = net_quantities.where(
-                net_quantities.abs() <= max_allowed_quantities,
-                max_allowed_quantities.where(net_quantities > 0, -max_allowed_quantities))
-
-        min_allowed_quantities = self.get_min_allowed_quantities(prices)
-        if min_allowed_quantities is not None:
-            min_allowed_quantities = min_allowed_quantities.loc[signal_date]
-            min_allowed_quantities = allocations.apply(lambda x: min_allowed_quantities).T
-            net_quantities = net_quantities.where(
-                net_quantities.abs() >= min_allowed_quantities,
-                min_allowed_quantities.where(net_quantities > 0, -min_allowed_quantities))
-
         order_stubs = self._quantities_to_order_stubs(net_quantities)
         orders = self.order_stubs_to_orders(order_stubs, prices)
 
         return orders
-
-    def _weights_to_quantities(self, weights, nlvs, exchange_rates, contract_values):
-        """
-        Converts a DataFrame of target percentage weights to a DataFrame of
-        target quantities.
-
-        Parameters
-        ----------
-        weights : DataFrame, required
-            DataFrame of target percentage weights
-
-        nlvs : DataFrame, required
-            DataFrame of net liquidation values
-
-        exchange_rates : DataFrame, required
-            DataFrame of exchange rates
-
-        contract_values : DataFrame, required
-            DataFrame of contract values (price / magnifier * multiplier)
-
-        """
-        target_trade_values_in_base_currency = weights * nlvs
-        target_trade_values_in_trade_currency = target_trade_values_in_base_currency * exchange_rates
-        target_quantities = target_trade_values_in_trade_currency / contract_values
-        return target_quantities.round().fillna(0).astype(int)
 
     def _get_contract_values(self, prices):
         """
@@ -1251,6 +1268,14 @@ class Moonshot(
                 ", ".join(candidate_fields)))
 
         closes = prices.loc[field]
+
+        sec_types = prices.loc["SecType"]
+        # For Forex, the value of the contract is simply 1 (1 EUR.USD = 1
+        # EUR; 1 EUR.JPY = 1 EUR)
+        if "CASH" in sec_types.iloc[0].values:
+            sec_types = sec_types.reindex(closes.index, method="ffill")
+            closes = closes.where(sec_types != "CASH", 1)
+
         price_magnifiers = prices.loc["PriceMagnifier"].fillna(1).reindex(closes.index, method="ffill")
         multipliers = prices.loc["Multiplier"].fillna(1).reindex(closes.index, method="ffill")
         contract_values = closes / price_magnifiers * multipliers
