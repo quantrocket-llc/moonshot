@@ -99,7 +99,7 @@ class Moonshot(
         (sectype,exchange,currency) to the different commission classes. By default
         no commission is applied.
 
-    SLIPPAGE_CLASSES : iterable of slippage classes
+    SLIPPAGE_CLASSES : iterable of slippage classes, optional
         one or more slippage classes. By default no slippage is applied.
 
     SLIPPAGE_BPS : float, optional
@@ -128,6 +128,14 @@ class Moonshot(
         be closed out and reopened each day rather than held continuously; this
         impacts commission and slippage calculations (default is False, meaning
         adjacent positions are assumed to be held continuously)
+
+    ALLOW_REBALANCE: bool or float
+        in live trading, whether to allow rebalancing of existing positions that
+        are already on the correct side. If True (the default), allow rebalancing.
+        If False, no rebalancing. If set to a positive decimal, allow rebalancing
+        only when the existing position differs from the target position by at least
+        this percentage. For example 0.5 means don't rebalance a position unless
+        the position will change by +/-50%.
 
     Examples
     --------
@@ -168,6 +176,7 @@ class Moonshot(
     TIMEZONE = None
     CALENDAR = None
     POSITIONS_CLOSED_DAILY = False
+    ALLOW_REBALANCE = True
 
     def __init__(self):
         self.is_trade = False
@@ -1240,6 +1249,31 @@ class Moonshot(
             target_quantities.index.set_names(["ConId","Account"], inplace=True)
             positions = positions.reindex(target_quantities.index).fillna(0)
             net_quantities = target_quantities - positions
+
+            # disable rebalancing as per ALLOW_REBALANCE
+            if self.ALLOW_REBALANCE is not True:
+                is_rebalance = (
+                    ((target_quantities > 0) & (positions > 0))
+                    |
+                    ((target_quantities < 0) & (positions < 0))
+                )
+                zeroes = pd.Series(0, index=net_quantities.index)
+                # ALLOW_REBALANCE = False: no rebalancing
+                if not self.ALLOW_REBALANCE:
+                    net_quantities = zeroes.where(is_rebalance, net_quantities)
+                # ALLOW_REBALANCE = <float>: only rebalance if it changes the position
+                # at least this much
+                else:
+                    if not isinstance(self.ALLOW_REBALANCE, (int, float)):
+                        raise MoonshotParameterError(
+                            "invalid value for ALLOW_REBALANCE: {0} (should be a float)".format(
+                                self.ALLOW_REBALANCE))
+
+                    rebalance_pcts = net_quantities/positions.where(is_rebalance)
+                    net_quantities = zeroes.where(
+                        is_rebalance & (rebalance_pcts.abs() < self.ALLOW_REBALANCE),
+                        net_quantities)
+
             net_quantities = net_quantities.unstack()
 
         if (net_quantities == 0).all().all():
