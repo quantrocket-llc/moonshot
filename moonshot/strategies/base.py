@@ -728,7 +728,7 @@ class Moonshot(
 
     def limit_position_sizes(self, prices):
         """
-        This method should return a tuple of DataFrames:
+        This method should return a tuple of DataFrames::
 
             return max_quantities_for_longs, max_quantities_for_shorts
 
@@ -742,7 +742,7 @@ class Moonshot(
         reduced, if necessary, based on max_quantities_for_longs and max_quantities_for_shorts.
 
         Return None for one or both DataFrames to indicate "no limits."
-        For example to limit shorts but not longs:
+        For example to limit shorts but not longs::
 
             return None, max_quantities_for_shorts
 
@@ -750,13 +750,13 @@ class Moonshot(
         particular security and date.
 
         Note that max_quantities_for_shorts can equivalently be represented with
-        positive or negative numbers. This is OK:
+        positive or negative numbers. This is OK::
 
                         AAPL
             2018-05-18   100
             2018-05-19   100
 
-        This is also OK:
+        This is also OK::
 
                         AAPL
             2018-05-18  -100
