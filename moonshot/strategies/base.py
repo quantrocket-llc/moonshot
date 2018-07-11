@@ -707,7 +707,7 @@ class Moonshot(
 
         # Convert weights to quantities
         trade_values_in_trade_currency = weights * nlvs_in_trade_currency
-        quantities = trade_values_in_trade_currency / contract_values
+        quantities = trade_values_in_trade_currency / contract_values.where(contract_values > 0)
         quantities = quantities.round().fillna(0).astype(int)
 
         # Constrain quantities
@@ -1215,7 +1215,7 @@ class Moonshot(
         # Convert weights to quantities
         target_trade_values_in_base_currency = weights * nlvs
         target_trade_values_in_trade_currency = target_trade_values_in_base_currency * exchange_rates
-        target_quantities = target_trade_values_in_trade_currency / contract_values
+        target_quantities = target_trade_values_in_trade_currency / contract_values.where(contract_values > 0)
         target_quantities = target_quantities.round().fillna(0).astype(int)
 
         # Constrain quantities (we do this before applying the position diff in order to
