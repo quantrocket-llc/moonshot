@@ -108,7 +108,7 @@ class WeightAllocationMixin(object):
         weights = pd.DataFrame(
             np.where(
                 (total_weights > total_cap) & (weights != 0),
-                weights * total_cap/total_weights,
+                weights * total_cap/total_weights.replace(0, 1),
                 weights), index=weights.index, columns=weights.columns)
 
         return weights
@@ -125,7 +125,7 @@ class WeightAllocationMixin(object):
         returns = self.get_returns(positions, price_panel)
         stds = pd.rolling_std(returns.sum(axis=1), std_window).fillna(method="ffill")
         annualized_stds = stds * np.sqrt(252)
-        volatilty_weights = target_std/annualized_stds
+        volatilty_weights = target_std/annualized_stds.where(annualized_stds > 0)
         volatilty_weights = pd.DataFrame(dict((column, volatilty_weights.copy()) for column in target_weights.columns),
                                index=target_weights.index, columns=target_weights.columns)
 
