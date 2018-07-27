@@ -674,7 +674,7 @@ class Moonshot(
         trades = self._positions_to_trades(positions)
         slippage = pd.DataFrame(0, index=trades.index, columns=trades.columns)
 
-        for slippage_class in self.SLIPPAGE_CLASSES:
+        for slippage_class in self.SLIPPAGE_CLASSES or ():
             slippage += slippage_class().get_slippage(trades, positions, prices)
 
         if self.SLIPPAGE_BPS:

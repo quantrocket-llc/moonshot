@@ -21,11 +21,17 @@ class FixedSlippage(object):
 
     Parameters
     ----------
-    one_way_slippage : float
-        the slippage to apply to each trade (default 0.0005 = 5 basis points)
+    ONE_WAY_SLIPPAGE : float
+        the slippage to apply to each trade (default 0.0005 = 5 basis points);
+        overridden if `one_way_slippage` is passed to __init__
     """
-    def __init__(self, one_way_slippage=0.0005):
-        self.one_way_slippage = one_way_slippage
+    ONE_WAY_SLIPPAGE = 0.0005
+
+    def __init__(self, one_way_slippage=None):
+        if one_way_slippage is not None:
+            self.one_way_slippage = one_way_slippage
+        else:
+            self.one_way_slippage = self.ONE_WAY_SLIPPAGE
 
     def get_slippage(self, trades, *args, **kwargs):
         """
@@ -34,7 +40,7 @@ class FixedSlippage(object):
         Parameters
         ----------
         trades : DataFrame, required
-            a DataFrame of positions
+            a DataFrame of trades
 
         Returns
         -------

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To run: python3 -m unittest discover -t . -s . -p test*.py
+# To run: python3 -m unittest discover -s tests/ -p test_*.py -t . -v
 
 import unittest
 import pandas as pd
