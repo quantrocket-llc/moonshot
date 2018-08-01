@@ -1103,11 +1103,14 @@ class Moonshot(
         try:
             weights = weights.loc[signal_date]
         except KeyError as e:
-            raise MoonshotError(
-                "expected signal date {0} not found in weights DataFrame, "
-                "is the underlying data up-to-date? (max date is {1})".format(
-                    signal_date.date().isoformat(),
-                    weights.index.max().date().isoformat()))
+            msg = ("expected signal date {0} not found in weights DataFrame, "
+                   "is the underlying data up-to-date? (max date is {1})")
+            if not self.CALENDAR and signal_date.date() - weights.index.max().date() == pd.Timedelta(days=1):
+                msg += (" If your strategy trades before the open and {0} data "
+                        "is not expected, try setting CALENDAR = <exchange>")
+            raise MoonshotError(msg.format(
+                signal_date.date().isoformat(),
+                weights.index.max().date().isoformat()))
 
         allocations = pd.Series(allocations)
         # Out:
