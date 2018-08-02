@@ -550,7 +550,7 @@ class Moonshot(
         if self.POSITIONS_CLOSED_DAILY:
             trades = positions * 2
         else:
-            trades = positions.diff()
+            trades = positions.fillna(0).diff()
         return trades
 
     def _positions_to_net_returns(self, positions, prices):
@@ -561,7 +561,7 @@ class Moonshot(
         commissions = self._get_commissions(positions, prices)
         slippage = self._get_slippage(positions, prices)
 
-        returns = gross_returns - commissions - slippage
+        returns = gross_returns.fillna(0) - commissions - slippage
         return returns
 
     def _get_signal_date(self):
@@ -649,9 +649,9 @@ class Moonshot(
             tuple(s.split("|")) for s in (sec_types+"|"+exchanges+"|"+currencies).iloc[-1].unique()])
         missing_sec_groups = required_sec_groups - defined_sec_groups
         if missing_sec_groups:
-            raise ValueError("expected a commission class for each combination of (sectype,exchange,currency) "
-                             "but none is defined for {0}".format(
-                                 ", ".join([str(m) for m in missing_sec_groups])))
+            raise MoonshotParameterError("expected a commission class for each combination of (sectype,exchange,currency) "
+                                         "but none is defined for {0}".format(
+                                             ", ".join(["({0})".format(",".join(t)) for t in missing_sec_groups])))
 
         all_commissions = pd.DataFrame(None, index=positions.index, columns=positions.columns)
 
@@ -681,9 +681,9 @@ class Moonshot(
             slippage += slippage_class().get_slippage(trades, positions, prices)
 
         if self.SLIPPAGE_BPS:
-            slippage = FixedSlippage(self.SLIPPAGE_BPS/10000.0).get_slippage(trades, positions, prices)
+            slippage += FixedSlippage(self.SLIPPAGE_BPS/10000.0).get_slippage(trades, positions, prices)
 
-        return slippage
+        return slippage.fillna(0)
 
     def _constrain_weights(self, weights, prices):
         """
@@ -877,12 +877,23 @@ class Moonshot(
         # Append NLV if applicable
         nlvs = nlv or self._get_nlv()
         if nlvs:
+            required_fields_for_nlv = ["SecType", "Currency"]
+            missing_fields_for_nlv = set(required_fields_for_nlv) - set(self.MASTER_FIELDS)
+            if missing_fields_for_nlv:
+                raise MoonshotParameterError(
+                    "MASTER_FIELDS must include SecType and Currency if providing NLV"
+                )
+
             currencies = prices.loc["Currency"]
             sec_types = prices.loc["SecType"]
 
             # For Forex, store NLV based on the Symbol not Currency (100
             # EUR.USD = 100 EUR, not 100 USD)
             if "CASH" in sec_types.iloc[0].values:
+                if "Symbol" not in self.MASTER_FIELDS:
+                    raise MoonshotParameterError(
+                        "MASTER_FIELDS must include Symbol if providing NLV and using CASH instruments"
+                    )
                 symbols = prices.loc["Symbol"]
                 currencies = symbols.where(sec_types=="CASH", currencies)
 
@@ -1061,6 +1072,21 @@ class Moonshot(
         ]
         if name in reserved_names:
             raise ValueError("name {0} is a reserved name".format(name))
+
+        index_levels = df.index.names
+
+        if "Time" in index_levels:
+            raise MoonshotParameterError(
+                "custom DataFrame '{0}' won't concat properly with 'Time' in index, please take a cross-section first, "
+                "for example: `my_dataframe.xs('15:45:00', level='Time')`".format(name))
+
+        if index_levels != ["Date"]:
+            raise MoonshotParameterError(
+                "custom DataFrame '{0}' must have index called 'Date' to concat properly, but has {1}".format(
+                    name, ",".join([str(level_name) for level_name in index_levels])))
+
+        if not hasattr(df.index, "date"):
+            raise MoonshotParameterError("custom DataFrame '{0}' must have a DatetimeIndex to concat properly".format(name))
 
         self._backtest_results[name] = df
 
