@@ -704,9 +704,14 @@ class Moonshot(
 
         is_intraday = "Time" in prices.index.names
         if is_intraday:
-            latest_time = prices.index.get_level_values("Time").unique().max()
-            contract_values = contract_values.xs(latest_time, level="Time")
-            nlvs_in_trade_currency = nlvs_in_trade_currency.xs(latest_time, level="Time")
+            # we somewhat arbitrarily pick the contract value as of the
+            # earliest time of day; this contract value might be somewhat
+            # stale but it avoids the possible lookahead bias of using, say,
+            # the contract value as of the latest time of day. We could ask
+            # the user to supply a time but that is rather clunky.
+            earliest_time = prices.index.get_level_values("Time").unique().min()
+            contract_values = contract_values.xs(earliest_time, level="Time")
+            nlvs_in_trade_currency = nlvs_in_trade_currency.xs(earliest_time, level="Time")
 
         # Convert weights to quantities
         trade_values_in_trade_currency = weights * nlvs_in_trade_currency
@@ -1152,6 +1157,13 @@ class Moonshot(
         # 23456   0.000    0.00
         # 34567   0.025    0.05
 
+        required_fields = ["SecType", "Currency"]
+        missing_fields = set(required_fields) - set(self.MASTER_FIELDS)
+        if missing_fields:
+            raise MoonshotParameterError(
+                "MASTER_FIELDS must include SecType and Currency"
+        )
+
         contract_values = self._get_contract_values(prices)
         contract_values = contract_values.fillna(method="ffill").loc[signal_date]
         if is_intraday:
@@ -1169,6 +1181,10 @@ class Moonshot(
         # For FX, exchange rate conversions should be based on the symbol,
         # not the currency (i.e. 100 EUR.USD = 100 EUR, not 100 USD)
         if (sec_types == "CASH").any():
+            if "Symbol" not in self.MASTER_FIELDS:
+                raise MoonshotParameterError(
+                    "MASTER_FIELDS must include Symbol if using CASH instruments"
+                )
             symbols = prices.loc["Symbol"].iloc[-1]
             currencies = currencies.where(sec_types != "CASH", symbols)
 

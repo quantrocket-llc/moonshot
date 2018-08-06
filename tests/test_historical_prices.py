@@ -50,6 +50,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
             CONIDS = [12345,23456]
             EXCLUDE_CONIDS = 34567
             EXCLUDE_UNIVERSES = ["usa-stk-pharm", "usa-stk-biotech"]
+            CONT_FUT = False
 
             def prices_to_signals(self, prices):
                 signals = prices.loc["Wap"] < 10
@@ -135,6 +136,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["fields"], ['Volume', 'Wap', 'Close'])
         self.assertEqual(kwargs["times"], ["00:00:00"])
         self.assertEqual(kwargs["master_fields"], ['Timezone', 'PrimaryExchange'])
+        self.assertFalse(kwargs["cont_fut"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
