@@ -135,22 +135,22 @@ class AllowRebalanceTestCase(unittest.TestCase):
             [
                 {
                     'ConId': 12345,
-                    'Account': 'DU234',
-                    'Action': 'BUY',
+                    'Account': 'U123',
+                    'Action': 'SELL',
                     'OrderRef': 'buy-below-10',
-                    # 0.3 allocation * 0.5 weight * 450K / 9.50 - 7100
-                    'TotalQuantity': 5,
+                    # 0.5 allocation * 0.5 weight * 85K / 9.50 - 2240
+                    'TotalQuantity': 3,
                     'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
                     'ConId': 12345,
-                    'Account': 'U123',
-                    'Action': 'SELL',
+                    'Account': 'DU234',
+                    'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
-                    # 0.5 allocation * 0.5 weight * 85K / 9.50 - 2240
-                    'TotalQuantity': 3,
+                    # 0.3 allocation * 0.5 weight * 450K / 9.50 - 7100
+                    'TotalQuantity': 5,
                     'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
