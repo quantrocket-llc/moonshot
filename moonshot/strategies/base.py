@@ -24,7 +24,7 @@ from moonshot.mixins import (
 from moonshot.cache import HistoryCache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.history import get_historical_prices
-from quantrocket.master import download_master_file, list_calendar_statuses
+from quantrocket.master import list_calendar_statuses
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions
 
