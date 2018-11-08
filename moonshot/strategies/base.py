@@ -79,10 +79,12 @@ class Moonshot(
         pass this cont_fut option to history db query (default None)
 
     LOOKBACK_WINDOW : int, optional
-        get this many days additional data prior to the backtest start date or trade date
-        to account for rolling windows. If set to None (the default), will use the largest
-        value of any attributes ending with `_WINDOW`, or 252 if no such attributes. Set
-        to 0 to disable.
+        get this many days additional data prior to the backtest start date or
+        trade date to account for rolling windows. If set to None (the default),
+        will use the largest value of any attributes ending with `*_WINDOW`, or
+        252 if no such attributes, and will further pad window based on any
+        `*_INTERVAL` attributes, which are interpreted as pandas offset aliases
+        (for example `REBALANCE_INTERVAL = 'Q'`). Set to 0 to disable.
 
     MASTER_FIELDS : list of str, optional
         get these fields from the securities master service (defaults to ["Currency",
@@ -804,7 +806,11 @@ class Moonshot(
     def _get_lookback_window(cls):
         """
         Returns cls.LOOKBACK_WINDOW if set, otherwise infers the lookback
-        window from `_WINDOW` attributes, defaulting to 252.
+        window from `_WINDOW`, defaulting to 252. Then increases the lookback
+        based on `_INTERVAL` attributes, which are interpreted as pandas
+        frequencies (for example `REBALANCE_INTERVAL` = 'Q'). This ensures the
+        lookback is sufficient when resampling to quarterly etc. for periodic
+        rebalancing.
         """
         if cls.LOOKBACK_WINDOW is not None:
             return cls.LOOKBACK_WINDOW
@@ -812,6 +818,26 @@ class Moonshot(
         window_attrs = [getattr(cls, attr) for attr in dir(cls) if attr.endswith("_WINDOW")]
         windows = [attr for attr in window_attrs if isinstance(attr, int)]
         lookback_window = max(windows) if windows else 252
+
+        # Add _INTERVAL if any
+        offset_aliases = [getattr(cls, attr) for attr in dir(cls) if attr.endswith("_INTERVAL")]
+        intervals = []
+        for freq in offset_aliases:
+            if not freq:
+                continue
+            try:
+                periods = pd.date_range(start=pd.to_datetime('today'),
+                                        freq=freq, periods=2)
+            except ValueError:
+                continue
+
+            # Use the period date range to count bdays in period
+            bdays = len(pd.bdate_range(start=periods[0], end=periods[1]))
+            intervals.append(bdays)
+
+        if intervals:
+            lookback_window += max(intervals)
+
         return lookback_window
 
     @classmethod

@@ -240,6 +240,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
             DB = 'test-db'
             SOME_WINDOW = 100
             SOME_OTHER_WINDOW = 5
+            SOME_NONINT_WINDOW = "foo" # make sure ignored
 
             def prices_to_signals(self, prices):
                 signals = prices.loc["Close"] < 10
@@ -305,6 +306,94 @@ class HistoricalPricesTestCase(unittest.TestCase):
         _, args, kwargs = get_historical_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
         self.assertEqual(kwargs["start_date"], "2017-11-16") # 100+ trading days before requested start_date
+        self.assertEqual(kwargs["end_date"], "2018-05-04")
+        self.assertEqual(kwargs["fields"], ['Open', 'High', 'Low', 'Close', 'Volume'])
+        self.assertEqual(kwargs["master_fields"], ['Currency', 'MinTick', 'Multiplier', 'PriceMagnifier', 'PrimaryExchange', 'SecType', 'Symbol', 'Timezone'])
+        self.assertIsNone(kwargs["timezone"])
+        self.assertTrue(kwargs["infer_timezone"])
+
+    @patch("moonshot.strategies.base.get_historical_prices")
+    def test_derive_lookback_window_from_window_and_interval_params(self, mock_get_historical_prices):
+        """
+        Tests that lookback window is derived from the max of *_WINDOW
+        params plus the max of *_INTERVAL params.
+        """
+        class BuyBelow10(Moonshot):
+            """
+            A basic test strategy that buys below 10.
+            """
+            DB = 'test-db'
+            SOME_WINDOW = 100
+            SOME_OTHER_WINDOW = 5
+            SOME_NONINT_WINDOW = "foo" # make sure ignored
+            REBALANCE_INTERVAL = "Q"
+            OTHER_INTERVAL = "MS"
+            INVALID_INTERNVAL = "invalid" # make sure ignored
+
+            def prices_to_signals(self, prices):
+                signals = prices.loc["Close"] < 10
+                return signals.astype(int)
+
+        def _mock_get_historical_prices():
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
+            fields = ["Close","Volume"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        #Close
+                        9,
+                        11,
+                        10.50,
+                        9.99,
+                        # Volume
+                        5000,
+                        16000,
+                        8800,
+                        9900
+                    ],
+                    23456: [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone"]
+            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                    ],
+                    23456: [
+                        "America/New_York",
+                    ]
+                },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+
+        results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+
+        get_historical_prices_call = mock_get_historical_prices.mock_calls[0]
+        _, args, kwargs = get_historical_prices_call
+        self.assertListEqual(kwargs["codes"], ["test-db"])
+        self.assertEqual(kwargs["start_date"], "2017-08-07") # 100 + 60ish trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'High', 'Low', 'Close', 'Volume'])
         self.assertEqual(kwargs["master_fields"], ['Currency', 'MinTick', 'Multiplier', 'PriceMagnifier', 'PrimaryExchange', 'SecType', 'Symbol', 'Timezone'])
