@@ -1396,9 +1396,9 @@ class BacktestTestCase(unittest.TestCase):
     def test_label_conids(self):
         """
         Tests that the label_conids param causes symbols to be included in
-        the resulting columns.
+        the resulting columns. For forex, symbol.currency should be used as
+        the label.
         """
-
         class BuyBelow10(Moonshot):
             """
             A basic test strategy that buys below 10.
@@ -1445,17 +1445,22 @@ class BacktestTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "Symbol"]
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency"]
             idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
-                        "ABC",
+                        "AAPL",
+                        "STK",
+                        "USD"
+
                     ],
                     23456: [
                         "America/New_York",
-                        "DEF"
+                        "EUR",
+                        "CASH",
+                        "JPY"
                     ]
                 },
                 index=idx
@@ -1480,8 +1485,8 @@ class BacktestTestCase(unittest.TestCase):
 
         self.assertSetEqual(
             set(results.columns),
-            {"ABC(12345)",
-             "DEF(23456)"}
+            {"AAPL(12345)",
+             "EUR.JPY(23456)"}
         )
 
     def test_truncate_at_start_date(self):
