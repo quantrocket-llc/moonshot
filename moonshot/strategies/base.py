@@ -998,13 +998,16 @@ class Moonshot(
         commissions = self._get_commissions(positions, prices)
         slippages = self._get_slippage(positions, prices)
 
+        total_holdings = (positions.fillna(0) != 0).astype(int)
+
         all_results = dict(
             Signal=signals,
             Weight=weights,
             AbsWeight=weights.abs(),
-            AbsExposure=positions.abs(),
-            NetExposure=positions,
+            Position=positions,
+            AbsPosition=positions.abs(),
             Trade=trades,
+            TotalHoldings=total_holdings,
             Commission=commissions,
             Slippage=slippages,
             Return=returns)

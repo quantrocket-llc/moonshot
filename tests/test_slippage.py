@@ -111,11 +111,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -162,10 +163,10 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                      -0.5]}
         )
 
-        net_exposures = results.loc["NetExposure"].reset_index()
-        net_exposures.loc[:, "Date"] = net_exposures.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions = results.loc["Position"].reset_index()
+        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            net_exposures.to_dict(orient="list"),
+            net_positions.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
@@ -322,11 +323,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -373,10 +375,10 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                      -0.5]}
         )
 
-        net_exposures = results.loc["NetExposure"].reset_index()
-        net_exposures.loc[:, "Date"] = net_exposures.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions = results.loc["Position"].reset_index()
+        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            net_exposures.to_dict(orient="list"),
+            net_positions.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
@@ -529,11 +531,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -580,10 +583,10 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                      -0.5]}
         )
 
-        net_exposures = results.loc["NetExposure"].reset_index()
-        net_exposures.loc[:, "Date"] = net_exposures.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions = results.loc["Position"].reset_index()
+        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            net_exposures.to_dict(orient="list"),
+            net_positions.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
@@ -745,11 +748,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -796,10 +800,10 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                      -0.5]}
         )
 
-        net_exposures = results.loc["NetExposure"].reset_index()
-        net_exposures.loc[:, "Date"] = net_exposures.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions = results.loc["Position"].reset_index()
+        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            net_exposures.to_dict(orient="list"),
+            net_positions.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',

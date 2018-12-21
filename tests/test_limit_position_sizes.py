@@ -185,11 +185,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -316,11 +317,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -470,11 +472,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -605,11 +608,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -752,11 +756,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -908,11 +913,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
@@ -1055,11 +1061,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsExposure',
+             'AbsPosition',
              'Signal',
              'Return',
              'Slippage',
-             'NetExposure',
+             'Position',
+             'TotalHoldings',
              'Trade',
              'AbsWeight',
              'Weight'}
