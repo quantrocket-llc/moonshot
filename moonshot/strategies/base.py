@@ -596,16 +596,17 @@ class Moonshot(
         trades = self._positions_to_trades(positions)
         contract_values = self._get_contract_values(prices)
 
-        is_intraday = "Time" in prices.index.names
+        prices_is_intraday = "Time" in prices.index.names
+        positions_is_intraday = "Time" in positions.index.names
 
-        if is_intraday:
+        if prices_is_intraday and not positions_is_intraday:
             contract_values = contract_values.groupby(
                 contract_values.index.get_level_values("Date")).first()
 
         fields = prices.index.get_level_values("Field").unique()
         if "Nlv" in fields:
             nlvs = prices.loc["Nlv"]
-            if is_intraday:
+            if prices_is_intraday and not positions_is_intraday:
                 nlvs = nlvs.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
             nlvs = nlvs.reindex(contract_values.index, method="ffill")
         else:
@@ -628,7 +629,7 @@ class Moonshot(
         exchanges = prices.loc["PrimaryExchange"]
         currencies = prices.loc["Currency"]
 
-        if is_intraday:
+        if prices_is_intraday and not positions_is_intraday:
             sec_types = sec_types.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
             exchanges = exchanges.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
             currencies = currencies.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
@@ -694,8 +695,10 @@ class Moonshot(
         contract_values = contract_values.fillna(method="ffill")
         nlvs_in_trade_currency = prices.loc["Nlv"].reindex(contract_values.index, method="ffill")
 
-        is_intraday = "Time" in prices.index.names
-        if is_intraday:
+        prices_is_intraday = "Time" in prices.index.names
+        weights_is_intraday = "Time" in weights.index.names
+
+        if prices_is_intraday and not weights_is_intraday:
             # we somewhat arbitrarily pick the contract value as of the
             # earliest time of day; this contract value might be somewhat
             # stale but it avoids the possible lookahead bias of using, say,
@@ -1005,11 +1008,16 @@ class Moonshot(
         all_results.update(self._backtest_results)
 
         if self.BENCHMARK:
-            all_results["Benchmark"] = self._get_benchmark(prices)
+            results_are_intraday = "Time" in signals.index.names
+            all_results["Benchmark"] = self._get_benchmark(prices, results_are_intraday)
 
-        results = pd.concat(
-            all_results,
-            names=["Field","Date"])
+        results = pd.concat(all_results)
+
+        names = ["Field","Date"]
+        if results.index.nlevels == 3:
+            names.append("Time")
+
+        results.index.set_names(names, inplace=True)
 
         if label_conids:
             symbols = prices.loc["Symbol"].iloc[-1]
@@ -1026,7 +1034,7 @@ class Moonshot(
 
         return results
 
-    def _get_benchmark(self, prices):
+    def _get_benchmark(self, prices, results_are_intraday=False):
         field = None
         fields = prices.index.get_level_values("Field").unique()
         candidate_fields = ("Close", "Open", "Bid", "Ask", "High", "Low")
@@ -1043,7 +1051,7 @@ class Moonshot(
             raise MoonshotError("{0} BENCHMARK ConId {1} is not in backtest data".format(
                 self.CODE, self.BENCHMARK))
 
-        if "Time" in prices.index.names:
+        if "Time" in prices.index.names and not results_are_intraday:
             if not self.BENCHMARK_TIME:
                 raise MoonshotParameterError(
                     "Cannot extract BENCHMARK {0} from {1} because prices contains intraday "
