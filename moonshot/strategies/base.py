@@ -556,17 +556,6 @@ class Moonshot(
             trades = positions.fillna(0).diff()
         return trades
 
-    def _positions_to_net_returns(self, positions, prices):
-        """
-        Returns a DataFrame of 1-period returns, after commissions and slippage.
-        """
-        gross_returns = self.positions_to_gross_returns(positions, prices)
-        commissions = self._get_commissions(positions, prices)
-        slippage = self._get_slippage(positions, prices)
-
-        returns = gross_returns.fillna(0) - commissions - slippage
-        return returns
-
     def _get_signal_date(self):
         """
         Returns the date that contains the signals that should be used for
@@ -993,10 +982,11 @@ class Moonshot(
         weights = weights * allocation
         weights = self._constrain_weights(weights, prices)
         positions = self.target_weights_to_positions(weights, prices)
-        returns = self._positions_to_net_returns(positions, prices)
-        trades = self._positions_to_trades(positions)
+        gross_returns = self.positions_to_gross_returns(positions, prices)
         commissions = self._get_commissions(positions, prices)
         slippages = self._get_slippage(positions, prices)
+        returns = gross_returns.fillna(0) - commissions - slippages
+        trades = self._positions_to_trades(positions)
 
         total_holdings = (positions.fillna(0) != 0).astype(int)
 
