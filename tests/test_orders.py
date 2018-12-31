@@ -144,6 +144,10 @@ class OrdersTestCase(unittest.TestCase):
         # replace nan with 'nan' to allow equality comparisons
         orders = orders.where(orders.notnull(), 'nan')
 
+        # strip timestamp from OrderId/ParentId field
+        orders.loc[orders.OrderId.notnull(), "OrderId"] = orders.loc[orders.OrderId.notnull()].OrderId.str.split(".").str[0]
+        orders.loc[orders.ParentId.notnull(), "ParentId"] = orders.loc[orders.ParentId.notnull()].ParentId.str.split(".").str[0]
+
         self.assertListEqual(
             orders.to_dict(orient="records"),
             [
@@ -152,7 +156,7 @@ class OrdersTestCase(unittest.TestCase):
                     'Action': 'SELL',
                     'ConId': 12345,
                     'Exchange': 'SMART',
-                    'OrderId': 0.0,
+                    'OrderId': '0',
                     'OrderRef': 'long-short-10',
                     'OrderType': 'MKT',
                     'ParentId': 'nan',
@@ -164,7 +168,7 @@ class OrdersTestCase(unittest.TestCase):
                     'Action': 'BUY',
                     'ConId': 23456,
                     'Exchange': 'SMART',
-                    'OrderId': 1.0,
+                    'OrderId': '1',
                     'OrderRef': 'long-short-10',
                     'OrderType': 'MKT',
                     'ParentId': 'nan',
@@ -179,7 +183,7 @@ class OrdersTestCase(unittest.TestCase):
                     'OrderId': 'nan',
                     'OrderRef': 'long-short-10',
                     'OrderType': 'MOC',
-                    'ParentId': 0.0,
+                    'ParentId': '0',
                     'Tif': 'Day',
                     'TotalQuantity': 1012
                 },
@@ -191,7 +195,7 @@ class OrdersTestCase(unittest.TestCase):
                     'OrderId': 'nan',
                     'OrderRef': 'long-short-10',
                     'OrderType': 'MOC',
-                    'ParentId': 1.0,
+                    'ParentId': '1',
                     'Tif': 'Day',
                     'TotalQuantity': 1250
                 }

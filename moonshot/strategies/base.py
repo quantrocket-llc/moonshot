@@ -16,6 +16,7 @@ import io
 import pandas as pd
 import numpy as np
 import warnings
+import time
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
@@ -489,7 +490,7 @@ class Moonshot(
         1   23456     SELL            400    SMART       MOC  Day      NaN         1
         """
         if "OrderId" not in orders.columns:
-            orders["OrderId"] = orders.index
+            orders["OrderId"] = orders.index.astype(str) + ".{0}".format(time.time())
         child_orders = orders.copy()
         child_orders.rename(columns={"OrderId":"ParentId"}, inplace=True)
         child_orders.loc[orders.Action=="BUY", "Action"] = "SELL"
