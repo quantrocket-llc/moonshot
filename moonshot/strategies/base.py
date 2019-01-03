@@ -1023,7 +1023,7 @@ class Moonshot(
             symbols = prices.loc["Symbol"].iloc[-1]
             sec_types = prices.loc["SecType"].iloc[-1]
             currencies = prices.loc["Currency"].iloc[-1]
-            symbols = symbols.str.cat(currencies, sep=".").where(sec_types=="CASH", symbols)
+            symbols = symbols.astype(str).str.cat(currencies, sep=".").where(sec_types=="CASH", symbols)
             symbols_with_conids = symbols.astype(str) + "(" + symbols.index.astype(str) + ")"
             results.rename(columns=symbols_with_conids.to_dict(), inplace=True)
 
