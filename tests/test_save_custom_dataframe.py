@@ -519,11 +519,11 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsPosition',
+             'AbsExposure',
              'Signal',
              'Return',
              'Slippage',
-             'Position',
+             'NetExposure',
              'TotalHoldings',
              'Trade',
              'AbsWeight',

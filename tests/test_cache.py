@@ -119,11 +119,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsPosition',
+             'AbsExposure',
              'Signal',
              'Return',
              'Slippage',
-             'Position',
+             'NetExposure',
              'TotalHoldings',
              'Trade',
              'AbsWeight',
@@ -191,7 +191,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                      0.0]}
         )
 
-        net_positions = results.loc["Position"].reset_index()
+        net_positions = results.loc["NetExposure"].reset_index()
         net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
@@ -210,7 +210,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                      1.0]}
         )
 
-        abs_positions = results.loc["AbsPosition"].reset_index()
+        abs_positions = results.loc["AbsExposure"].reset_index()
         abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
@@ -326,11 +326,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsPosition',
+             'AbsExposure',
              'Signal',
              'Return',
              'Slippage',
-             'Position',
+             'NetExposure',
              'TotalHoldings',
              'Trade',
              'AbsWeight',
@@ -398,7 +398,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                      0.0]}
         )
 
-        net_positions = results.loc["Position"].reset_index()
+        net_positions = results.loc["NetExposure"].reset_index()
         net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
@@ -417,7 +417,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                      1.0]}
         )
 
-        abs_positions = results.loc["AbsPosition"].reset_index()
+        abs_positions = results.loc["AbsExposure"].reset_index()
         abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),

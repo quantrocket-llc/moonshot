@@ -136,11 +136,11 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsPosition',
+             'AbsExposure',
              'Signal',
              'Return',
              'Slippage',
-             'Position',
+             'NetExposure',
              'TotalHoldings',
              'Trade',
              'AbsWeight',
@@ -183,7 +183,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                      -0.25]}
         )
 
-        net_positions = results.loc["Position"].reset_index()
+        net_positions = results.loc["NetExposure"].reset_index()
         net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
@@ -336,11 +336,11 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
             {'Commission',
-             'AbsPosition',
+             'AbsExposure',
              'Signal',
              'Return',
              'Slippage',
-             'Position',
+             'NetExposure',
              'TotalHoldings',
              'Trade',
              'AbsWeight',
@@ -383,7 +383,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                      -0.25]}
         )
 
-        net_positions = results.loc["Position"].reset_index()
+        net_positions = results.loc["NetExposure"].reset_index()
         net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
