@@ -289,9 +289,9 @@ class BenchmarkTestCase(unittest.TestCase):
                      10.5]}
         )
 
-    def test_complain_if_intraday_and_no_benchmark_time(self):
+    def test_complain_if_once_a_day_intraday_and_no_benchmark_time(self):
         """
-        Tests error handling for an intraday strategy when no BENCHMARK_TIME
+        Tests error handling for a once a day intraday strategy when no BENCHMARK_TIME
         is specified.
         """
 
@@ -398,8 +398,8 @@ class BenchmarkTestCase(unittest.TestCase):
 
     def test_complain_if_benchmark_time_not_in_data(self):
         """
-        Tests error handling for an intraday strategy when BENCHMARK_TIME is
-        specified but is not in the data.
+        Tests error handling for a once a day intraday strategy when
+        BENCHMARK_TIME is specified but is not in the data.
         """
 
         class ShortAbove10Intraday(Moonshot):
@@ -503,10 +503,10 @@ class BenchmarkTestCase(unittest.TestCase):
         self.assertIn(
             "short-above-10 BENCHMARK_TIME 15:45:00 is not in backtest data", repr(cm.exception))
 
-    def test_benchmark_intraday(self):
+    def test_benchmark_once_a_day_intraday(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified on an intraday strategy.
+        Benchmark ConId is specified on a once a day intraday strategy.
         """
 
         class ShortAbove10Intraday(Moonshot):
@@ -622,4 +622,106 @@ class BenchmarkTestCase(unittest.TestCase):
              23456: ["nan",
                      "nan",
                      "nan"]}
+        )
+
+    def test_benchmark_continuous_intraday(self):
+        """
+        Tests that the results DataFrame contains Benchmark prices when a
+        Benchmark ConId is specified on a continuous intraday strategy.
+        """
+
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+
+            BENCHMARK = 23456
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["Close"] <= 10
+                short_signals = prices.loc["Close"] > 10
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+        def mock_get_historical_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["Close"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone"]
+            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York"
+                    ],
+                    23456: [
+                        "America/New_York"
+                    ]
+                },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+
+            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+
+        results = results.where(results.notnull(), "nan")
+
+        benchmarks = results.loc["Benchmark"].reset_index()
+        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            benchmarks.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: ['nan',
+                     'nan',
+                     'nan',
+                     'nan',
+                     'nan',
+                     'nan'],
+             23456: [10.56,
+                     12.01,
+                     10.50,
+                     9.80,
+                     13.40,
+                     7.50,]}
         )

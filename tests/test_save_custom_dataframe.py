@@ -107,9 +107,10 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
 
         self.assertIn("name Signal is a reserved name", repr(cm.exception))
 
-    def test_complain_if_save_custom_dataframe_with_time_in_index(self):
+    def test_complain_if_save_custom_dataframe_with_time_in_index_and_eod_result(self):
         """
-        Tests error handling when a custom dataframe is saved with Time in the index.
+        Tests error handling when a custom dataframe is saved with Time in
+        the index yet the results are EOD.
         """
 
         class ShortAbove10Intraday(Moonshot):
@@ -549,3 +550,116 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                      244800.0, # 8.50 * 28800
                      178500.0]} # 10.50 * 17000
         )
+
+    def test_save_custom_dataframe_continuous_intraday(self):
+        """
+        Tests saving a custom dataframe to the output in a continuous intraday backtest.
+        """
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["Close"] <= 10
+                short_signals = prices.loc["Close"] > 10
+                self.save_to_results("TheClose", prices.loc["Close"])
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+        def mock_get_historical_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["Close"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone"]
+            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York"
+                    ],
+                    23456: [
+                        "America/New_York"
+                    ]
+                },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+
+            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+
+        self.assertSetEqual(
+            set(results.index.get_level_values("Field")),
+            {'Commission',
+             'AbsExposure',
+             'Signal',
+             'Return',
+             'Slippage',
+             'NetExposure',
+             'TotalHoldings',
+             'Trade',
+             'AbsWeight',
+             'Weight',
+             'TheClose'}
+        )
+
+        closes = results.loc["TheClose"].reset_index()
+        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            closes.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+            'Time': [
+                '10:00:00',
+                '11:00:00',
+                '12:00:00',
+                '10:00:00',
+                '11:00:00',
+                '12:00:00'],
+            12345: [9.6,
+                    10.45,
+                    10.12,
+                    15.45,
+                    8.67,
+                    12.30,],
+            23456: [10.56,
+                    12.01,
+                    10.50,
+                    9.80,
+                    13.40,
+                    7.50,]}
+               )

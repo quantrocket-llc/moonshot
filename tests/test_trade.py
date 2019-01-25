@@ -533,10 +533,10 @@ class TradeTestCase(unittest.TestCase):
             ]
         )
 
-    def test_short_only_intraday_strategy(self):
+    def test_short_only_once_a_day_intraday_strategy(self):
         """
         Tests that the resulting DataFrames are correct after running a
-        short-only intraday strategy.
+        short-only once-a-day intraday strategy.
         """
 
         class ShortAbove10Intraday(Moonshot):
@@ -670,6 +670,144 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'short-above-10',
                     # 1.0 allocation * 0.25 weight * 60K / 14.50
                     'TotalQuantity': 1034,
+                    'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                }
+            ]
+        )
+
+    def test_continuous_intraday_strategy(self):
+        """
+        Tests that the resulting DataFrames are correct after running a
+        continuous intraday strategy.
+        """
+
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+            CODE = "c-intraday-pivot-10"
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["Close"] <= 10
+                short_signals = prices.loc["Close"] > 10
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+        def mock_get_historical_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["Close"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product(
+                [fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            idx = pd.MultiIndex.from_product(
+                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                        ],
+                    23456: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                    },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        def mock_download_account_balances(f, **kwargs):
+            balances = pd.DataFrame(dict(Account=["U123"],
+                                         NetLiquidation=[60000],
+                                         Currency=["USD"]))
+            balances.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_exchange_rates(f, **kwargs):
+            rates = pd.DataFrame(dict(BaseCurrency=["USD"],
+                                      QuoteCurrency=["USD"],
+                                         Rate=[1.0]))
+            rates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_positions(**kwargs):
+            return []
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
+                with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
+                    with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+
+                        orders = BuyBelow10ShortAbove10ContIntraday().trade(
+                            {"U123": 1.0}, review_date="2018-05-02 12:05:00")
+
+        self.assertSetEqual(
+            set(orders.columns),
+            {'ConId',
+             'Account',
+             'Action',
+             'OrderRef',
+             'TotalQuantity',
+             'Exchange',
+             'OrderType',
+             'Tif'}
+        )
+        self.assertListEqual(
+            orders.to_dict(orient="records"),
+            [
+                {
+                    'ConId': 12345,
+                    'Account': 'U123',
+                    'Action': 'SELL',
+                    'OrderRef': 'c-intraday-pivot-10',
+                    # 1.0 allocation * 0.5 weight * 60K / 12.30 = 2439
+                    'TotalQuantity': 2439,
+                    'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'ConId': 23456,
+                    'Account': 'U123',
+                    'Action': 'BUY',
+                    'OrderRef': 'c-intraday-pivot-10',
+                    # 1.0 allocation * 0.5 weight * 60K / 7.50 = 4000
+                    'TotalQuantity': 4000,
                     'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'

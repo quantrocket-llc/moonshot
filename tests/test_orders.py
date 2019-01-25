@@ -18,7 +18,7 @@ import unittest
 from unittest.mock import patch
 import pandas as pd
 from moonshot import Moonshot
-from moonshot.exceptions import MoonshotParameterError
+from moonshot.exceptions import MoonshotError, MoonshotParameterError
 
 class OrdersTestCase(unittest.TestCase):
     """
@@ -202,6 +202,147 @@ class OrdersTestCase(unittest.TestCase):
             ]
         )
 
+    def test_complain_if_reindex_like_orders_with_time_index_on_once_a_day_intraday_strategy(self):
+        """
+        Tests error handling when using reindex_like_orders on a once-a-day
+        intraday strategy and passing Time in the index.
+        """
+
+        class ShortAbove10Intraday(Moonshot):
+
+            CODE = "short-10"
+
+            def prices_to_signals(self, prices):
+                morning_prices = prices.loc["Open"].xs("09:30:00", level="Time")
+                short_signals = morning_prices > 10
+                return -short_signals.astype(int)
+
+            def signals_to_target_weights(self, signals, prices):
+                weights = self.allocate_fixed_weights(signals, 0.25)
+                return weights
+
+            def target_weights_to_positions(self, weights, prices):
+                # enter on same day
+                positions = weights.copy()
+                return positions
+
+            def positions_to_gross_returns(self, positions, prices):
+                # hold from 10:00-16:00
+                closes = prices.loc["Close"]
+                entry_prices = closes.xs("09:30:00", level="Time")
+                exit_prices = closes.xs("15:30:00", level="Time")
+                pct_changes = (exit_prices - entry_prices) / entry_prices
+                gross_returns = pct_changes * positions
+                return gross_returns
+
+            def order_stubs_to_orders(self, orders, prices):
+                closes = prices.loc["Close"]
+                prior_closes = closes.shift()
+                prior_closes = self.reindex_like_orders(prior_closes, orders)
+
+                orders["Exchange"] = "SMART"
+                orders["OrderType"] = 'LMT'
+                orders["LmtPrice"] = prior_closes
+                orders["Tif"] = "Day"
+                return orders
+
+        def mock_get_historical_prices(*args, **kwargs):
+
+            dt_idx = pd.date_range(end=pd.Timestamp.today(), periods=3, normalize=True)
+            fields = ["Close","Open"]
+            times = ["09:30:00", "15:30:00"]
+            idx = pd.MultiIndex.from_product(
+                [fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                        # Open
+                        9.88,
+                        10.34,
+                        10.23,
+                        16.45,
+                        8.90,
+                        11.30,
+                    ],
+                    23456: [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        14.50,
+                        # Open
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        14.10,
+                        15.60
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        def mock_download_account_balances(f, **kwargs):
+            balances = pd.DataFrame(dict(Account=["U123"],
+                                         NetLiquidation=[85000],
+                                         Currency=["USD"]))
+            balances.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_exchange_rates(f, **kwargs):
+            rates = pd.DataFrame(dict(BaseCurrency=["USD"],
+                                      QuoteCurrency=["USD"],
+                                         Rate=[1.0]))
+            rates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_positions(**kwargs):
+            return []
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
+                with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
+                    with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+
+                        with self.assertRaises(MoonshotError) as cm:
+                            ShortAbove10Intraday().trade({"U123": 0.5})
+
+        self.assertIn("cannot reindex DataFrame like orders because DataFrame contains "
+                      "'Time' in index, please take a cross-section first", repr(cm.exception))
+
     def test_reindex_like_orders(self):
         """
         Tests that the orders DataFrame is correct when using reindex_like_orders.
@@ -341,6 +482,156 @@ class OrdersTestCase(unittest.TestCase):
                     'Exchange': 'SMART',
                     'OrderType': 'LMT',
                     'LmtPrice': 11.25,
+                    'Tif': 'Day'
+                }
+            ]
+        )
+
+    def test_reindex_like_orders_continous_intraday(self):
+        """
+        Tests that the orders DataFrame is correct when using
+        reindex_like_orders on a continuous intraday strategy.
+        """
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+            CODE = "c-intraday-pivot-10"
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["Close"] <= 10
+                short_signals = prices.loc["Close"] > 10
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+            def order_stubs_to_orders(self, orders, prices):
+                closes = prices.loc["Close"]
+                prior_closes = closes.shift()
+                prior_closes = self.reindex_like_orders(prior_closes, orders)
+
+                orders["Exchange"] = "SMART"
+                orders["OrderType"] = 'LMT'
+                orders["LmtPrice"] = prior_closes
+                orders["Tif"] = "Day"
+                return orders
+
+        def mock_get_historical_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["Close"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product(
+                [fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            idx = pd.MultiIndex.from_product(
+                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                        ],
+                    23456: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                    },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        def mock_download_account_balances(f, **kwargs):
+            balances = pd.DataFrame(dict(Account=["U123"],
+                                         NetLiquidation=[60000],
+                                         Currency=["USD"]))
+            balances.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_exchange_rates(f, **kwargs):
+            rates = pd.DataFrame(dict(BaseCurrency=["USD"],
+                                      QuoteCurrency=["USD"],
+                                         Rate=[1.0]))
+            rates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_positions(**kwargs):
+            return []
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
+                with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
+                    with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+
+                        orders = BuyBelow10ShortAbove10ContIntraday().trade(
+                            {"U123": 1.0}, review_date="2018-05-02 12:05:00")
+
+        self.assertSetEqual(
+            set(orders.columns),
+            {'ConId',
+             'Account',
+             'Action',
+             'OrderRef',
+             'TotalQuantity',
+             'Exchange',
+             'LmtPrice',
+             'OrderType',
+             'Tif'}
+        )
+
+        self.assertListEqual(
+            orders.to_dict(orient="records"),
+            [
+                {
+                    'ConId': 12345,
+                    'Account': 'U123',
+                    'Action': 'SELL',
+                    'OrderRef': 'c-intraday-pivot-10',
+                    'TotalQuantity': 2439,
+                    'Exchange': 'SMART',
+                    'OrderType': 'LMT',
+                    'LmtPrice': 8.67,
+                    'Tif': 'Day'
+                },
+                {
+                    'ConId': 23456,
+                    'Account': 'U123',
+                    'Action': 'BUY',
+                    'OrderRef': 'c-intraday-pivot-10',
+                    'TotalQuantity': 4000,
+                    'Exchange': 'SMART',
+                    'OrderType': 'LMT',
+                    'LmtPrice': 13.4,
                     'Tif': 'Day'
                 }
             ]

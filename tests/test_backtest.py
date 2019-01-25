@@ -964,7 +964,7 @@ class BacktestTestCase(unittest.TestCase):
              }
         )
 
-    def test_short_only_intraday_strategy(self):
+    def test_short_only_once_a_day_intraday_strategy(self):
         """
         Tests that the resulting DataFrames are correct after running a
         short-only intraday strategy.
@@ -1243,6 +1243,405 @@ class BacktestTestCase(unittest.TestCase):
                      0.0,
                      -0.0205224] # (14.50 - 13.40)/13.40 * 0.25
              }
+        )
+
+    def test_continuous_intraday_strategy(self):
+
+        """
+        Tests that the resulting DataFrames are correct after running a
+        long-short continuous intraday strategy.
+        """
+
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["Close"] <= 10
+                short_signals = prices.loc["Close"] > 10
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+        def mock_get_historical_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["Close"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+
+            master_fields = ["Timezone"]
+            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York"
+                    ],
+                    23456: [
+                        "America/New_York"
+                    ]
+                },
+                index=idx
+            )
+            return pd.concat((prices, securities))
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+
+            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+
+        self.assertSetEqual(
+            set(results.index.get_level_values("Field")),
+            {'Commission',
+             'AbsExposure',
+             'Signal',
+             'Return',
+             'Slippage',
+             'NetExposure',
+             'TotalHoldings',
+             'Trade',
+             'AbsWeight',
+             'Weight'}
+        )
+
+        # replace nan with "nan" to allow equality comparisons
+        results = results.round(7)
+        results = results.where(results.notnull(), "nan")
+
+        signals = results.loc["Signal"].reset_index()
+        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            signals.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [1.0,
+                     -1.0,
+                     -1.0,
+                     -1.0,
+                     1.0,
+                     -1.0],
+             23456: [-1.0,
+                     -1.0,
+                     -1.0,
+                     1.0,
+                     -1.0,
+                     1.0]}
+        )
+
+        weights = results.loc["Weight"].reset_index()
+        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            weights.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [0.5,
+                     -0.5,
+                     -0.5,
+                     -0.5,
+                     0.5,
+                     -0.5],
+             23456: [-0.5,
+                     -0.5,
+                     -0.5,
+                     0.5,
+                     -0.5,
+                     0.5]}
+        )
+
+        abs_weights = results.loc["AbsWeight"].reset_index()
+        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            abs_weights.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [0.5,
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5],
+             23456: [0.5,
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5]}
+        )
+
+
+        net_positions = results.loc["NetExposure"].reset_index()
+        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            net_positions.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: ['nan',
+                     0.5,
+                     -0.5,
+                     -0.5,
+                     -0.5,
+                     0.5],
+             23456: ['nan',
+                     -0.5,
+                     -0.5,
+                     -0.5,
+                     0.5,
+                     -0.5]}
+        )
+
+        abs_positions = results.loc["AbsExposure"].reset_index()
+        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            abs_positions.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: ['nan',
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5],
+             23456: ['nan',
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5,
+                     0.5]}
+        )
+
+        total_holdings = results.loc["TotalHoldings"].reset_index()
+        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            total_holdings.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [0,
+                     1.0,
+                     1.0,
+                     1.0,
+                     1.0,
+                     1.0],
+             23456: [0,
+                     1.0,
+                     1.0,
+                     1.0,
+                     1.0,
+                     1.0]}
+        )
+
+        trades = results.loc["Trade"].reset_index()
+        trades.loc[:, "Date"] = trades.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            trades.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: ['nan',
+                     0.5,
+                     -1.0,
+                     0.0,
+                     0.0,
+                     1.0],
+             23456: ['nan',
+                     -0.5,
+                     0.0,
+                     0.0,
+                     1.0,
+                     -1.0]}
+        )
+
+        commissions = results.loc["Commission"].reset_index()
+        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            commissions.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0],
+             23456: [0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0]}
+        )
+
+        slippage = results.loc["Slippage"].reset_index()
+        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            slippage.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0],
+             23456: [0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0,
+                     0.0]}
+        )
+
+        returns = results.loc["Return"].reset_index()
+        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            returns.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-02T00:00:00'],
+             'Time': ['10:00:00',
+                      '11:00:00',
+                      '12:00:00',
+                      '10:00:00',
+                      '11:00:00',
+                      '12:00:00'],
+             12345: [0.0,
+                     0.0,
+                     -0.0157895, # (10.12-10.45)/10.45 * 0.5
+                     -0.2633399, # (15.45-10.12)/10.12 * -0.5
+                     0.2194175,  # (8.67-15.45)/15.45 * -0.5
+                     -0.2093426  # (12.30-8.67)/8.67 * -0.5
+                     ],
+             23456: [0.0,
+                     0.0,
+                     0.0628643, # (10.50-12.01)/12.01 * -0.5
+                     0.0333333, # (9.80-10.50)/10.50 * -0.5
+                     -0.1836735, # (13.40-9.80)/9.80 * -0.5
+                     -0.2201493 # (7.50-13.40)/13.40 * 0.5
+                     ]}
         )
 
     def test_pass_allocation(self):

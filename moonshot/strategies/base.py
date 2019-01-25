@@ -187,6 +187,8 @@ class Moonshot(
         self.is_backtest = False
         self._backtest_results = {}
         self._inferred_timezone = None
+        self._signal_date = None # set by _weights_to_today_weights
+        self._signal_time = None # set by _weights_to_today_weights
 
         if hasattr(self, "get_signals"):
             warnings.warn(
@@ -446,8 +448,15 @@ class Moonshot(
         >>> prior_closes = self.reindex_like_orders(prior_closes, orders)
 
         """
-        signal_date = self._get_signal_date()
-        df = df.loc[signal_date]
+        df = df.loc[self._signal_date]
+        if "Time" in df.index.names:
+            if not self._signal_time:
+                raise MoonshotError(
+                    "cannot reindex DataFrame like orders because DataFrame contains "
+                    "'Time' in index, please take a cross-section first, for example: "
+                    "`my_dataframe.xs('15:45:00', level='Time')`")
+            df = df.loc[self._signal_time]
+
         df.name = "_MoonshotOther"
         df = orders.join(df, on="ConId")._MoonshotOther
         df.name = None
@@ -556,11 +565,28 @@ class Moonshot(
             trades = positions.fillna(0).diff()
         return trades
 
-    def _get_signal_date(self):
+    def _weights_to_today_weights(self, weights, prices):
         """
-        Returns the date that contains the signals that should be used for
-        today's trading. By default this is today.
+        From a DataFrame of target weights, extract the row that contains the
+        weights that should be used for today's trading. Returns a Series of
+        weights by conid:
+
+        ConId
+        12345  -0.2
+        23456     0
+        34567   0.1
+
+        The date whose weights are selected is usually today, but if CALENDAR
+        is used and the market is closed it will be the date when the market
+        closed. Can also be overridden by review_date.
+
+        For intraday strategies, the time whose weights are selected is the
+        latest time that is earlier than the time at which the strategy is
+        running.
         """
+
+        # First, get the signal date
+
         # Use review_date if set
         if self.review_date:
             dt = pd.Timestamp(self.review_date)
@@ -582,9 +608,77 @@ class Moonshot(
             tz = self.TIMEZONE or self._inferred_timezone
             dt = pd.Timestamp.now(tz=tz)
 
-        # Keep only the date
-        dt = pd.Timestamp(dt.date())
-        return dt
+        # Keep only the date as the signal_date
+        self._signal_date = pd.Timestamp(dt.date())
+
+        # extract the current time (or review date time)
+        trade_time = dt.strftime("%H:%M:%S")
+
+        weights_is_intraday = "Time" in weights.index.names
+
+        try:
+            today_weights = weights.loc[self._signal_date]
+        except KeyError:
+            if weights_is_intraday:
+                max_date = weights.index.get_level_values("Date").max()
+            else:
+                max_date = weights.index.max()
+
+            msg = ("expected signal date {0} not found in target weights DataFrame, "
+                   "is the underlying data up-to-date? (max date is {1})")
+            if not self.CALENDAR and not weights_is_intraday and self._signal_date.date() - max_date.date() == pd.Timedelta(days=1):
+                msg += (" If your strategy trades before the open and {0} data "
+                        "is not expected, try setting CALENDAR = <exchange>")
+            raise MoonshotError(msg.format(
+                self._signal_date.date().isoformat(),
+                max_date.date().isoformat()))
+
+        if not weights_is_intraday:
+            print("using target weights for {0} to create orders".format(self._signal_date.date().isoformat()))
+            return today_weights
+
+        # For intraday strategies, select the weights from the latest time
+        # that is earlier than the trade time. Note that we select the
+        # expected time from the entire weights DataFrame, which will result
+        # in a failure if that time is missing for the trade date
+        unique_times = weights.index.get_level_values("Time").unique()
+        self._signal_time = unique_times[unique_times < trade_time].max()
+        if pd.isnull(self._signal_time):
+            msg = (
+                "cannot determine which target weights to use for orders because "
+                "target weights DataFrame contains no times earlier than trade time {0} "
+                "for signal date {1}".format(
+                    trade_time,
+                    self._signal_date.date().isoformat()))
+
+            if self.review_date:
+                msg += ", please adjust the review_date"
+            raise MoonshotError(msg)
+
+        # get_historical_prices inserts all times into each day's index, thus
+        # the signal_time will be in the weights DataFrame even if the data
+        # is stale. Instead, to validate the data, we make sure that there is
+        # at least one nonnull field in the prices DataFrame at the
+        # signal_time on the signal_date
+        today_prices = prices.xs(self._signal_date, level="Date")
+        notnull_today_prices = today_prices[today_prices.notnull().any(axis=1)]
+        if notnull_today_prices.xs(self._signal_time, level="Time").empty:
+            msg = ("no {0} data found in prices DataFrame for signal date {1}, "
+                   "is the underlying data up-to-date? (max time for {1} "
+                   "is {2})")
+            notnull_max_date = notnull_today_prices.iloc[-1].name[-1]
+            raise MoonshotError(msg.format(
+                self._signal_time,
+                self._signal_date.date().isoformat(),
+                notnull_max_date))
+
+        today_weights = today_weights.loc[self._signal_time]
+
+        print("using target weights for {0} at {1} to create orders".format(
+            self._signal_date.date().isoformat(),
+            self._signal_time))
+
+        return today_weights
 
     def _get_commissions(self, positions, prices):
         """
@@ -993,6 +1087,8 @@ class Moonshot(
 
         total_holdings = (positions.fillna(0) != 0).astype(int)
 
+        results_are_intraday = "Time" in signals.index.names
+
         all_results = dict(
             Signal=signals,
             Weight=weights,
@@ -1005,11 +1101,20 @@ class Moonshot(
             Slippage=slippages,
             Return=returns)
 
+        # validate that custom backtest results are daily if results are
+        # daily
+        for custom_name, custom_df in self._backtest_results.items():
+
+            if "Time" in custom_df.index.names and not results_are_intraday:
+                raise MoonshotParameterError(
+                    "custom DataFrame '{0}' won't concat properly with 'Time' in index, "
+                    "please take a cross-section first, for example: "
+                    "`my_dataframe.xs('15:45:00', level='Time')`".format(custom_name))
+
         all_results.update(self._backtest_results)
 
         if self.BENCHMARK:
-            results_are_intraday = "Time" in signals.index.names
-            all_results["Benchmark"] = self._get_benchmark(prices, results_are_intraday)
+            all_results["Benchmark"] = self._get_benchmark(prices, daily=not results_are_intraday)
 
         results = pd.concat(all_results)
 
@@ -1034,7 +1139,7 @@ class Moonshot(
 
         return results
 
-    def _get_benchmark(self, prices, results_are_intraday=False):
+    def _get_benchmark(self, prices, daily=True):
         field = None
         fields = prices.index.get_level_values("Field").unique()
         candidate_fields = ("Close", "Open", "Bid", "Ask", "High", "Low")
@@ -1051,7 +1156,7 @@ class Moonshot(
             raise MoonshotError("{0} BENCHMARK ConId {1} is not in backtest data".format(
                 self.CODE, self.BENCHMARK))
 
-        if "Time" in prices.index.names and not results_are_intraday:
+        if "Time" in prices.index.names and daily:
             if not self.BENCHMARK_TIME:
                 raise MoonshotParameterError(
                     "Cannot extract BENCHMARK {0} from {1} because prices contains intraday "
@@ -1111,17 +1216,12 @@ class Moonshot(
 
         index_levels = df.index.names
 
-        if "Time" in index_levels:
-            raise MoonshotParameterError(
-                "custom DataFrame '{0}' won't concat properly with 'Time' in index, please take a cross-section first, "
-                "for example: `my_dataframe.xs('15:45:00', level='Time')`".format(name))
-
-        if index_levels != ["Date"]:
+        if "Date" not in index_levels:
             raise MoonshotParameterError(
                 "custom DataFrame '{0}' must have index called 'Date' to concat properly, but has {1}".format(
                     name, ",".join([str(level_name) for level_name in index_levels])))
 
-        if not hasattr(df.index, "date"):
+        if not hasattr(df.index.get_level_values("Date"), "date"):
             raise MoonshotParameterError("custom DataFrame '{0}' must have a DatetimeIndex to concat properly".format(name))
 
         self._backtest_results[name] = df
@@ -1135,8 +1235,10 @@ class Moonshot(
         allocations : dict, required
             dict of account:allocation to strategy (expressed as a percentage of NLV)
 
-        review_date : str (YYYY-MM-DD), optional
-            generate orders as if it were this date, rather than using the latest date
+        review_date : str (YYYY-MM-DD [HH:MM:SS]), optional
+            generate orders as if it were this date, rather than using the latest date.
+            For end-of-day strategies, provide a date; for intraday strategies a date
+            and time
 
         Returns
         -------
@@ -1149,30 +1251,13 @@ class Moonshot(
         start_date = review_date or pd.Timestamp.today()
 
         prices = self.get_historical_prices(start_date)
-        is_intraday = "Time" in prices.index.names
+        prices_is_intraday = "Time" in prices.index.names
 
         signals = self.prices_to_signals(prices)
 
-        signal_date = self._get_signal_date()
-
         weights = self.signals_to_target_weights(signals, prices)
 
-        # get the latest date's weights; this results in a Series of weights by ConId:
-        # ConId
-        # 12345  -0.2
-        # 23456     0
-        # 34567   0.1
-        try:
-            weights = weights.loc[signal_date]
-        except KeyError as e:
-            msg = ("expected signal date {0} not found in weights DataFrame, "
-                   "is the underlying data up-to-date? (max date is {1})")
-            if not self.CALENDAR and signal_date.date() - weights.index.max().date() == pd.Timedelta(days=1):
-                msg += (" If your strategy trades before the open and {0} data "
-                        "is not expected, try setting CALENDAR = <exchange>")
-            raise MoonshotError(msg.format(
-                signal_date.date().isoformat(),
-                weights.index.max().date().isoformat()))
+        weights = self._weights_to_today_weights(weights, prices)
 
         allocations = pd.Series(allocations)
         # Out:
@@ -1196,9 +1281,12 @@ class Moonshot(
         )
 
         contract_values = self._get_contract_values(prices)
-        contract_values = contract_values.fillna(method="ffill").loc[signal_date]
-        if is_intraday:
-            contract_values = contract_values.iloc[-1]
+        contract_values = contract_values.fillna(method="ffill").loc[self._signal_date]
+        if prices_is_intraday:
+            if self._signal_time:
+                contract_values = contract_values.loc[self._signal_time]
+            else:
+                contract_values = contract_values.iloc[-1]
         contract_values = allocations.apply(lambda x: contract_values).T
         # Out:
         #          U12345    U55555
@@ -1300,14 +1388,21 @@ class Moonshot(
         # Constrain quantities (we do this before applying the position diff in order to
         # mirror backtesting)
         max_quantities_for_longs, max_quantities_for_shorts = self.limit_position_sizes(prices)
+
         if max_quantities_for_longs is not None:
-            max_quantities_for_longs = max_quantities_for_longs.loc[signal_date]
+            max_quantities_for_longs_is_intraday = "Time" in max_quantities_for_longs.index.names
+            max_quantities_for_longs = max_quantities_for_longs.loc[self._signal_date]
+            if max_quantities_for_longs_is_intraday:
+                max_quantities_for_longs = max_quantities_for_longs.loc[self._signal_time]
             max_quantities_for_longs = allocations.apply(lambda x: max_quantities_for_longs.abs()).T
             target_quantities = max_quantities_for_longs.where(
                 target_quantities > max_quantities_for_longs, target_quantities)
 
         if max_quantities_for_shorts is not None:
-            max_quantities_for_shorts = max_quantities_for_shorts.loc[signal_date]
+            max_quantities_for_shorts_is_intraday = "Time" in max_quantities_for_shorts.index.names
+            max_quantities_for_shorts = max_quantities_for_shorts.loc[self._signal_date]
+            if max_quantities_for_shorts_is_intraday:
+                max_quantities_for_shorts = max_quantities_for_shorts.loc[self._signal_time]
             max_quantities_for_shorts = allocations.apply(lambda x: -max_quantities_for_shorts.abs()).T
             target_quantities = max_quantities_for_shorts.where(
                 target_quantities < max_quantities_for_shorts, target_quantities)
