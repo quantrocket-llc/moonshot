@@ -317,7 +317,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
         def mock_get_historical_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(), periods=2, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=2, normalize=True)
             fields = ["Close"]
             times = ["10:00:00", "11:00:00", "12:00:00"]
             idx = pd.MultiIndex.from_product(
@@ -815,7 +815,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
         def mock_get_historical_prices(*args, **kwargs):
 
-            now = pd.Timestamp.now()
+            now = pd.Timestamp.now(tz="America/New_York")
             dt_idx = pd.date_range(end=now, periods=2, normalize=True)
             fields = ["Close"]
             first_time = (now - pd.Timedelta(seconds=120)).strftime("%H:%M:00")

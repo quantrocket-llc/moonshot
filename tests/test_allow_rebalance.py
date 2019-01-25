@@ -46,7 +46,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
         def mock_get_historical_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
             idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
 
@@ -181,7 +181,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
         def mock_get_historical_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
             idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
 
@@ -339,7 +339,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
         def mock_get_historical_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
             idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
 
@@ -515,7 +515,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
         def mock_get_historical_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
             idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
 
