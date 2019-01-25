@@ -662,7 +662,13 @@ class Moonshot(
         # signal_time on the signal_date
         today_prices = prices.xs(self._signal_date, level="Date")
         notnull_today_prices = today_prices[today_prices.notnull().any(axis=1)]
-        if notnull_today_prices.xs(self._signal_time, level="Time").empty:
+
+        try:
+            no_signal_time_prices = notnull_today_prices.xs(self._signal_time, level="Time").empty
+        except KeyError:
+            no_signal_time_prices = True
+
+        if no_signal_time_prices:
             msg = ("no {0} data found in prices DataFrame for signal date {1}, "
                    "is the underlying data up-to-date? (max time for {1} "
                    "is {2})")
