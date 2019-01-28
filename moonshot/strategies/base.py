@@ -550,20 +550,20 @@ class Moonshot(
         """
         return self.NLV
 
-    def _positions_to_trades(self, positions):
+    def _positions_to_turnover(self, positions):
         """
-        Given a dataframe of positions, returns a dataframe of trades. 0
-        indicates no trade; 1 indicates going from 100% short to cash or cash
-        to 100% long, and vice versa; and 2 indicates going from 100% short
-        to %100 long. Fractional positions can result in fractional trades.
+        Given a dataframe of positions, returns a dataframe of turnover. 0
+        indicates no turnover; 1 indicates going from 100% short to cash or
+        cash to 100% long (for example), and vice versa; and 2 indicates
+        going from 100% short to %100 long (for example).
         """
         # Intraday trades are opened and closed each day there's a position,
-        # so the trades are twice the positions.
+        # so the turnover is twice the positions.
         if self.POSITIONS_CLOSED_DAILY:
-            trades = positions * 2
+            turnover = positions * 2
         else:
-            trades = positions.fillna(0).diff()
-        return trades
+            turnover = positions.fillna(0).diff()
+        return turnover.abs()
 
     def _weights_to_today_weights(self, weights, prices):
         """
@@ -693,7 +693,7 @@ class Moonshot(
         if not self.COMMISSION_CLASS:
             return pd.DataFrame(0, index=positions.index, columns=positions.columns)
 
-        trades = self._positions_to_trades(positions)
+        turnover = self._positions_to_turnover(positions)
         contract_values = self._get_contract_values(prices)
 
         prices_is_intraday = "Time" in prices.index.names
@@ -714,7 +714,7 @@ class Moonshot(
 
         # handle the case of only one commission class
         if not isinstance(self.COMMISSION_CLASS, dict):
-            commissions = self.COMMISSION_CLASS.get_commissions(contract_values, trades=trades, nlvs=nlvs)
+            commissions = self.COMMISSION_CLASS.get_commissions(contract_values, turnover=turnover, nlvs=nlvs)
             return commissions
 
         # handle multiple commission classes per sectype/exchange/currency
@@ -753,7 +753,7 @@ class Moonshot(
             sec_type, exchange, currency = sec_group
 
             sec_group_commissions = commission_cls.get_commissions(
-                contract_values, trades=trades, nlvs=nlvs)
+                contract_values, turnover=turnover, nlvs=nlvs)
 
             in_sec_group = (sec_types == sec_type) & (exchanges == exchange) & (currencies == currency)
             all_commissions = sec_group_commissions.where(in_sec_group, all_commissions)
@@ -764,17 +764,17 @@ class Moonshot(
         """
         Returns the slippage to be subtracted from the returns.
         """
-        trades = self._positions_to_trades(positions)
-        slippage = pd.DataFrame(0, index=trades.index, columns=trades.columns)
+        turnover = self._positions_to_turnover(positions)
+        slippage = pd.DataFrame(0, index=turnover.index, columns=turnover.columns)
 
         slippage_classes = self.SLIPPAGE_CLASSES or ()
         if not isinstance(slippage_classes, (list, tuple)):
             slippage_classes = [slippage_classes]
         for slippage_class in slippage_classes:
-            slippage += slippage_class().get_slippage(trades, positions, prices)
+            slippage += slippage_class().get_slippage(turnover, positions, prices)
 
         if self.SLIPPAGE_BPS:
-            slippage += FixedSlippage(self.SLIPPAGE_BPS/10000.0).get_slippage(trades, positions, prices)
+            slippage += FixedSlippage(self.SLIPPAGE_BPS/10000.0).get_slippage(turnover, positions, prices)
 
         return slippage.fillna(0)
 
@@ -1089,7 +1089,7 @@ class Moonshot(
         commissions = self._get_commissions(positions, prices)
         slippages = self._get_slippage(positions, prices)
         returns = gross_returns.fillna(0) - commissions - slippages
-        trades = self._positions_to_trades(positions)
+        turnover = self._positions_to_turnover(positions)
 
         total_holdings = (positions.fillna(0) != 0).astype(int)
 
@@ -1101,7 +1101,7 @@ class Moonshot(
             AbsWeight=weights.abs(),
             AbsExposure=positions.abs(),
             NetExposure=positions,
-            Trade=trades,
+            Turnover=turnover,
             TotalHoldings=total_holdings,
             Commission=commissions,
             Slippage=slippages,
@@ -1212,8 +1212,10 @@ class Moonshot(
             "AbsWeight",
             "AbsExposure",
             "NetExposure",
-            "Trade",
+            "Turnover",
+            "TotalHolding",
             "Commission",
+            "Slippage",
             "Return",
             "Benchmark"
         ]

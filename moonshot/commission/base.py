@@ -19,7 +19,7 @@ class BaseCommission(object):
     MIN_COMMISSION = 0
 
     @classmethod
-    def get_commissions(cls, contract_values, trades, nlvs=None):
+    def get_commissions(cls, contract_values, turnover, nlvs=None):
         """
         Returns a DataFrame of commissions.
 
@@ -29,8 +29,8 @@ class BaseCommission(object):
         contract_values : DataFrame, required
             a DataFrame of contract values (price * multipler / price_magnifier)
 
-        trades : DataFrame of floats, required
-            a DataFrame of trades, expressing the percentage of account equity that
+        turnover : DataFrame of floats, required
+            a DataFrame of turnover, expressing the percentage of account equity that
             is turning over
 
         nlvs : DataFrame of nlvs, optional
@@ -51,8 +51,7 @@ class BaseCommission(object):
         """
         Return a DataFrame of commissions after enforcing the min commission.
         """
-        # Express the min commission as a percentage of NLV (trades are
-        # expressed as a percentage of NLV)
+        # Express the min commission as a percentage of NLV
         min_commissions = cls.MIN_COMMISSION / nlvs
         must_pay_min_commissions = (commissions > 0) & (commissions < min_commissions)
         commissions = commissions.where(must_pay_min_commissions == False, min_commissions)
@@ -107,7 +106,7 @@ class PercentageCommission(BaseCommission):
     MIN_COMMISSION = 0
 
     @classmethod
-    def get_commissions(cls, contract_values, trades, nlvs=None):
+    def get_commissions(cls, contract_values, turnover, nlvs=None):
         """
         Returns a DataFrame of commissions.
 
@@ -117,8 +116,8 @@ class PercentageCommission(BaseCommission):
         contract_values : DataFrame, required
             a DataFrame of contract values (price * multipler / price_magnifier)
 
-        trades : DataFrame of floats, required
-            a DataFrame of trades, expressing the percentage of account equity that
+        turnover : DataFrame of floats, required
+            a DataFrame of turnover, expressing the percentage of account equity that
             is turning over
 
         nlvs : DataFrame of nlvs, optional
@@ -132,8 +131,6 @@ class PercentageCommission(BaseCommission):
         DataFrame
             a DataFrame of commissions, expressed as percentages of account equity
         """
-        trades = trades.abs()
-
         if cls.TIER_2_RATIO:
             ib_commission_rate = (
                 ((1 - cls.TIER_2_RATIO) * cls.IB_COMMISSION_RATE)
@@ -142,12 +139,12 @@ class PercentageCommission(BaseCommission):
         else:
             ib_commission_rate = cls.IB_COMMISSION_RATE
 
-        ib_commissions = trades * ib_commission_rate
+        ib_commissions = turnover * ib_commission_rate
 
         if nlvs is not None and cls.MIN_COMMISSION:
             ib_commissions = cls._enforce_min_commissions(ib_commissions, nlvs=nlvs)
 
-        exchange_commissions = trades * cls.EXCHANGE_FEE_RATE
+        exchange_commissions = turnover * cls.EXCHANGE_FEE_RATE
 
         commissions = ib_commissions + exchange_commissions
 

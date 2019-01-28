@@ -741,7 +741,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight',
              'Nlv'}
@@ -843,7 +843,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight',
              'Nlv'}
@@ -947,7 +947,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight',
              'Nlv'}

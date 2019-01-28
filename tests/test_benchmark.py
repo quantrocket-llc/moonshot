@@ -262,7 +262,7 @@ class BenchmarkTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight',
              'Benchmark'}

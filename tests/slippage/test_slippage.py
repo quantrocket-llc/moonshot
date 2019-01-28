@@ -27,11 +27,11 @@ class FixedSlippageTestCase(unittest.TestCase):
 
     def test_fixed_slippage(self):
 
-        trades = pd.DataFrame(
-            {"ES201609": [0.1, -0.2],
-            "NQ201609": [-0.17, 0.32]},
+        turnover = pd.DataFrame(
+            {"ES201609": [0.1, 0.2],
+            "NQ201609": [0.17, 0.32]},
             )
-        slippage = TestFixedSlippage().get_slippage(trades)
+        slippage = TestFixedSlippage().get_slippage(turnover)
 
         self.assertListEqual(
             slippage.to_dict(orient="records"),
@@ -60,8 +60,8 @@ class BorrowFeesSlippageTestCase(unittest.TestCase):
 
         mock_get_borrow_fees_reindexed_like.return_value = borrow_fee_rates
 
-        trades = prices = None
-        fees = BorrowFees().get_slippage(trades, positions, prices)
+        turnover = prices = None
+        fees = BorrowFees().get_slippage(turnover, positions, prices)
 
         mock_get_borrow_fees_reindexed_like.assert_called_with(positions, time=None)
 

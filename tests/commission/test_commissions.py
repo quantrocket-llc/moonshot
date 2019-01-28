@@ -29,9 +29,9 @@ class FuturesCommissionTestCase(unittest.TestCase):
 
     def test_commissions(self):
 
-        trades = pd.DataFrame(
-            {"ES201609": [0.1, -0.2],
-            "NQ201609": [-0.18, 0.32]},
+        turnover = pd.DataFrame(
+            {"ES201609": [0.1, 0.2],
+            "NQ201609": [0.18, 0.32]},
             )
         contract_values = pd.DataFrame(
             {"ES201609": [70000, 70000],
@@ -39,7 +39,7 @@ class FuturesCommissionTestCase(unittest.TestCase):
             )
         commissions = TestFuturesCommission.get_commissions(
             contract_values,
-            trades)
+            turnover)
 
         # expected commission
         # ES 0: $2.05 / $70000 * .1  = 0.000002929
@@ -66,9 +66,9 @@ class PerShareCommissionTestCase(unittest.TestCase):
     def test_min_commission(self):
 
         # only buy 50 shares
-        trade_pct = 50*250/220000
-        trades = pd.DataFrame(
-            {"LVS": [trade_pct]},
+        turnover_pct = 50*250/220000
+        turnover = pd.DataFrame(
+            {"LVS": [turnover_pct]},
         )
         contract_values = pd.DataFrame(
             {"LVS": [250.00]},
@@ -78,7 +78,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
         )
         commission = TestStockCommission.get_commissions(
             contract_values,
-            trades,
+            turnover,
             nlvs=nlvs)
 
         # expected commission
@@ -93,7 +93,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
         class TestMakerCommission(TestStockCommission):
             MAKER_RATIO = 1
 
-        trades = pd.DataFrame(
+        turnover = pd.DataFrame(
             {"AAPL": [0.1]},
         )
         contract_values = pd.DataFrame(
@@ -105,7 +105,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
 
         commissions = TestMakerCommission.get_commissions(
             contract_values,
-            trades,
+            turnover,
             nlvs=nlvs)
 
         # expected commission
@@ -117,7 +117,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
         class TestTakerCommission(TestStockCommission):
             MAKER_RATIO = 0
 
-        trades = pd.DataFrame(
+        turnover = pd.DataFrame(
             {"AAPL": [0.1]},
         )
         contract_values = pd.DataFrame(
@@ -129,7 +129,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
 
         commissions = TestTakerCommission.get_commissions(
             contract_values,
-            trades,
+            turnover,
             nlvs=nlvs)
 
         # expected commission
@@ -141,7 +141,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
         class TestMakerTakerCommission(TestStockCommission):
             MAKER_RATIO = 0.60
 
-        trades = pd.DataFrame(
+        turnover = pd.DataFrame(
             {"AAPL": [0.1]},
         )
         contract_values = pd.DataFrame(
@@ -153,7 +153,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
 
         commissions = TestMakerTakerCommission.get_commissions(
             contract_values,
-            trades,
+            turnover,
             nlvs=nlvs)
 
         # expected commission
@@ -163,7 +163,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
 class NoCommissionTestCase(unittest.TestCase):
 
     def test_no_commissions(self):
-        trades = pd.DataFrame(
+        turnover = pd.DataFrame(
             {"WYNN": [0.15]},
         )
         contract_values = pd.DataFrame(
@@ -171,7 +171,7 @@ class NoCommissionTestCase(unittest.TestCase):
         )
         commissions = NoCommission.get_commissions(
             contract_values,
-            trades)
+            turnover)
 
         self.assertEqual(commissions.loc[0, "WYNN"], 0)
 
@@ -179,14 +179,14 @@ class ForexCommissionTestCase(unittest.TestCase):
 
     def test_commissions_cadhkd(self):
 
-        trades = pd.DataFrame(
+        turnover = pd.DataFrame(
             {"CAD.HKD": [0.25]})
         contract_values = None # not used for fixed rate
         nlvs = pd.DataFrame(
             {"CAD.HKD": [700000]})
         commissions = SpotForexCommission.get_commissions(
             contract_values,
-            trades,
+            turnover,
             nlvs=nlvs)
 
         # expected commission
@@ -198,14 +198,14 @@ class ForexCommissionTestCase(unittest.TestCase):
     @unittest.expectedFailure
     def test_min_commissions_cadhkd(self):
 
-        trades = pd.DataFrame(
+        turnover = pd.DataFrame(
             {"CAD.HKD": [0.01, 0.05]})
         contract_values = None # not used for fixed rate
         nlvs = pd.DataFrame(
             {"CAD.HKD": [700000,700000]})
         commissions = SpotForexCommission.get_commissions(
             contract_values,
-            trades,
+            turnover,
             nlvs=nlvs)
 
         # expected commission

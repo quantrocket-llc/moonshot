@@ -526,7 +526,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight',
              'DollarVolume'}
@@ -626,7 +626,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight',
              'TheClose'}

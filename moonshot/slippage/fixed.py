@@ -33,18 +33,18 @@ class FixedSlippage(object):
         else:
             self.one_way_slippage = self.ONE_WAY_SLIPPAGE
 
-    def get_slippage(self, trades, *args, **kwargs):
+    def get_slippage(self, turnover, *args, **kwargs):
         """
         Apply the fix pct slippage to each trade.
 
         Parameters
         ----------
-        trades : DataFrame, required
-            a DataFrame of trades
+        turnover : DataFrame, required
+            a DataFrame of turnover
 
         Returns
         -------
         DataFrame
             slippages
         """
-        return trades.abs() * self.one_way_slippage
+        return turnover * self.one_way_slippage

@@ -28,7 +28,7 @@ class BorrowFees(object):
 
     TIME = None
 
-    def get_slippage(self, trades, positions, prices):
+    def get_slippage(self, turnover, positions, prices):
 
         borrow_fees = get_borrow_fees_reindexed_like(positions, time=self.TIME)
         borrow_fees = borrow_fees.fillna(0) / 100

@@ -125,7 +125,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -229,10 +229,10 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                      1.0]}
         )
 
-        trades = results.loc["Trade"].reset_index()
-        trades.loc[:, "Date"] = trades.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover = results.loc["Turnover"].reset_index()
+        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            trades.to_dict(orient="list"),
+            turnover.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
@@ -240,11 +240,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-04T00:00:00'],
              12345: ["nan",
                      0.5,
-                     -0.5,
+                     0.5,
                      0.0],
              23456: ["nan",
                      0.5,
-                     -0.5,
+                     0.5,
                      1.0]}
         )
 
@@ -332,7 +332,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -436,10 +436,10 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                      1.0]}
         )
 
-        trades = results.loc["Trade"].reset_index()
-        trades.loc[:, "Date"] = trades.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover = results.loc["Turnover"].reset_index()
+        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            trades.to_dict(orient="list"),
+            turnover.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
@@ -447,11 +447,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-04T00:00:00'],
              12345: ["nan",
                      0.5,
-                     -0.5,
+                     0.5,
                      0.0],
              23456: ["nan",
                      0.5,
-                     -0.5,
+                     0.5,
                      1.0]}
         )
 

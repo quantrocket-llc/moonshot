@@ -48,7 +48,7 @@ class FuturesCommission(BaseCommission):
     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
 
     @classmethod
-    def get_commissions(cls, contract_values, trades, **kwargs):
+    def get_commissions(cls, contract_values, turnover, **kwargs):
         """
         Return a DataFrame of commissions as percentages of account equity.
         """
@@ -57,8 +57,8 @@ class FuturesCommission(BaseCommission):
         # Express the commission as a percent of contract value
         commission_rates = float(cost_per_contract)/contract_values
 
-        # Multipy the commission rates by the trades
-        commissions = commission_rates * trades.abs()
+        # Multipy the commission rates by the turnover
+        commissions = commission_rates * turnover
 
         return commissions
 

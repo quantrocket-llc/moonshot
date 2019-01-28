@@ -101,7 +101,7 @@ class PerShareCommission(BaseCommission):
     MIN_COMMISSION = 0
 
     @classmethod
-    def get_commissions(cls, contract_values, trades, nlvs=None):
+    def get_commissions(cls, contract_values, turnover, nlvs=None):
         """
         Returns a DataFrame of commissions.
 
@@ -111,8 +111,8 @@ class PerShareCommission(BaseCommission):
         contract_values : DataFrame, required
             a DataFrame of contract values (price * multipler / price_magnifier)
 
-        trades : DataFrame of floats, required
-            a DataFrame of trades, expressing the percentage of account equity that
+        turnover : DataFrame of floats, required
+            a DataFrame of turnover, expressing the percentage of account equity that
             is turning over
 
         nlvs : DataFrame of nlvs, optional
@@ -126,8 +126,6 @@ class PerShareCommission(BaseCommission):
         DataFrame
             a DataFrame of commissions, expressed as percentages of account equity
         """
-        trades = trades.abs()
-
         taker_ratio = 1 - cls.MAKER_RATIO
         exchange_fee_per_share = cls.EXCHANGE_FEE_PER_SHARE + (cls.MAKER_RATIO * cls.MAKER_FEE_PER_SHARE) + (taker_ratio * cls.TAKER_FEE_PER_SHARE)
 
@@ -144,16 +142,16 @@ class PerShareCommission(BaseCommission):
 
         ib_commission_rates = float(ib_commission_per_share)/contract_values.where(contract_values > 0)
 
-        # Multiply the commissions by the trades.
-        ib_commissions = ib_commission_rates * trades
+        # Multiply the commissions by the turnover.
+        ib_commissions = ib_commission_rates * turnover
 
         if nlvs is not None and cls.MIN_COMMISSION:
             ib_commissions = cls._enforce_min_commissions(ib_commissions, nlvs=nlvs)
 
         share_based_exchange_fee_rates = exchange_fee_per_share/contract_values.where(contract_values > 0)
-        share_based_exchange_fees = share_based_exchange_fee_rates * trades
+        share_based_exchange_fees = share_based_exchange_fee_rates * turnover
 
-        value_based_fees = cls.PERCENTAGE_FEE_RATE * trades
+        value_based_fees = cls.PERCENTAGE_FEE_RATE * turnover
 
         commission_based_fees = cls.COMMISSION_PERCENTAGE_FEE_RATE * ib_commissions
 

@@ -191,7 +191,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -323,7 +323,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -478,7 +478,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -616,7 +616,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -748,7 +748,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -896,7 +896,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -1053,7 +1053,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
@@ -1201,7 +1201,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              'Slippage',
              'NetExposure',
              'TotalHoldings',
-             'Trade',
+             'Turnover',
              'AbsWeight',
              'Weight'}
         )
