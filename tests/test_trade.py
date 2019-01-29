@@ -248,7 +248,7 @@ class TradeTestCase(unittest.TestCase):
             DB = 'test-db'
             DB_FIELDS = ["Volume", "Wap", "Close"]
             MASTER_FIELDS = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier", "PrimaryExchange"]
-            DB_TIME_FILTERS = ["00:00:00"]
+            DB_TIMES = ["00:00:00"]
             UNIVERSES = "us-stk"
             CONIDS = [12345,23456]
             EXCLUDE_CONIDS = 34567

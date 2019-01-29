@@ -64,6 +64,9 @@ class Moonshot(
         fields to retrieve from history db (defaults to ["Open", "High", "Low",
         "Close", "Volume"])
 
+    DB_TIMES : list of str (HH:MM:SS), optional
+        for intraday databases, only retrieve these times
+
     CONIDS : list of int, optional
         limit history db query to these conids
 
@@ -160,7 +163,7 @@ class Moonshot(
     CODE = None
     DB = None
     DB_FIELDS = ["Open", "High", "Low", "Close", "Volume"]
-    DB_TIME_FILTERS = None
+    DB_TIMES = None
     CONIDS = None
     UNIVERSES = None
     EXCLUDE_CONIDS = None
@@ -962,6 +965,12 @@ class Moonshot(
         if not isinstance(codes, (list, tuple)):
             codes = [self.DB]
 
+        if not self.DB_TIMES and getattr(self, "DB_TIME_FILTERS", None):
+            warnings.warn(
+                "DB_TIME_FILTERS is deprecated and will be removed in a "
+                "future release, please use DB_TIMES instead", DeprecationWarning)
+            self.DB_TIMES = self.DB_TIME_FILTERS
+
         kwargs = dict(
             codes=codes,
             start_date=start_date,
@@ -970,7 +979,7 @@ class Moonshot(
             conids=self.CONIDS,
             exclude_universes=self.EXCLUDE_UNIVERSES,
             exclude_conids=self.EXCLUDE_CONIDS,
-            times=self.DB_TIME_FILTERS,
+            times=self.DB_TIMES,
             cont_fut=self.CONT_FUT,
             fields=self.DB_FIELDS,
             master_fields=self.MASTER_FIELDS,
