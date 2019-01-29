@@ -1,17 +1,6 @@
 image: python:3.6
 
 pipelines:
-    default:
-        - step:
-            script:
-                - pip install -U tox
-                - tox
-    branches:
-        master:
-            - step:
-                script:
-                    - pip install -U tox
-                    - tox
     tags:
         '*':
             - step:
