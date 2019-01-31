@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import time
+import requests
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
@@ -115,8 +116,15 @@ class Moonshot(
     BENCHMARK : int, optional
         the conid of a security in the historical data to use as the benchmark
 
+    BENCHMARK_DB : str, optional
+        the database containing the benchmark, if different from DB. BENCHMARK_DB
+        should contain end-of-day data, not intraday (but can be used with intraday
+        backtests).
+
     BENCHMARK_TIME : str (HH:MM:SS), optional
-        use prices from this time of day for benchmark, if using intraday prices
+        use prices from this time of day as benchmark prices. Only applicable if
+        benchmark prices originate in DB (not BENCHMARK_DB), DB contains intraday
+        data, and backtest results are daily.
 
     TIMEZONE : str, optional
         convert timestamps to this timezone (if not provided, will be inferred
@@ -178,6 +186,7 @@ class Moonshot(
     SLIPPAGE_CLASSES = ()
     SLIPPAGE_BPS = 0
     BENCHMARK = None
+    BENCHMARK_DB = None
     BENCHMARK_TIME = None
     TIMEZONE = None
     CALENDAR = None
@@ -1155,32 +1164,98 @@ class Moonshot(
         return results
 
     def _get_benchmark(self, prices, daily=True):
-        field = None
-        fields = prices.index.get_level_values("Field").unique()
-        candidate_fields = ("Close", "Open", "Bid", "Ask", "High", "Low")
-        for candidate in candidate_fields:
-            if candidate in fields:
-                field = candidate
-                break
-            else:
-                raise MoonshotParameterError("Cannot extract BENCHMARK {0} from {1} without one of {2}".format(
-                    self.BENCHMARK, self.CODE, ", ".join(candidate_fields)))
-        try:
-            benchmark = prices.loc[field][self.BENCHMARK]
-        except KeyError:
-            raise MoonshotError("{0} BENCHMARK ConId {1} is not in backtest data".format(
-                self.CODE, self.BENCHMARK))
+        """
+        Returns a 1-column DataFrame of benchmark prices, either extracted
+        from prices or queried from BENCHMARK_DB if defined.
 
-        if "Time" in prices.index.names and daily:
+        BENCHMARK_DB, if used, must contain end-of-day prices.
+
+        If prices are intraday and daily=True, the returned benchmark prices
+        will be daily; if this is the case and benchmark prices are extracted
+        from the prices DataFrame, BENCHMARK_TIME will be used to extract
+        daily prices.
+
+        If prices are intraday and daily=False, intraday benchmark prices
+        will be returned; if this is the case and BENCHMARK_DB is used, the
+        daily benchmark prices will be broadcast across the entire intraday
+        timeframe.
+        """
+
+        if self.BENCHMARK_DB:
+            try:
+                benchmark_prices = get_historical_prices(
+                    self.BENCHMARK_DB,
+                    conids=self.BENCHMARK,
+                    start_date=prices.index.get_level_values("Date").min(),
+                    end_date=prices.index.get_level_values("Date").max(),
+                    fields="Close"
+                )
+            except requests.HTTPError as e:
+                raise MoonshotError("error querying BENCHMARK_DB {0}: {1}".format(
+                    self.BENCHMARK_DB, repr(e)
+                ))
+
+            benchmark_prices = benchmark_prices.loc["Close"]
+
+            if "Time" in benchmark_prices.index.names:
+                raise MoonshotParameterError(
+                    "only end-of-day databases are supported for BENCHMARK_DB but {0} is intraday".format(
+                        self.BENCHMARK_DB))
+
+            # Reindex benchmark prices like prices
+            first_prices_field = prices.loc[prices.index.get_level_values("Field")[0]]
+
+            # either reindex daily to daily (end-of-day backtests)
+            if "Time" not in first_prices_field.index.names:
+                benchmark_prices = benchmark_prices.reindex(index=first_prices_field.index)
+            else:
+                # or reindex daily to intraday daily (continuous intraday backtests)
+                benchmark_prices = benchmark_prices.reindex(index=first_prices_field.index, level="Date")
+
+                # and possibly back to daily (once-a-day intraday backtests)
+                if daily:
+                    benchmark_prices = benchmark_prices.groupby(
+                        benchmark_prices.index.get_level_values("Date")).last()
+
+            benchmark_db = self.BENCHMARK_DB
+        else:
+            benchmark_prices = prices
+            benchmark_db = self.DB
+
+            field = None
+            fields = benchmark_prices.index.get_level_values("Field").unique()
+            candidate_fields = ("Close", "Open", "Bid", "Ask", "High", "Low")
+            for candidate in candidate_fields:
+                if candidate in fields:
+                    field = candidate
+                    break
+                else:
+                    raise MoonshotParameterError("Cannot extract BENCHMARK {0} from {1} data without one of {2}".format(
+                        self.BENCHMARK, benchmark_db, ", ".join(candidate_fields)))
+
+            benchmark_prices = benchmark_prices.loc[field]
+
+        try:
+            benchmark = benchmark_prices[self.BENCHMARK]
+        except KeyError:
+            raise MoonshotError("BENCHMARK ConId {0} is not in {1} data".format(
+                self.BENCHMARK, benchmark_db))
+
+        # to avoid inserting an extra column in the results DataFrame,
+        # store the benchmark prices under the first column
+        if self.BENCHMARK_DB:
+            benchmark.name = prices.columns[0]
+
+        if "Time" in benchmark_prices.index.names and daily:
             if not self.BENCHMARK_TIME:
                 raise MoonshotParameterError(
-                    "Cannot extract BENCHMARK {0} from {1} because prices contains intraday "
-                    "prices but no BENCHMARK_TIME specified".format(self.BENCHMARK, self.CODE))
+                    "Cannot extract BENCHMARK {0} from {1} data because prices contains intraday "
+                    "prices but no BENCHMARK_TIME specified".format(self.BENCHMARK, benchmark_db))
             try:
                 benchmark = benchmark.xs(self.BENCHMARK_TIME, level="Time")
             except KeyError:
-                raise MoonshotError("{0} BENCHMARK_TIME {1} is not in backtest data".format(
-                    self.CODE, self.BENCHMARK_TIME))
+                raise MoonshotError("BENCHMARK_TIME {0} is not in {1} data".format(
+                    self.BENCHMARK_TIME, benchmark_db))
 
         return pd.DataFrame(benchmark)
 
