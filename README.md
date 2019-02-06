@@ -2,9 +2,9 @@
 
 Moonshot is a backtester designed for data scientists, created by and for [QuantRocket](https://www.quantrocket.com).
 
-### Key features
+## Key features
 
-**Pandas-based**: Moonshot is based on Pandas, the centerpiece of the Python data science stack. If you love Pandas you'll love Moonshot, which can be thought of as a set of conventions for organizing Pandas code for the purpose of running backtests.
+**Pandas-based**: Moonshot is based on Pandas, the centerpiece of the Python data science stack. If you love Pandas you'll love Moonshot. Moonshot can be thought of as a set of conventions for organizing Pandas code for the purpose of running backtests.
 
 **Lightweight**: Moonshot is simple and lightweight because it relies on the power and flexibility of Pandas and doesn't attempt to re-create functionality that Pandas can already do. No bloated codebase full of countless indicators and models to import and learn. Most of Moonshot's code is contained in a single `Moonshot` class.
 
@@ -14,9 +14,9 @@ Moonshot is a backtester designed for data scientists, created by and for [Quant
 
 **Live trading**: Live trading with Moonshot can be thought of as running a backtest on up-to-date historical data and generating a batch of orders based on the latest signals produced by the backtest.
 
-**No black boxes, no magic**: Moonshot provides many conveniences to make backtesting easier, but it eschews hidden behaviors and complex, under-the-hood simulations that are hard to understand or audit. What you see is what you get.
+**No black boxes, no magic**: Moonshot provides many conveniences to make backtesting easier, but it eschews hidden behaviors and complex, under-the-hood simulation rules that are hard to understand or audit. What you see is what you get.
 
-### Example
+## Example
 
 A basic Moonshot strategy is shown below:
 
@@ -61,7 +61,7 @@ class DualMovingAverageStrategy(Moonshot):
         return gross_returns
 ```
 
-See the [QuantRocket docs](https://www.quantrocket.com/docs/#moonshot-backtesting) for more details.
+See the [QuantRocket docs](https://www.quantrocket.com/docs/#moonshot-backtesting) for a fuller discussion.
 
 ## FAQ
 
