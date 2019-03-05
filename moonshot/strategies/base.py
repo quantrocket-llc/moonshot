@@ -153,13 +153,13 @@ class Moonshot(
 
     Examples
     --------
-    Example of a minimal strategy that runs on a history db called "mexi-stk" and buys when
+    Example of a minimal strategy that runs on a history db called "mexi-stk-1d" and buys when
     the securities are above their 200-day moving average:
 
     >>> MexicoMovingAverage(Moonshot):
     >>>
     >>>     CODE = "mexi-ma"
-    >>>     DB = "mexi-stk"
+    >>>     DB = "mexi-stk-1d"
     >>>     MAVG_WINDOW = 200
     >>>
     >>>     def prices_to_signals(self, prices):
@@ -236,7 +236,8 @@ class Moonshot(
         Parameters
         ----------
         prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of
+            price/market data
 
         Returns
         -------
@@ -279,7 +280,8 @@ class Moonshot(
             a DataFrame of signals
 
         prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame
+            of price/market data
 
         Returns
         -------
@@ -315,7 +317,8 @@ class Moonshot(
             a DataFrame of weights
 
         prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of
+            price/market data
 
         Returns
         -------
@@ -349,7 +352,8 @@ class Moonshot(
             a DataFrame of positions
 
         prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of
+            price/market data
 
         Returns
         -------
@@ -381,7 +385,8 @@ class Moonshot(
             OrderRef, and TotalQuantity
 
         prices : DataFrame
-            multiindex (Field, Date) DataFrame of price/market data
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of
+            price/market data
 
         Returns
         -------
@@ -883,7 +888,8 @@ class Moonshot(
         Parameters
         ----------
         prices : DataFrame, required
-            multiindex (Field, Date) DataFrame of price/market data
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of
+            price/market data
 
         Returns
         -------
@@ -1056,13 +1062,19 @@ class Moonshot(
 
         return prices
 
+    def _prices_to_signals(self, prices):
+        """
+        Converts a prices DataFrame to a DataFrame of signals. This private
+        method, which simply calls the user-modified public method
+        `prices_to_signals`, exists for the benefit of the MoonshotML
+        subclass, which overrides it.
+        """
+        return self.prices_to_signals(prices)
+
     def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0,
                  label_conids=False, history_cache="24H"):
         """
         Backtest a strategy and return a DataFrame of results.
-
-        Typically you'll run backtests via the QuantRocket client and won't
-        call this method directly.
 
         Parameters
         ----------
@@ -1090,7 +1102,8 @@ class Moonshot(
         Returns
         -------
         DataFrame
-            multiindex (Field, Date) DataFrame of backtest results
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of
+            backtest results
         """
         self.is_backtest = True
         allocation = allocation or 1.0
@@ -1098,7 +1111,7 @@ class Moonshot(
         prices = self.get_historical_prices(start_date, end_date, nlv=nlv,
                                             max_cache=history_cache)
 
-        signals = self.prices_to_signals(prices)
+        signals = self._prices_to_signals(prices)
         weights = self.signals_to_target_weights(signals, prices)
         weights = weights * allocation
         weights = self._constrain_weights(weights, prices)
@@ -1263,7 +1276,8 @@ class Moonshot(
         """
         Saves the DataFrame to the backtest results output.
 
-        DataFrame should have a Date index with ConIds as columns.
+        DataFrame should have a Date or (Date, Time) index with
+        ConIds as columns.
 
         Parameters
         ----------
@@ -1345,7 +1359,7 @@ class Moonshot(
         prices = self.get_historical_prices(start_date)
         prices_is_intraday = "Time" in prices.index.names
 
-        signals = self.prices_to_signals(prices)
+        signals = self._prices_to_signals(prices)
 
         weights = self.signals_to_target_weights(signals, prices)
 
