@@ -331,6 +331,9 @@ class MoonshotML(Moonshot):
 
         # get predictions
         predictions_raw = self.model.predict(features.values)
+        # squeeze if needed (needed for Keras output)
+        if len(predictions_raw.shape) == 2 and predictions_raw.shape[-1] == 1:
+            predictions_raw = predictions_raw.squeeze(axis=-1)
         predictions = pd.Series(predictions_raw, index=features.index)
         predictions = predictions.unstack(level="ConId")
 
