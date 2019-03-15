@@ -334,9 +334,21 @@ class MoonshotML(Moonshot):
         if "target" in features:
             del features["target"]
 
-        # move features to columns
-        features = pd.concat(features).stack(dropna=False).unstack(level=0).fillna(0)
-        idx = features.index
+        # save the index and columns of (one of) the features so we can
+        # reapply it to the predictions output
+        first_feature = features[list(features.keys())[0]]
+        predictions_df_idx = first_feature.index
+        predictions_df_cols = first_feature.columns
+        del first_feature
+
+        # features dict to stack of DataFrames
+        features = pd.concat(features)
+
+        # Stack columns (conids) then unstack features (fields) to columns
+        features = features.stack().unstack(level=0).fillna(0)
+
+        # Save stacked index for predictions output
+        predictions_series_idx = features.index
         features = features.values
 
         # get predictions
@@ -347,8 +359,13 @@ class MoonshotML(Moonshot):
         if len(predictions.shape) == 2 and predictions.shape[-1] == 1:
             predictions = predictions.squeeze(axis=-1)
 
-        predictions = pd.Series(predictions, index=idx)
+        predictions = pd.Series(predictions, index=predictions_series_idx)
         predictions = predictions.unstack(level="ConId")
+
+        # Reindex like input features DataFrame(s) - this second reindexing
+        # is necessary in case some dates or conids were completely dropped
+        # when the features were stacked
+        predictions = predictions.reindex(index=predictions_df_idx, columns=predictions_df_cols)
 
         # predictions to signals
         signals = self.predictions_to_signals(predictions, prices)
