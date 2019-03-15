@@ -20,6 +20,7 @@ except ImportError:
 import pandas as pd
 from moonshot.strategies.base import Moonshot
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
+from moonshot.cache import Cache
 
 class MoonshotML(Moonshot):
     """
@@ -263,8 +264,7 @@ class MoonshotML(Moonshot):
         raise NotImplementedError("strategies must implement predictions_to_signals")
 
     def backtest(self, model=None, start_date=None, end_date=None, nlv=None,
-                allocation=1.0, label_conids=False,
-                history_cache="24H"):
+                allocation=1.0, label_conids=False):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -291,10 +291,6 @@ class MoonshotML(Moonshot):
             replace <ConId> with <Symbol>(<ConId>) in columns in output
             for better readability (default True)
 
-        history_cache : str
-             cache history CSVs on disk and re-use them for up to this long
-             (use a pandas Timedelta string, default "24H")
-
         Returns
         -------
         DataFrame
@@ -309,8 +305,7 @@ class MoonshotML(Moonshot):
 
         return super(MoonshotML, self).backtest(
             start_date=start_date, end_date=end_date, nlv=nlv,
-            allocation=allocation, label_conids=label_conids,
-            history_cache=history_cache)
+            allocation=allocation, label_conids=label_conids)
 
     def _prices_to_signals(self, prices):
         """
@@ -320,7 +315,20 @@ class MoonshotML(Moonshot):
         - using the ML model to create predictions from the features
         - creating signals from the predictions
         """
-        features = self.prices_to_features(prices)
+        features = None
+
+        # serve features from cache in backtests if possible. The features are cached
+        # based on the index and columns of prices. If this file has been
+        # edited more recently than the features were cached, the cache is
+        # not used.
+        if self.is_backtest:
+            cache_key = [prices.index.tolist(), prices.columns.tolist()]
+            features = Cache.get(cache_key, prefix="_features", unless_modified=self)
+
+        if features is None:
+            features = self.prices_to_features(prices)
+            if self.is_backtest:
+                Cache.set(cache_key, features, prefix="_features")
 
         # Don't use the target/label for predictions
         if "target" in features:
@@ -328,13 +336,18 @@ class MoonshotML(Moonshot):
 
         # move features to columns
         features = pd.concat(features).stack(dropna=False).unstack(level=0).fillna(0)
+        idx = features.index
+        features = features.values
 
         # get predictions
-        predictions_raw = self.model.predict(features.values)
+        predictions = self.model.predict(features)
+        del features
+
         # squeeze if needed (needed for Keras output)
-        if len(predictions_raw.shape) == 2 and predictions_raw.shape[-1] == 1:
-            predictions_raw = predictions_raw.squeeze(axis=-1)
-        predictions = pd.Series(predictions_raw, index=features.index)
+        if len(predictions.shape) == 2 and predictions.shape[-1] == 1:
+            predictions = predictions.squeeze(axis=-1)
+
+        predictions = pd.Series(predictions, index=idx)
         predictions = predictions.unstack(level="ConId")
 
         # predictions to signals

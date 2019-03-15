@@ -515,8 +515,9 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
 
     def test_40_dont_use_cache(self):
         """
-        Re-runs the strategy without using mock and specifying not to use the
-        cache, which should trigger ImproperlyConfigured.
+        Re-runs the strategy without using mock and specifying different DB
+        parameters so as not to use the cache, which should trigger
+        ImproperlyConfigured.
         """
 
         class BuyBelow10(Moonshot):
@@ -524,13 +525,15 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
             A basic test strategy that buys below 10.
             """
 
+            DB_FIELDS = ["Open"]
+
             def prices_to_signals(self, prices):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
         with self.assertRaises(ImproperlyConfigured) as cm:
 
-            BuyBelow10().backtest(history_cache="0H")
+            BuyBelow10().backtest()
 
         self.assertIn("HOUSTON_URL is not set", repr(cm.exception))
 
