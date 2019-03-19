@@ -18,6 +18,7 @@ try:
 except ImportError:
     pass
 import pandas as pd
+import numpy as np
 from moonshot.strategies.base import Moonshot
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from moonshot.cache import Cache
@@ -334,22 +335,17 @@ class MoonshotML(Moonshot):
         if "target" in features:
             del features["target"]
 
-        # save the index and columns of (one of) the features so we can
-        # reapply it to the predictions output
-        first_feature = features[list(features.keys())[0]]
-        predictions_df_idx = first_feature.index
-        predictions_df_cols = first_feature.columns
-        del first_feature
+        all_features = []
 
-        # features dict to stack of DataFrames
-        features = pd.concat(features)
+        for i, feature in enumerate(features.values()):
+            feature = feature.stack(dropna=False).fillna(0)
+            if i == 0:
+                # save stacked index for predictions output
+                predictions_series_idx = feature.index
+            all_features.append(feature.values)
 
-        # Stack columns (conids) then unstack features (fields) to columns
-        features = features.stack().unstack(level=0).fillna(0)
-
-        # Save stacked index for predictions output
-        predictions_series_idx = features.index
-        features = features.values
+        features = np.stack(all_features, axis=-1)
+        del all_features
 
         # get predictions
         predictions = self.model.predict(features)
@@ -361,11 +357,6 @@ class MoonshotML(Moonshot):
 
         predictions = pd.Series(predictions, index=predictions_series_idx)
         predictions = predictions.unstack(level="ConId")
-
-        # Reindex like input features DataFrame(s) - this second reindexing
-        # is necessary in case some dates or conids were completely dropped
-        # when the features were stacked
-        predictions = predictions.reindex(index=predictions_df_idx, columns=predictions_df_cols)
 
         # predictions to signals
         signals = self.predictions_to_signals(predictions, prices)
