@@ -97,24 +97,48 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10().backtest()
+                    results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),

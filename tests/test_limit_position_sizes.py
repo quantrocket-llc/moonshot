@@ -81,13 +81,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
@@ -95,21 +105,26 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            with self.assertRaises(MoonshotParameterError) as cm:
+                    with self.assertRaises(MoonshotParameterError) as cm:
 
-                BuyBelow10ShortAbove10Overnight().backtest()
+                        BuyBelow10ShortAbove10Overnight().backtest()
 
         self.assertIn("must provide NLVs if using limit_position_sizes", repr(cm.exception))
 
@@ -154,13 +169,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
@@ -168,19 +193,24 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10Overnight().backtest()
+                    results = BuyBelow10ShortAbove10Overnight().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -286,13 +316,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
@@ -300,19 +340,24 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
+                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -441,13 +486,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
@@ -455,19 +510,24 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10().backtest(nlv={"USD": 100000})
+                    results = BuyBelow10ShortAbove10().backtest(nlv={"USD": 100000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -579,33 +639,48 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
                         None
-                        ],
+                    ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
-                    },
-                index=idx
+                },
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD": 100000})
+                    results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD": 100000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -644,7 +719,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                       '12:00:00'],
              12345: [0.0288, # 300 * 9.6 / 100K
                      -0.0627, # 600 * 10.45 / 100K
-                     -0.06071999999999999, # 600 * 10.12 / 100K
+                     -0.06072, # 600 * 10.12 / 100K
                      -0.0927, # 600 * 15.45 / 100K
                      0.02601, # 300 * 8.67 / 100K
                      -0.0738], # 600 * 12.30 / 100K
@@ -711,13 +786,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
@@ -725,19 +810,24 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
+                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -779,14 +869,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-03T00:00:00'],
              12345: [
                  # 0.5 expected but watch out for floating point
-                 0.49986,
+                 0.50004,
                  # 150K volume * 1% * 11 / 50K
                  -0.33,
                  # 125K volume * 1% * 10.50 / 50K
                  -0.2625],
              23456: [
                  # 0.5 expected but watch out for floating point
-                 0.4998406,
+                 0.5000384,
                  # 60K volume * 1% * 11 / 50K
                  -0.132,
                  # 0.5 expected but watch out for floating point
@@ -859,13 +949,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
                         "USD",
                         None,
@@ -873,19 +973,24 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
                         "USD",
                         None,
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
+                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -928,13 +1033,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
              12345: [
                  # 300 * 9 / 50K
                  0.054,
-                 # 0.5 expected but watch out for floating point
-                 -0.49984,
-                 # 0.5 expected but watch out for floating point
-                 -0.4998],
+                 # -0.5 expected but watch out for floating point
+                 -0.50006,
+                 # -0.5 expected but watch out for floating point
+                 -0.50001],
              23456: [
                  # 0.5 expected but watch out for floating point
-                 0.4998406,
+                 0.5000384,
                  # 400 * 11 / 50K
                  -0.088,
                  # 0.5 expected but watch out for floating point
@@ -1010,9 +1115,18 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -1032,17 +1146,21 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10Overnight().backtest(
-                nlv={
-                    "USD":50000,
-                    "EUR": 35000,
-                })
+                    results = BuyBelow10ShortAbove10Overnight().backtest(
+                        nlv={
+                            "USD":50000,
+                            "EUR": 35000,
+                        })
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1164,13 +1282,23 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/Chicago",
+                        "ABC",
                         "FUT",
                         "USD",
                         None,
@@ -1178,19 +1306,24 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "America/Chicago",
+                        "DEF",
                         "FUT",
                         "USD",
                         10,
                         50,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":500000})
+                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":500000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1288,9 +1421,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -1308,9 +1450,11 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -1333,8 +1477,10 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1433,9 +1579,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -1453,9 +1608,11 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -1478,8 +1635,10 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1576,9 +1735,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -1596,9 +1764,11 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -1621,8 +1791,10 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1731,9 +1903,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -1758,9 +1939,11 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -1783,8 +1966,9 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-
-                        orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1896,9 +2080,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -1916,9 +2109,11 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -1949,8 +2144,10 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -2051,10 +2248,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -2063,7 +2268,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         "USD",
                         None,
                         None
-                        ],
+                    ],
                     23456: [
                         "America/New_York",
                         "STK",
@@ -2071,10 +2276,12 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                         None,
                     ]
-                    },
-                index=idx
+                },
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -2097,8 +2304,10 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -2195,10 +2404,18 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -2207,7 +2424,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         "USD",
                         None,
                         None
-                        ],
+                    ],
                     23456: [
                         "America/New_York",
                         "STK",
@@ -2215,10 +2432,12 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         None,
                         None,
                     ]
-                    },
-                index=idx
+                },
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123"],
@@ -2241,9 +2460,11 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10ShortAbove10ContIntraday().trade(
-                            {"U123": 1.0}, review_date="2018-05-02 12:05:00")
+                                orders = BuyBelow10ShortAbove10ContIntraday().trade(
+                                    {"U123": 1.0}, review_date="2018-05-02 12:05:00")
 
         self.assertSetEqual(
             set(orders.columns),

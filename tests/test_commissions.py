@@ -90,24 +90,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10().backtest()
+                    results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -301,30 +325,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
-                        1,
-                        1
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
+                        "USD",
                         None,
-                        None
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10().backtest()
+                    results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -479,7 +521,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 long_signals = prices.loc["Close"] <= 10
                 short_signals = prices.loc["Close"] > 10
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
-                self.save_to_results("Nlv", prices.loc["Nlv"])
+                self.save_to_results("Nlv", signals.apply(lambda x: self._securities_master.Nlv, axis=1))
                 return signals
 
         def mock_get_historical_prices(*args, **kwargs):
@@ -519,32 +561,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
-                        1,
-                        1,
-                        "USD"
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
+                        "USD",
                         None,
                         None,
-                        "USD"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10().backtest(nlv={"USD":50000})
+                    results = BuyBelow10ShortAbove10().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -645,9 +703,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [
-                '2018-05-01T00:00:00'],
-             12345: [50000],
-             23456: [50000]}
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [50000.0, 50000.0, 50000.0, 50000.0],
+             23456: [50000.0, 50000.0, 50000.0, 50000.0]}
         )
 
         commissions = results.loc["Commission"].reset_index()
@@ -681,12 +742,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-04T00:00:00'],
              12345: ["nan",
                      -0.01,
-                     -0.03272727272727271, # (10.50 - 11)/11 * 0.5 - 0.01
-                     0.0242857142857143], # (9.99 - 10.50)/10.50 * -0.5 - 0.01
+                     -0.0327273, # (10.50 - 11)/11 * 0.5 - 0.01
+                     0.0242857], # (9.99 - 10.50)/10.50 * -0.5 - 0.01
              23456: ["nan",
                      -0.01,
-                     -0.12363636363636364, # (8.50 - 11)/11 * 0.5 - 0.01
-                     -0.12764705882352945] # (10.50 - 8.50)/8.50 * -0.5 - 0.01
+                     -0.1236364, # (8.50 - 11)/11 * 0.5 - 0.01
+                     -0.1276471] # (10.50 - 8.50)/8.50 * -0.5 - 0.01
              }
         )
 
@@ -743,12 +804,23 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "Japan",
+                        '1900',
                         "STK",
                         1,
                         1,
@@ -757,6 +829,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "Japan",
+                        'N225',
                         "FUT",
                         None,
                         None,
@@ -764,14 +837,18 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "OSE"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            with self.assertRaises(MoonshotParameterError) as cm:
-                BuyBelow10ShortAbove10().backtest()
+                    with self.assertRaises(MoonshotParameterError) as cm:
+                        BuyBelow10ShortAbove10().backtest()
 
         self.assertIn((
             "expected a commission class for each combination of (sectype,exchange,currency) "
@@ -829,12 +906,23 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "Japan",
+                        "1500",
                         "STK",
                         1,
                         1,
@@ -843,6 +931,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "Japan",
+                        "N225",
                         "FUT",
                         None,
                         None,
@@ -850,13 +939,17 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "OSE"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10().backtest()
+                    results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1075,32 +1168,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '30 mins'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
+                        "USD",
                         1,
                         1
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
+                        "USD",
                         None,
-                        None
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = ShortAbove10Intraday().backtest()
+                    results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1237,7 +1346,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             def prices_to_signals(self, prices):
                 morning_prices = prices.loc["Open"].xs("09:30:00", level="Time")
                 short_signals = morning_prices > 10
-                self.save_to_results("Nlv", prices.loc["Nlv"].xs("09:30:00", level="Time"))
+                self.save_to_results("Nlv", morning_prices.apply(lambda x: self._securities_master.Nlv, axis=1))
                 return -short_signals.astype(int)
 
             def signals_to_target_weights(self, signals, prices):
@@ -1304,33 +1413,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '30 mins'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
+                        "USD",
                         1,
-                        1,
-                        "USD"
+                        1
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
+                        "USD",
                         None,
                         None,
-                        "USD"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = ShortAbove10Intraday().backtest(nlv={"USD":50000})
+                    results = ShortAbove10Intraday().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1419,9 +1543,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [
-                '2018-05-01T00:00:00'],
-             12345: [50000],
-             23456: [50000]}
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00'],
+             12345: [50000.0, 50000.0, 50000.0],
+             23456: [50000.0, 50000.0, 50000.0]}
         )
 
         commissions = results.loc["Commission"].reset_index()
@@ -1450,11 +1576,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
              12345: [0.0,
-                     -0.14166996047430833, # (15.45 - 10.12)/10.12 * -0.25 - 0.01
+                     -0.14167, # (15.45 - 10.12)/10.12 * -0.25 - 0.01
                      0.0],
              23456: [0.0,
                      0.0,
-                     -0.030522388059701484] # (14.50 - 13.40)/13.40 * 0.25 - 0.01
+                     -0.0305224] # (14.50 - 13.40)/13.40 * 0.25 - 0.01
              }
         )
 
@@ -1549,13 +1675,23 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "Japan",
+                        "1900",
                         "STK",
                         1,
                         1,
@@ -1564,6 +1700,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "Japan",
+                        "N225",
                         "FUT",
                         None,
                         None,
@@ -1571,13 +1708,17 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "OSE"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = ShortAbove10Intraday().backtest()
+                    results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1748,30 +1889,49 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
+                        "USD",
                         1,
                         1
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
+                        "USD",
                         None,
-                        None
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -2032,32 +2192,49 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/New_York",
+                        "ABC",
                         "STK",
+                        "USD",
                         1,
-                        1,
-                        "USD"
+                        1
                     ],
                     23456: [
                         "America/New_York",
+                        "DEF",
                         "STK",
+                        "USD",
                         None,
                         None,
-                        "USD"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD":25000})
+                    results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD":25000})
 
             self.assertSetEqual(
                 set(results.index.get_level_values("Field")),
@@ -2250,17 +2427,17 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '12:00:00'],
                  12345: ['nan',
                          -0.02,
-                         -0.035789473684210524, # (10.12-10.45)/10.45 * 0.5 - 0.02
-                         -0.2633399209486166, # (15.45-10.12)/10.12 * -0.5
-                         0.21941747572815534,  # (8.67-15.45)/15.45 * -0.5
-                         -0.2293425605536333  # (12.30-8.67)/8.67 * -0.5 - 0.02
+                         -0.0357895, # (10.12-10.45)/10.45 * 0.5 - 0.02
+                         -0.2633399, # (15.45-10.12)/10.12 * -0.5
+                         0.2194175,  # (8.67-15.45)/15.45 * -0.5
+                         -0.2293426  # (12.30-8.67)/8.67 * -0.5 - 0.02
                          ],
                  23456: ['nan',
                          -0.02,
-                         0.06286427976686093, # (10.50-12.01)/12.01 * -0.5
-                         0.033333333333333326, # (9.80-10.50)/10.50 * -0.5
-                         -0.20367346938775507, # (13.40-9.80)/9.80 * -0.5 - 0.02
-                         -0.2401492537313433 # (7.50-13.40)/13.40 * 0.5 - 0.02
+                         0.0628643, # (10.50-12.01)/12.01 * -0.5
+                         0.0333333, # (9.80-10.50)/10.50 * -0.5
+                         -0.2036735, # (13.40-9.80)/9.80 * -0.5 - 0.02
+                         -0.2401493 # (7.50-13.40)/13.40 * 0.5 - 0.02
                          ]}
             )
 
@@ -2323,12 +2500,23 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "Japan",
+                        "1500",
                         "STK",
                         1,
                         1,
@@ -2337,6 +2525,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                     ],
                     23456: [
                         "Japan",
+                        "N225",
                         "FUT",
                         None,
                         None,
@@ -2344,13 +2533,17 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "OSE"
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
             self.assertSetEqual(
                 set(results.index.get_level_values("Field")),
@@ -2603,30 +2796,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "Currency", "SecType", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/Chicago",
+                        "HE",
+                        "USD",
                         "FUT",
                         1,
                         10
                     ],
                     23456: [
                         "America/Chicago",
+                        "HE",
+                        "USD",
                         "FUT",
                         None,
                         20
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow1000ShortAbove1000().backtest()
+                    results = BuyBelow1000ShortAbove1000().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -2731,19 +2942,20 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
              12345: ["nan",
-                     0.0000909090909090909,
-                     0.00019047619047619048,
+                     0.0000909,
+                     0.0001905,
                      0.0],
              23456: ["nan",
-                     0.00004545454545454545,
-                     0.00009523809523809524,
+                     0.0000455,
+                     0.0000952,
                      0.0]}
         )
 
         # The FUT with double the multiplier requires half the contracts and
         # therefore incurs half the commission
         self.assertAlmostEqual(
-            commissions[12345].iloc[1], commissions[23456].iloc[1] * 2
+            commissions[12345].iloc[1], commissions[23456].iloc[1] * 2,
+            places=5
         )
 
     def test_apply_commissions_eod_with_price_magnifier(self):
@@ -2792,30 +3004,48 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone", "SecType", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "Currency", "SecType", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
                         "America/Chicago",
+                        "HE",
+                        "USD",
                         "FUT",
                         1,
                         10
                     ],
                     23456: [
                         "America/Chicago",
+                        "HE",
+                        "USD",
                         "FUT",
                         100,
                         10
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow1000ShortAbove1000().backtest()
+                    results = BuyBelow1000ShortAbove1000().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -2920,17 +3150,18 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
              12345: ["nan",
-                     0.0000909090909090909,
-                     0.00019047619047619048,
+                     0.0000909,
+                     0.0001905,
                      0.0],
              23456: ["nan",
-                     0.00909090909090909,
-                     0.019047619047619048,
+                     0.0090909,
+                     0.0190476,
                      0.0]}
         )
 
         # The FUT with 100x the price magnifier (23456) requires 100x the
         # contracts and therefore incurs 100x the commission
         self.assertAlmostEqual(
-            commissions[12345].iloc[1] * 100, commissions[23456].iloc[1]
+            commissions[12345].iloc[1] * 100, commissions[23456].iloc[1],
+            places=5
         )

@@ -84,26 +84,49 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            with self.assertRaises(MoonshotParameterError) as cm:
-                BuyAndHold().backtest()
+                    with self.assertRaises(MoonshotParameterError) as cm:
+                        BuyAndHold().backtest()
 
         self.assertIn("Cannot extract BENCHMARK 12345 from sample-stk-1d data without one of Close, Open, Bid, Ask, High, Low", repr(cm.exception))
 
@@ -162,25 +185,49 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            with self.assertRaises(MoonshotError) as cm:
-                BuyBelow10().backtest()
+                    with self.assertRaises(MoonshotError) as cm:
+                        BuyBelow10().backtest()
 
         self.assertIn("BENCHMARK ConId 99999 is not in sample-stk-1d data", repr(cm.exception))
 
@@ -238,24 +285,48 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10().backtest()
+                    results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -350,20 +421,7 @@ class BenchmarkTestCase(unittest.TestCase):
                     index=idx
                 )
 
-                master_fields = ["Timezone"]
-                idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
-                securities = pd.DataFrame(
-                    {
-                        12345: [
-                            "America/New_York"
-                        ],
-                        23456: [
-                            "America/New_York"
-                        ]
-                    },
-                    index=idx
-                )
-                return pd.concat((prices, securities))
+                return prices
 
             else:
 
@@ -386,9 +444,47 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
 
-            results = BuyBelow10().backtest()
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+
+                    results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -510,26 +606,49 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            with self.assertRaises(MoonshotParameterError) as cm:
-                ShortAbove10Intraday().backtest()
+                    with self.assertRaises(MoonshotParameterError) as cm:
+                        ShortAbove10Intraday().backtest()
 
         self.assertIn((
             "Cannot extract BENCHMARK 12345 from sample-stk-15min data because prices contains intraday "
@@ -619,26 +738,49 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            with self.assertRaises(MoonshotError) as cm:
-                ShortAbove10Intraday().backtest()
+                    with self.assertRaises(MoonshotError) as cm:
+                        ShortAbove10Intraday().backtest()
 
         self.assertIn(
             "BENCHMARK_TIME 15:45:00 is not in sample-stk-15min data", repr(cm.exception))
@@ -728,21 +870,7 @@ class BenchmarkTestCase(unittest.TestCase):
                     index=idx
                 )
 
-                master_fields = ["Timezone"]
-                idx = pd.MultiIndex.from_product(
-                    (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
-                securities = pd.DataFrame(
-                    {
-                        34567: [
-                            "America/New_York"
-                        ],
-                        23456: [
-                            "America/New_York"
-                        ]
-                    },
-                    index=idx
-                )
-                return pd.concat((prices, securities))
+                return prices
             else:
                 dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03"])
                 fields = ["Close"]
@@ -767,10 +895,47 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
 
-            with self.assertRaises(MoonshotError) as cm:
-                ShortAbove10Intraday().backtest()
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+
+                    with self.assertRaises(MoonshotError) as cm:
+                        ShortAbove10Intraday().backtest()
 
         self.assertIn(
             "only end-of-day databases are supported for BENCHMARK_DB but etf-15min is intraday", repr(cm.exception))
@@ -860,28 +1025,51 @@ class BenchmarkTestCase(unittest.TestCase):
                     index=idx
                 )
 
-                master_fields = ["Timezone"]
-                idx = pd.MultiIndex.from_product(
-                    (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
-                securities = pd.DataFrame(
-                    {
-                        34567: [
-                            "America/New_York"
-                        ],
-                        23456: [
-                            "America/New_York"
-                        ]
-                    },
-                    index=idx
-                )
-                return pd.concat((prices, securities))
+                return prices
             else:
                 raise NoHistoricalData(requests.HTTPError("No history matches the query parameters"))
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
 
-            with self.assertRaises(MoonshotError) as cm:
-                ShortAbove10Intraday().backtest()
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+
+                    with self.assertRaises(MoonshotError) as cm:
+                        ShortAbove10Intraday().backtest()
 
         self.assertIn(
             "error querying BENCHMARK_DB etf-15min: NoHistoricalData", repr(cm.exception))
@@ -969,25 +1157,48 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product(
-                (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = ShortAbove10Intraday().backtest()
+                    results = ShortAbove10Intraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1093,21 +1304,7 @@ class BenchmarkTestCase(unittest.TestCase):
                     index=idx
                 )
 
-                master_fields = ["Timezone"]
-                idx = pd.MultiIndex.from_product(
-                    (master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
-                securities = pd.DataFrame(
-                    {
-                        12345: [
-                            "America/New_York"
-                        ],
-                        23456: [
-                            "America/New_York"
-                        ]
-                    },
-                    index=idx
-                )
-                return pd.concat((prices, securities))
+                return prices
             else:
                 dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03"])
                 fields = ["Close"]
@@ -1128,9 +1325,46 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
 
-            results = ShortAbove10Intraday().backtest()
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+
+                    results = ShortAbove10Intraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1200,24 +1434,48 @@ class BenchmarkTestCase(unittest.TestCase):
                 index=idx
             )
 
-            master_fields = ["Timezone"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 hour'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
                     12345: [
-                        "America/New_York"
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
                     ],
                     23456: [
-                        "America/New_York"
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
                     ]
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1307,20 +1565,7 @@ class BenchmarkTestCase(unittest.TestCase):
                     index=idx
                 )
 
-                master_fields = ["Timezone"]
-                idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]], [times[0]]), names=["Field", "Date", "Time"])
-                securities = pd.DataFrame(
-                    {
-                        12345: [
-                            "America/New_York"
-                        ],
-                        23456: [
-                            "America/New_York"
-                        ]
-                    },
-                    index=idx
-                )
-                return pd.concat((prices, securities))
+                return prices
 
             else:
                 dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
@@ -1341,9 +1586,46 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
 
-            results = BuyBelow10ShortAbove10ContIntraday().backtest()
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+
+                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 

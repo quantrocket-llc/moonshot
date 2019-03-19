@@ -25,8 +25,8 @@ from moonshot.mixins import (
 )
 from moonshot.cache import Cache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
-from quantrocket.history import get_historical_prices
-from quantrocket.master import list_calendar_statuses
+from quantrocket.history import get_historical_prices, get_db_config
+from quantrocket.master import list_calendar_statuses, download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions
 
@@ -92,9 +92,10 @@ class Moonshot(
         (for example `REBALANCE_INTERVAL = 'Q'`). Set to 0 to disable.
 
     MASTER_FIELDS : list of str, optional
-        get these fields from the securities master service (defaults to ["Currency",
-        "MinTick", "Multiplier", "PriceMagnifier", "PrimaryExchange", "SecType", "Symbol",
-        "Timezone"])
+        [DEPRECATED] get these fields from the securities master service. This
+        parameter is deprecated and will be removed in a future release. For
+        better performance, use `quantrocket.master.get_securities_reindexed_like`
+        instead.
 
     NLV : dict, optional
         dict of currency:NLV for each currency represented in the strategy. Can
@@ -178,9 +179,7 @@ class Moonshot(
     EXCLUDE_UNIVERSES = None
     CONT_FUT = None
     LOOKBACK_WINDOW = None
-    MASTER_FIELDS = [
-        "Currency", "MinTick", "Multiplier", "PriceMagnifier",
-        "PrimaryExchange", "SecType", "Symbol", "Timezone"]
+    MASTER_FIELDS = None
     NLV = None
     COMMISSION_CLASS = None
     SLIPPAGE_CLASSES = ()
@@ -197,6 +196,7 @@ class Moonshot(
         self.is_trade = False
         self.review_date = None # see trade() docstring
         self.is_backtest = False
+        self._securities_master = None
         self._backtest_results = {}
         self._inferred_timezone = None
         self._signal_date = None # set by _weights_to_today_weights
@@ -721,11 +721,8 @@ class Moonshot(
                 contract_values.index.get_level_values("Date")).first()
 
         fields = prices.index.get_level_values("Field").unique()
-        if "Nlv" in fields:
-            nlvs = prices.loc["Nlv"]
-            if prices_is_intraday and not positions_is_intraday:
-                nlvs = nlvs.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
-            nlvs = nlvs.reindex(contract_values.index, method="ffill")
+        if "Nlv" in self._securities_master.columns:
+            nlvs = contract_values.apply(lambda x: self._securities_master.Nlv, axis=1)
         else:
             nlvs = None
 
@@ -742,18 +739,11 @@ class Moonshot(
             commission_classes[tuple(sec_group)] = commission_cls
 
         defined_sec_groups = set([tuple(k) for k in commission_classes.keys()])
-        sec_types = prices.loc["SecType"]
-        exchanges = prices.loc["PrimaryExchange"]
-        currencies = prices.loc["Currency"]
 
-        if prices_is_intraday and not positions_is_intraday:
-            sec_types = sec_types.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
-            exchanges = exchanges.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
-            currencies = currencies.reset_index(drop=True).set_index(pd.Index([contract_values.index.min()]))
-
-        sec_types = sec_types.reindex(contract_values.index, method="ffill")
-        exchanges = exchanges.reindex(contract_values.index, method="ffill")
-        currencies = currencies.reindex(contract_values.index, method="ffill")
+        # Reindex master fields like contract_values
+        sec_types = contract_values.apply(lambda x: self._securities_master.SecType, axis=1)
+        exchanges = contract_values.apply(lambda x: self._securities_master.PrimaryExchange, axis=1)
+        currencies = contract_values.apply(lambda x: self._securities_master.Currency, axis=1)
 
         required_sec_groups = set([
             tuple(s.split("|")) for s in (sec_types+"|"+exchanges+"|"+currencies).iloc[-1].unique()])
@@ -805,12 +795,12 @@ class Moonshot(
         if max_quantities_for_longs is None and max_quantities_for_shorts is None:
             return weights
 
-        if "Nlv" not in prices.index.get_level_values("Field").unique():
+        if "Nlv" not in self._securities_master.columns:
             raise MoonshotParameterError("must provide NLVs if using limit_position_sizes")
 
         contract_values = self._get_contract_values(prices)
         contract_values = contract_values.fillna(method="ffill")
-        nlvs_in_trade_currency = prices.loc["Nlv"].reindex(contract_values.index, method="ffill")
+        nlvs_in_trade_currency = contract_values.apply(lambda x: self._securities_master.Nlv, axis=1)
 
         prices_is_intraday = "Time" in prices.index.names
         weights_is_intraday = "Time" in weights.index.names
@@ -951,6 +941,73 @@ class Moonshot(
 
         return lookback_window
 
+    def _load_master_file(self, conids, nlv=None):
+        """
+        Loads master file from cache or master service.
+        """
+        securities = None
+
+        fields = [
+            "Currency", "Multiplier", "PriceMagnifier",
+            "PrimaryExchange", "SecType", "Symbol", "Timezone"]
+
+        if self.is_backtest:
+            # try to load from cache
+            securities = Cache.get(conids, prefix="_master")
+
+        if securities is None:
+
+            # determine domain (all DBs must have same domain, which is check
+            # by get_historical_prices, so not checked here)
+            dbs = self.DB
+            if not isinstance(dbs, (list, tuple)):
+                dbs = [dbs]
+            first_db = dbs[0]
+            db_config = get_db_config(first_db)
+            domain = db_config.get("domain", "main")
+
+            # query master
+            f = io.StringIO()
+            download_master_file(
+                f,
+                conids=conids,
+                fields=fields,
+                domain=domain)
+
+            securities = pd.read_csv(f, index_col="ConId")
+
+            if self.is_backtest:
+                Cache.set(conids, securities, prefix="_master")
+
+        if not self.TIMEZONE:
+            timezones = securities.Timezone.unique()
+
+            if len(timezones) > 1:
+                raise MoonshotParameterError(
+                    "cannot infer timezone because multiple timezones are present "
+                    "in data, please specify TIMEZONE explicitly (timezones: {0})".format(
+                        ", ".join(timezones)))
+
+            self._inferred_timezone = timezones[0]
+
+        # Append NLV if applicable
+        nlvs = nlv or self._get_nlv()
+        if nlvs:
+
+            # For Forex, store NLV based on the Symbol not Currency (100
+            # EUR.USD = 100 EUR, not 100 USD)
+            currencies = securities.Symbol.where(securities.SecType=="CASH", securities.Currency)
+
+            missing_nlvs = set(currencies) - set(nlvs.keys())
+            if missing_nlvs:
+                raise MoonshotParameterError(
+                    "NLV dict is missing values for required currencies: {0}".format(
+                        ", ".join(missing_nlvs)))
+
+            securities["Nlv"] = currencies.apply(lambda currency: nlvs.get(currency, None))
+
+        self._securities_master = securities.sort_index()
+
     @classmethod
     def _get_start_date_with_lookback(cls, start_date):
         """
@@ -969,8 +1026,7 @@ class Moonshot(
     def get_historical_prices(self, start_date, end_date=None, nlv=None):
         """
         Downloads historical prices from a history db. Downloads security
-        details from the master db and broadcasts the values to be shaped
-        like the historical prices.
+        details from the master db.
         """
         if start_date:
             start_date = self._get_start_date_with_lookback(start_date)
@@ -1001,10 +1057,6 @@ class Moonshot(
         )
 
         if not self.TIMEZONE:
-            if "Timezone" not in self.MASTER_FIELDS:
-                raise MoonshotParameterError(
-                    "cannot determine strategy timezone, please set TIMEZONE parameter "
-                    "or include 'Timezone' in MASTER_FIELDS")
             kwargs["infer_timezone"] = True
 
         prices = None
@@ -1018,46 +1070,7 @@ class Moonshot(
             if self.is_backtest:
                 Cache.set(kwargs, prices, prefix="_history")
 
-        if not self.TIMEZONE:
-            self._inferred_timezone = prices.loc["Timezone"].iloc[0].iloc[0]
-
-        # Append NLV if applicable
-        nlvs = nlv or self._get_nlv()
-        if nlvs:
-            required_fields_for_nlv = ["SecType", "Currency"]
-            missing_fields_for_nlv = set(required_fields_for_nlv) - set(self.MASTER_FIELDS)
-            if missing_fields_for_nlv:
-                raise MoonshotParameterError(
-                    "MASTER_FIELDS must include SecType and Currency if providing NLV"
-                )
-
-            currencies = prices.loc["Currency"]
-            sec_types = prices.loc["SecType"]
-
-            # For Forex, store NLV based on the Symbol not Currency (100
-            # EUR.USD = 100 EUR, not 100 USD)
-            if "CASH" in sec_types.iloc[0].values:
-                if "Symbol" not in self.MASTER_FIELDS:
-                    raise MoonshotParameterError(
-                        "MASTER_FIELDS must include Symbol if providing NLV and using CASH instruments"
-                    )
-                symbols = prices.loc["Symbol"]
-                currencies = symbols.where(sec_types=="CASH", currencies)
-
-            missing_nlvs = set(currencies.iloc[0]) - set(nlvs.keys())
-            if missing_nlvs:
-                raise MoonshotParameterError(
-                    "NLV dict is missing values for required currencies: {0}".format(
-                        ", ".join(missing_nlvs)))
-
-            nlvs = currencies.applymap(lambda currency: nlvs.get(currency, None))
-            nlvs["Field"] = "Nlv"
-            levels = ["Field"]
-            levels.extend(list(nlvs.index.names))
-
-            nlvs.set_index('Field', append=True, inplace=True)
-            nlvs = nlvs.reorder_levels(levels)
-            prices = prices.append(nlvs)
+        self._load_master_file(prices.columns.tolist(), nlv=nlv)
 
         return prices
 
@@ -1156,9 +1169,9 @@ class Moonshot(
         results.index.set_names(names, inplace=True)
 
         if label_conids:
-            symbols = prices.loc["Symbol"].iloc[-1]
-            sec_types = prices.loc["SecType"].iloc[-1]
-            currencies = prices.loc["Currency"].iloc[-1]
+            symbols = self._securities_master.Symbol
+            sec_types = self._securities_master.SecType
+            currencies = self._securities_master.Currency
             symbols = symbols.astype(str).str.cat(currencies, sep=".").where(sec_types=="CASH", symbols)
             symbols_with_conids = symbols.astype(str) + "(" + symbols.index.astype(str) + ")"
             results.rename(columns=symbols_with_conids.to_dict(), inplace=True)
@@ -1372,14 +1385,6 @@ class Moonshot(
         # 12345  -0.050   -0.10
         # 23456   0.000    0.00
         # 34567   0.025    0.05
-
-        required_fields = ["SecType", "Currency"]
-        missing_fields = set(required_fields) - set(self.MASTER_FIELDS)
-        if missing_fields:
-            raise MoonshotParameterError(
-                "MASTER_FIELDS must include SecType and Currency"
-        )
-
         contract_values = self._get_contract_values(prices)
         contract_values = contract_values.fillna(method="ffill").loc[self._signal_date]
         if prices_is_intraday:
@@ -1394,17 +1399,13 @@ class Moonshot(
         # 23456   1500.00   1500.00
         # 34567   3600.00   3600.00
 
-        currencies = prices.loc["Currency"].iloc[-1]
-        sec_types = prices.loc["SecType"].iloc[-1]
+        currencies = self._securities_master.Currency
+        sec_types = self._securities_master.SecType
 
         # For FX, exchange rate conversions should be based on the symbol,
         # not the currency (i.e. 100 EUR.USD = 100 EUR, not 100 USD)
         if (sec_types == "CASH").any():
-            if "Symbol" not in self.MASTER_FIELDS:
-                raise MoonshotParameterError(
-                    "MASTER_FIELDS must include Symbol if using CASH instruments"
-                )
-            symbols = prices.loc["Symbol"].iloc[-1]
+            symbols = self._securities_master.Symbol
             currencies = currencies.where(sec_types != "CASH", symbols)
 
         f = io.StringIO()
@@ -1577,14 +1578,13 @@ class Moonshot(
 
         closes = prices.loc[field]
 
-        sec_types = prices.loc["SecType"]
         # For Forex, the value of the contract is simply 1 (1 EUR.USD = 1
         # EUR; 1 EUR.JPY = 1 EUR)
-        if "CASH" in sec_types.iloc[0].values:
-            sec_types = sec_types.reindex(closes.index, method="ffill")
+        if "CASH" in self._securities_master.SecType.values:
+            sec_types = closes.apply(lambda x: self._securities_master.SecType, axis=1)
             closes = closes.where(sec_types != "CASH", 1)
 
-        price_magnifiers = prices.loc["PriceMagnifier"].fillna(1).reindex(closes.index, method="ffill")
-        multipliers = prices.loc["Multiplier"].fillna(1).reindex(closes.index, method="ffill")
+        price_magnifiers = closes.apply(lambda x: self._securities_master.PriceMagnifier.fillna(1), axis=1)
+        multipliers = closes.apply(lambda x: self._securities_master.Multiplier.fillna(1), axis=1)
         contract_values = closes / price_magnifiers * multipliers
         return contract_values

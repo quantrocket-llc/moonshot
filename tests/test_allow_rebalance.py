@@ -61,9 +61,18 @@ class AllowRebalanceTestCase(unittest.TestCase):
                  },
                 index=idx
             )
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -74,9 +83,11 @@ class AllowRebalanceTestCase(unittest.TestCase):
                         None
                     ],
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123", "DU234"],
@@ -113,11 +124,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10().trade(
-                            {"U123": 0.5,
-                             "DU234": 0.3,
-                             })
+                                orders = BuyBelow10().trade(
+                                    {"U123": 0.5,
+                                     "DU234": 0.3,
+                                     })
 
         self.assertSetEqual(
             set(orders.columns),
@@ -203,8 +216,18 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 index=idx
             )
 
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -222,9 +245,11 @@ class AllowRebalanceTestCase(unittest.TestCase):
                         None
                     ],
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123", "DU234"],
@@ -271,11 +296,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10().trade(
-                            {"U123": 0.5,
-                             "DU234": 0.3,
-                             })
+                                orders = BuyBelow10().trade(
+                                    {"U123": 0.5,
+                                     "DU234": 0.3,
+                                     })
 
         self.assertSetEqual(
             set(orders.columns),
@@ -361,8 +388,18 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 index=idx
             )
 
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -380,9 +417,11 @@ class AllowRebalanceTestCase(unittest.TestCase):
                         None
                     ],
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123", "DU234", "U999"],
@@ -436,12 +475,14 @@ class AllowRebalanceTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        orders = BuyBelow10().trade(
-                            {"U123": 0.5,
-                             "DU234": 0.3,
-                             "U999": 0.5
-                             })
+                                orders = BuyBelow10().trade(
+                                    {"U123": 0.5,
+                                     "DU234": 0.3,
+                                     "U999": 0.5
+                                     })
 
         self.assertSetEqual(
             set(orders.columns),
@@ -537,8 +578,18 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 index=idx
             )
 
+            return prices
+
+        def mock_get_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
             securities = pd.DataFrame(
                 {
                     12345: [
@@ -556,9 +607,11 @@ class AllowRebalanceTestCase(unittest.TestCase):
                         None
                     ],
                 },
-                index=idx
+                index=master_fields
             )
-            return pd.concat((prices, securities))
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
 
         def mock_download_account_balances(f, **kwargs):
             balances = pd.DataFrame(dict(Account=["U123", "DU234", "U999"],
@@ -612,13 +665,15 @@ class AllowRebalanceTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                        with self.assertRaises(MoonshotParameterError) as cm:
-                            BuyBelow10().trade(
-                                {"U123": 0.5,
-                                 "DU234": 0.3,
-                                 "U999": 0.5
-                                 })
+                                with self.assertRaises(MoonshotParameterError) as cm:
+                                    BuyBelow10().trade(
+                                        {"U123": 0.5,
+                                         "DU234": 0.3,
+                                         "U999": 0.5
+                                         })
 
         self.assertIn(
             "invalid value for ALLOW_REBALANCE: always (should be a float)", repr(cm.exception))
