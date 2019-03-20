@@ -93,9 +93,9 @@ class Moonshot(
 
     MASTER_FIELDS : list of str, optional
         [DEPRECATED] get these fields from the securities master service. This
-        parameter is deprecated and will be removed in a future release. For
-        better performance, use `quantrocket.master.get_securities_reindexed_like`
-        instead.
+        parameter is deprecated and will be removed in a future release. For better
+        performance, use `quantrocket.master.get_securities_reindexed_like` to get
+        securities master data shaped like prices.
 
     NLV : dict, optional
         dict of currency:NLV for each currency represented in the strategy. Can
