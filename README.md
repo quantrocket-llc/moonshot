@@ -12,7 +12,7 @@ Moonshot is a backtester designed for data scientists, created by and for [Quant
 
 **Multi-asset class, multi-time frame**: Moonshot supports end-of-day and intraday strategies using equities, futures, and forex.
 
-**Machine learning support**: Moonshot supports machine learning and deep learning strategies using [scikit-learn](https://scikit-learn.org) or [Keras](https://keras.io/).
+**Machine learning support**: Moonshot [supports machine learning and deep learning strategies](#machine-learning-example) using scikit-learn or Keras.
 
 **Live trading**: Live trading with Moonshot can be thought of as running a backtest on up-to-date historical data and generating a batch of orders based on the latest signals produced by the backtest.
 
@@ -67,7 +67,7 @@ See the [QuantRocket docs](https://www.quantrocket.com/docs/#moonshot-backtestin
 
 ## Machine Learning Example
 
-Moonshot supports machine learning strategies using scikit-learn or Keras. The model must be trained outside of Moonshot, either using QuantRocket or by training the model manually and persisting it to disk:
+Moonshot supports machine learning strategies using [scikit-learn](https://scikit-learn.org) or [Keras](https://keras.io/). The model must be trained outside of Moonshot, either using QuantRocket or by training the model manually and persisting it to disk:
 
 ```python
 from sklearn.tree import DecisionTreeClassifier
