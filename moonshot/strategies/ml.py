@@ -88,11 +88,6 @@ class MoonshotML(Moonshot):
         `*_INTERVAL` attributes, which are interpreted as pandas offset aliases
         (for example `REBALANCE_INTERVAL = 'Q'`). Set to 0 to disable.
 
-    MASTER_FIELDS : list of str, optional
-        get these fields from the securities master service (defaults to ["Currency",
-        "MinTick", "Multiplier", "PriceMagnifier", "PrimaryExchange", "SecType", "Symbol",
-        "Timezone"])
-
     NLV : dict, optional
         dict of currency:NLV for each currency represented in the strategy. Can
         alternatively be passed directly to backtest method.
@@ -181,15 +176,19 @@ class MoonshotML(Moonshot):
 
     def _load_model(self):
         """
-        Loads a model from file, either using joblib or pickle.
+        Loads a model from file, either using joblib or pickle or keras.
         """
         if not self.MODEL:
             raise MoonshotParameterError("please specify a model file")
 
         if "joblib" in self.MODEL:
             self.model = joblib.load(self.MODEL)
+        elif "keras.h5" in self.MODEL:
+            from keras.models import load_model
+            self.model = load_model(self.MODEL)
         else:
-            self.model = pickle.load(self.MODEL)
+            with open(self.MODEL, "rb") as f:
+                self.model = pickle.load(f)
 
     def prices_to_features(self, prices):
         """
