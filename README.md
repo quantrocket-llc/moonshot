@@ -12,6 +12,8 @@ Moonshot is a backtester designed for data scientists, created by and for [Quant
 
 **Multi-asset class, multi-time frame**: Moonshot supports end-of-day and intraday strategies using equities, futures, and forex.
 
+**Machine learning support**: Moonshot supports machine learning and deep learning strategies using [scikit-learn](https://scikit-learn.org) or [Keras](https://keras.io/).
+
 **Live trading**: Live trading with Moonshot can be thought of as running a backtest on up-to-date historical data and generating a batch of orders based on the latest signals produced by the backtest.
 
 **No black boxes, no magic**: Moonshot provides many conveniences to make backtesting easier, but it eschews hidden behaviors and complex, under-the-hood simulation rules that are hard to understand or audit. What you see is what you get.
@@ -62,6 +64,52 @@ class DualMovingAverageStrategy(Moonshot):
 ```
 
 See the [QuantRocket docs](https://www.quantrocket.com/docs/#moonshot-backtesting) for a fuller discussion.
+
+## Machine Learning Example
+
+Moonshot supports machine learning strategies using scikit-learn or Keras. The model must be trained outside of Moonshot, either using QuantRocket or by training the model manually and persisting it to disk:
+
+```python
+from sklearn.tree import DecisionTreeClassifier
+import pickle
+
+model = DecisionTreeClassifier()
+X = np.array([[1,1],[0,0]])
+Y = np.array([1,0])
+model.fit(X, Y)
+
+with open("my_ml_model.pkl", "wb") as f:
+    pickle.dump(model, f)
+```
+
+A basic machine learning strategy is shown below:
+
+```python
+from moonshot import MoonshotML
+
+class DemoMLStrategy(MoonshotML):
+
+    CODE = "demo-ml"
+    DB = "demo-stk-1d"
+    MODEL = "my_ml_model.pkl"
+
+    def prices_to_features(self, prices):
+        closes = prices.loc["Close"]
+        # create a dict of DataFrame features
+        features = {}
+        features["returns_1d"]= closes.pct_change()
+        features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
+        # target is only required if using QuantRocket to train
+        # model, otherwise ignored
+        features["target"] = closes.pct_change().shift(-1)
+        return features
+
+    def predictions_to_signals(self, predictions, prices):
+        signals = predictions > 0
+        return signals.astype(int)
+```
+
+See the [QuantRocket docs](https://www.quantrocket.com/docs/#ml) for a fuller discussion.
 
 ## FAQ
 
