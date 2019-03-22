@@ -106,7 +106,9 @@ class Cache:
 
             if not isinstance(unless_modified, six.string_types):
 
-                if hasattr(unless_modified, "__class__"):
+                if hasattr(unless_modified, "__module__"):
+                    unless_modified = inspect.getmodule(unless_modified)
+                elif hasattr(unless_modified, "__class__"):
                     unless_modified = unless_modified.__class__
 
                 unless_modified = inspect.getfile(unless_modified)
