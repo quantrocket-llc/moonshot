@@ -612,7 +612,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 features = {}
                 features["feature1"] = prices.loc["Close"] > 10
                 features["feature2"] = prices.loc["Close"] > 10 # silly, duplicate feature
-                return features
+                return features, None
 
             def predictions_to_signals(self, predictions, prices):
                 # Go long when price is predicted to be below 10
@@ -638,7 +638,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 features = {}
                 features["feature1"] = prices.loc["Close"] > 10
                 features["feature2"] = prices.loc["Close"] > 10 # silly, duplicate feature
-                return features
+                return features, None
 
             def predictions_to_signals(self, predictions, prices):
                 # Go long when price is predicted to be below 10
