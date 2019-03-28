@@ -99,10 +99,10 @@ class DemoMLStrategy(MoonshotML):
         features = {}
         features["returns_1d"]= closes.pct_change()
         features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
-        # target is only required if using QuantRocket to train
-        # model, otherwise ignored
-        features["target"] = closes.pct_change().shift(-1)
-        return features
+        # targets is used by QuantRocket for training model, can be None if using
+        # an already trained model
+        targets = closes.pct_change().shift(-1)
+        return features, targets
 
     def predictions_to_signals(self, predictions, prices):
         signals = predictions > 0

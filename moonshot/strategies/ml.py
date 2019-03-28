@@ -160,8 +160,8 @@ class MoonshotML(Moonshot):
     >>>         features = {}
     >>>         features["returns_1d"]= closes.pct_change()
     >>>         features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
-    >>>         features["target"] = closes.pct_change().shift(-1)
-    >>>         return features
+    >>>         targets = closes.pct_change().shift(-1)
+    >>>         return features, targets
     >>>
     >>>     def predictions_to_signals(self, predictions, prices):
     >>>         signals = predictions > 0
@@ -192,17 +192,23 @@ class MoonshotML(Moonshot):
 
     def prices_to_features(self, prices):
         """
-        From a DataFrame of prices, return a dict of DataFrames of
-        features to be provided to the machine learning model.
+        From a DataFrame of prices, return a tuple of features and targets to be
+        provided to the machine learning model.
 
-        Each DataFrame should have the same shape, with a Date or (Date, Time)
-        index and conids as columns. (Moonshot will convert the DataFrames to
-        the format expected by the machine learning model).
+        The returned features can be a list or dict of DataFrames, where each
+        DataFrame is a feature and should have the same shape, with a Date or
+        (Date, Time) index and conids as columns. (Moonshot will convert the
+        DataFrames to the format expected by the machine learning model).
 
-        If the features dict contains a key called "target", this will
-        be interpreted as the targets (a.k.a. labels) to use in training
-        and will be ignored for prediction. (Model training is not handled
-        by the MoonshotML class.)
+        Alternatively, a list or dict of Series can be provided, which is
+        suitable if using multiple securities to make predictions for a
+        single security (for example, an index).
+
+        The returned targets should be a DataFrame or Series with an index
+        matching the index of the features DataFrames or Series. Targets are
+        used in training and are ignored for prediction. (Model training is
+        not handled by the MoonshotML class.) Alternatively return None if
+        using an already trained model.
 
         Must be implemented by strategy subclasses.
 
@@ -214,7 +220,7 @@ class MoonshotML(Moonshot):
 
         Returns
         -------
-        dict of DataFrames
+        dict or list of DataFrames or Series
             features
 
         Examples
@@ -226,8 +232,21 @@ class MoonshotML(Moonshot):
         >>>     features = {}
         >>>     features["returns_1d"]= closes.pct_change()
         >>>     features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
-        >>>     features["target"] = closes.pct_change().shift(-1)
-        >>>     return features
+        >>>     targets = closes.pct_change().shift(-1)
+        >>>     return features, targets
+
+        Predict next-day returns for a single security in the prices
+        DataFrame using another security's returns:
+
+        >>> def prices_to_features(self, prices):
+        >>>     closes = prices.loc["Close"]
+        >>>     closes_to_predict = closes[12345]
+        >>>     closes_to_predict_with = closes[23456]
+        >>>     features = {}
+        >>>     features["returns_1d"]= closes_to_predict_with.pct_change()
+        >>>     features["returns_2d"] = (closes_to_predict_with - closes_to_predict_with.shift(2)) / closes_to_predict_with.shift(2)
+        >>>     targets = closes_to_predict.pct_change().shift(-1)
+        >>>     return features, targets
         """
         raise NotImplementedError("strategies must implement prices_to_features")
 
@@ -236,6 +255,9 @@ class MoonshotML(Moonshot):
         From a DataFrame of predictions produced by a machine learning model,
         return a DataFrame of signals. By convention, signals should be
         1=long, 0=cash, -1=short.
+
+        The index of predictions will match the index of the features
+        DataFrames or Series returned in prices_to_features.
 
         Must be implemented by strategy subclasses.
 
@@ -255,10 +277,18 @@ class MoonshotML(Moonshot):
 
         Examples
         --------
-        Buy when prediction is above zero.
+        Buy when prediction (a DataFrame) is above zero.
 
         >>> def predictions_to_signals(self, predictions, prices):
         >>>     signals = predictions > 0
+        >>>     return signals.astype(int)
+
+        Buy a single security when the predictions (a Series) is above zero.
+
+        >>> def predictions_to_signals(self, predictions, prices):
+        >>>     closes = prices.loc["Close"]
+        >>>     signals = pd.DataFrame(False, index=closes.index, columns=closes.columns)
+        >>>     signals.loc[:, 12345] = predictions > 0
         >>>     return signals.astype(int)
         """
         raise NotImplementedError("strategies must implement predictions_to_signals")
@@ -330,21 +360,60 @@ class MoonshotML(Moonshot):
             if self.is_backtest:
                 Cache.set(cache_key, features, prefix="_features")
 
-        # Don't use the target/label for predictions
-        if "target" in features:
-            del features["target"]
+        # validate features
+        if not isinstance(features, tuple) or len(features) != 2:
+            raise MoonshotError("prices_to_features should return a tuple of (features, targets)")
 
-        all_features = []
+        features, targets = features
 
-        for i, feature in enumerate(features.values()):
-            feature = feature.stack(dropna=False).fillna(0)
-            if i == 0:
-                # save stacked index for predictions output
-                predictions_series_idx = feature.index
-            all_features.append(feature.values)
+        # Don't use the targets/labels for predictions
+        del targets
 
-        features = np.stack(all_features, axis=-1)
-        del all_features
+        if not isinstance(features, (dict, list, tuple, pd.DataFrame)):
+            raise MoonshotError("features should either be a DataFrame or a dict, list, or tuple of DataFrames or Series")
+
+        predictions_series_idx = None
+        unstack_predictions_series = False
+
+        # a single DataFrame is interpreted as a ready-made DataFrame of features
+        if isinstance(features, pd.DataFrame):
+            predictions_series_idx = features.index
+            features = features.values
+
+        # Convert iteratable of DataFrames or Series to np array
+        else:
+
+            if isinstance(features, dict):
+                features = features.values()
+
+            all_features = []
+
+            has_df = False
+            has_series = False
+
+            for i, feature in enumerate(features):
+
+                if isinstance(feature, pd.DataFrame):
+                    has_df = True
+                    unstack_predictions_series = True
+                    if has_series:
+                        raise MoonshotError("features should be either all DataFrames or all Series, not a mix of both")
+                    # stack DataFrame to Series
+                    feature = feature.stack(dropna=False)
+                else:
+                    has_series = True
+                    if has_df:
+                        raise MoonshotError("features should be either all DataFrames or all Series, not a mix of both")
+
+                feature = feature.fillna(0)
+                if i == 0:
+                    # save stacked index for predictions output
+                    predictions_series_idx = feature.index
+                all_features.append(feature.values)
+                del feature
+
+            features = np.stack(all_features, axis=-1)
+            del all_features
 
         # get predictions
         predictions = self.model.predict(features)
@@ -355,7 +424,8 @@ class MoonshotML(Moonshot):
             predictions = predictions.squeeze(axis=-1)
 
         predictions = pd.Series(predictions, index=predictions_series_idx)
-        predictions = predictions.unstack(level="ConId")
+        if unstack_predictions_series:
+            predictions = predictions.unstack(level="ConId")
 
         # predictions to signals
         signals = self.predictions_to_signals(predictions, prices)
