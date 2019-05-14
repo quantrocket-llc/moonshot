@@ -120,17 +120,21 @@ class AllowRebalanceTestCase(unittest.TestCase):
             ]
             return positions
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders = BuyBelow10().trade(
-                                    {"U123": 0.5,
-                                     "DU234": 0.3,
-                                     })
+                                    orders = BuyBelow10().trade(
+                                        {"U123": 0.5,
+                                         "DU234": 0.3,
+                                         })
 
         self.assertSetEqual(
             set(orders.columns),
@@ -292,17 +296,21 @@ class AllowRebalanceTestCase(unittest.TestCase):
             ]
             return positions
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders = BuyBelow10().trade(
-                                    {"U123": 0.5,
-                                     "DU234": 0.3,
-                                     })
+                                    orders = BuyBelow10().trade(
+                                        {"U123": 0.5,
+                                         "DU234": 0.3,
+                                         })
 
         self.assertSetEqual(
             set(orders.columns),
@@ -471,18 +479,22 @@ class AllowRebalanceTestCase(unittest.TestCase):
             ]
             return positions
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders = BuyBelow10().trade(
-                                    {"U123": 0.5,
-                                     "DU234": 0.3,
-                                     "U999": 0.5
-                                     })
+                                    orders = BuyBelow10().trade(
+                                        {"U123": 0.5,
+                                         "DU234": 0.3,
+                                         "U999": 0.5
+                                         })
 
         self.assertSetEqual(
             set(orders.columns),
@@ -661,19 +673,23 @@ class AllowRebalanceTestCase(unittest.TestCase):
             ]
             return positions
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                with self.assertRaises(MoonshotParameterError) as cm:
-                                    BuyBelow10().trade(
-                                        {"U123": 0.5,
-                                         "DU234": 0.3,
-                                         "U999": 0.5
-                                         })
+                                    with self.assertRaises(MoonshotParameterError) as cm:
+                                        BuyBelow10().trade(
+                                            {"U123": 0.5,
+                                             "DU234": 0.3,
+                                             "U999": 0.5
+                                             })
 
         self.assertIn(
             "invalid value for ALLOW_REBALANCE: always (should be a float)", repr(cm.exception))

@@ -2118,14 +2118,18 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders = DecisionTreeML().trade({"U123": 1.0})
+                                    orders = DecisionTreeML().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -2587,14 +2591,18 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders = DeepLearningML().trade({"U123": 1.0})
+                                    orders = DeepLearningML().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),

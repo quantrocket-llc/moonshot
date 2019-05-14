@@ -18,6 +18,7 @@ import numpy as np
 import warnings
 import time
 import requests
+import json
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
@@ -28,7 +29,7 @@ from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.history import get_historical_prices, get_db_config
 from quantrocket.master import list_calendar_statuses, download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
-from quantrocket.blotter import list_positions
+from quantrocket.blotter import list_positions, download_order_statuses
 
 class Moonshot(
     WeightAllocationMixin,
@@ -1508,29 +1509,26 @@ class Moonshot(
             target_quantities = max_quantities_for_shorts.where(
                 target_quantities < max_quantities_for_shorts, target_quantities)
 
-        # Adjust quantities based on existing positions
-        positions = list_positions(
-            order_refs=[self.CODE],
+        # Adjust quantities based on existing positions_and_orders
+        positions_and_orders = self._get_positions_and_orders(
             accounts=list(allocations.index),
-            conids=list(target_quantities.index)
-        )
+            conids=list(target_quantities.index))
 
-        if not positions:
+        if positions_and_orders.empty:
             net_quantities = target_quantities
         else:
-            positions = pd.DataFrame(positions)
-            positions = positions.set_index(["ConId","Account"]).Quantity
+            positions_and_orders = positions_and_orders.set_index(["ConId","Account"]).Quantity
             target_quantities = target_quantities.stack()
             target_quantities.index.set_names(["ConId","Account"], inplace=True)
-            positions = positions.reindex(target_quantities.index).fillna(0)
-            net_quantities = target_quantities - positions
+            positions_and_orders = positions_and_orders.reindex(target_quantities.index).fillna(0)
+            net_quantities = target_quantities - positions_and_orders
 
             # disable rebalancing as per ALLOW_REBALANCE
             if self.ALLOW_REBALANCE is not True:
                 is_rebalance = (
-                    ((target_quantities > 0) & (positions > 0))
+                    ((target_quantities > 0) & (positions_and_orders > 0))
                     |
-                    ((target_quantities < 0) & (positions < 0))
+                    ((target_quantities < 0) & (positions_and_orders < 0))
                 )
                 zeroes = pd.Series(0, index=net_quantities.index)
                 # ALLOW_REBALANCE = False: no rebalancing
@@ -1544,7 +1542,7 @@ class Moonshot(
                             "invalid value for ALLOW_REBALANCE: {0} (should be a float)".format(
                                 self.ALLOW_REBALANCE))
 
-                    rebalance_pcts = net_quantities/positions.where(is_rebalance)
+                    rebalance_pcts = net_quantities/positions_and_orders.where(is_rebalance)
                     net_quantities = zeroes.where(
                         is_rebalance & (rebalance_pcts.abs() < self.ALLOW_REBALANCE),
                         net_quantities)
@@ -1558,6 +1556,49 @@ class Moonshot(
         orders = self.order_stubs_to_orders(order_stubs, prices)
 
         return orders
+
+    def _get_positions_and_orders(self, accounts, conids):
+        """
+        Returns a DataFrame of current positions and open orders, for the
+        purpose of generating an order diff in live trading.
+        """
+        # query positions
+        positions = list_positions(
+            order_refs=[self.CODE],
+            accounts=accounts,
+            conids=conids
+        )
+
+        if positions:
+            positions = pd.DataFrame(positions)
+        else:
+            positions = pd.DataFrame(columns=["ConId","Account","Quantity"])
+
+        # query open orders
+        f = io.StringIO()
+        download_order_statuses(
+            f,
+            order_refs=[self.CODE],
+            accounts=accounts,
+            conids=conids,
+            open_orders=True,
+            fields=["ConId","Account","OrderRef","Remaining","Action"],
+            output="json")
+
+        if f.getvalue():
+            orders = json.load(f)
+            orders = pd.DataFrame(orders)
+            orders.loc[orders.Action == "SELL", "Remaining"] = -orders.loc[orders.Action == "SELL"].Remaining
+            orders = orders.groupby([orders.ConId, orders.Account]).Remaining.sum().reset_index()
+        else:
+            orders = pd.DataFrame(columns=["ConId","Account","Remaining"])
+
+        positions_and_orders = pd.merge(positions, orders, how="outer", on=["ConId","Account"])
+        positions_and_orders.loc[:, "Quantity"] = positions_and_orders.Quantity.fillna(0) + positions_and_orders.Remaining.fillna(0)
+
+        positions_and_orders = positions_and_orders[["ConId","Account","Quantity"]]
+
+        return positions_and_orders
 
     def _get_contract_values(self, prices):
         """

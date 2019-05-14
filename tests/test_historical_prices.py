@@ -525,7 +525,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
         get_historical_prices_call = mock_get_historical_prices.mock_calls[0]
         _, args, kwargs = get_historical_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
-        self.assertEqual(kwargs["start_date"], "2017-08-07") # 100 + 60ish trading days before requested start_date
+        self.assertIn(kwargs["start_date"], ("2017-08-06", "2017-08-07")) # 100 + 60ish trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'High', 'Low', 'Close', 'Volume'])
         self.assertIsNone(kwargs["master_fields"])

@@ -635,15 +635,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders_20180503 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-03")
-                                orders_20180501 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-01")
+                                    orders_20180503 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-03")
+                                    orders_20180501 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-01")
 
         self.assertSetEqual(
             set(orders_20180503.columns),
@@ -803,17 +807,21 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders_10 = BuyBelow10ShortAbove10ContIntraday().trade(
-                                    {"U123": 1.0}, review_date="2018-05-01 10:05:00")
-                                orders_11 = BuyBelow10ShortAbove10ContIntraday().trade(
-                                    {"U123": 1.0}, review_date="2018-05-01 11:30:35")
+                                    orders_10 = BuyBelow10ShortAbove10ContIntraday().trade(
+                                        {"U123": 1.0}, review_date="2018-05-01 10:05:00")
+                                    orders_11 = BuyBelow10ShortAbove10ContIntraday().trade(
+                                        {"U123": 1.0}, review_date="2018-05-01 11:30:35")
 
         self.assertSetEqual(
             set(orders_10.columns),
@@ -982,14 +990,18 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                orders = BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0})
+                                    orders = BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1121,6 +1133,9 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         def mock_pd_timestamp_now(tz=None):
             if tz == "America/Mexico_City":
                 return pd.Timestamp("2018-05-02 10:40:00", tz=tz)
@@ -1133,11 +1148,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
-                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
+                                with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                    with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                    orders = BuyBelow1().trade({"U123": 1.0})
+                                        orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1258,6 +1274,9 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         def mock_pd_timestamp_now(tz=None):
             if tz == "America/Mexico_City":
                 return pd.Timestamp("2018-04-01 10:40:00", tz=tz)
@@ -1270,11 +1289,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
-                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
+                                with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                    with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                    orders = BuyBelow1().trade({"U123": 1.0})
+                                        orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1406,6 +1426,9 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         def mock_pd_timestamp_now(tz=None):
             if tz == "America/Mexico_City":
                 return pd.Timestamp("2018-04-04 10:40:00", tz=tz)
@@ -1418,12 +1441,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
-                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
+                                with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                    with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                    with self.assertRaises(MoonshotError) as cm:
-                                        BuyBelow1().trade({"U123": 1.0})
+                                        with self.assertRaises(MoonshotError) as cm:
+                                            BuyBelow1().trade({"U123": 1.0})
 
         self.assertIn((
             "expected signal date 2018-04-04 not found in target weights DataFrame, is "
@@ -1525,6 +1549,9 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         def _mock_list_calendar_statuses():
             return {
                 "TSEJ":{
@@ -1549,11 +1576,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
-                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
+                                with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                    with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                    orders = BuyBelow1().trade({"U123": 1.0})
+                                        orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
@@ -1678,6 +1706,9 @@ class TradeDateValidationTestCase(unittest.TestCase):
         def mock_list_positions(**kwargs):
             return []
 
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
         # First, as a control, pretend the exchange is open; this should
         # raise an error
         def _mock_list_calendar_statuses():
@@ -1705,12 +1736,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
-                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
+                                with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                    with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                    with self.assertRaises(MoonshotError) as cm:
-                                        BuyBelow1().trade({"U123": 1.0})
+                                        with self.assertRaises(MoonshotError) as cm:
+                                            BuyBelow1().trade({"U123": 1.0})
 
         self.assertIn((
             "expected signal date 2018-05-04 not found in target weights DataFrame, is "
@@ -1733,11 +1765,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
-                        with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
-                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
+                                with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                    with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
 
-                                    orders = BuyBelow1().trade({"U123": 1.0})
+                                        orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
