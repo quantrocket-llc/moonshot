@@ -57,7 +57,7 @@ class OrdersTestCase(unittest.TestCase):
                 orders = pd.concat([orders,child_orders])
                 return orders
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Open"]
@@ -82,7 +82,7 @@ class OrdersTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -135,13 +135,13 @@ class OrdersTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = BuyBelow10ShortAbove10Overnight().trade({"U123": 0.5})
 
@@ -263,7 +263,7 @@ class OrdersTestCase(unittest.TestCase):
                 orders["Tif"] = "Day"
                 return orders
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close","Open"]
@@ -310,7 +310,7 @@ class OrdersTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -363,13 +363,13 @@ class OrdersTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     with self.assertRaises(MoonshotError) as cm:
                                         ShortAbove10Intraday().trade({"U123": 0.5})
@@ -409,7 +409,7 @@ class OrdersTestCase(unittest.TestCase):
                 orders["Tif"] = "Day"
                 return orders
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -434,7 +434,7 @@ class OrdersTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -487,13 +487,13 @@ class OrdersTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = BuyBelow10ShortAbove10Overnight().trade({"U123": 0.5})
 
@@ -566,7 +566,7 @@ class OrdersTestCase(unittest.TestCase):
                 orders["Tif"] = "Day"
                 return orders
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
             fields = ["Close"]
@@ -599,7 +599,7 @@ class OrdersTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -652,13 +652,13 @@ class OrdersTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = BuyBelow10ShortAbove10ContIntraday().trade(
                                         {"U123": 1.0}, review_date="2018-05-02 12:05:00")

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
 from quantrocket.fundamental import get_reuters_financials_reindexed_like
 
 class ReutersFundamentalsMixin(object):
@@ -76,6 +75,7 @@ class ReutersFundamentalsMixin(object):
         >>> book_values_per_share = (tot_assets - tot_liabilities)/shares_out
 
         """
+        import warnings
         warnings.warn(
             "this method has been deprecated and will be removed in a "
             "future release, please use quantrocket.fundamental.get_reuters_financials_reindexed_like "

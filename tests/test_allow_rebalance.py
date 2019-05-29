@@ -44,7 +44,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
             def signals_to_target_weights(self, signals, prices):
                 return self.allocate_fixed_weights(signals, 0.5)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -63,7 +63,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -123,13 +123,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = BuyBelow10().trade(
                                         {"U123": 0.5,
@@ -196,7 +196,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
             def signals_to_target_weights(self, signals, prices):
                 return self.allocate_fixed_weights(signals, 0.5)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -222,7 +222,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -299,13 +299,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = BuyBelow10().trade(
                                         {"U123": 0.5,
@@ -372,7 +372,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
             def signals_to_target_weights(self, signals, prices):
                 return self.allocate_fixed_weights(signals, 0.5)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -398,7 +398,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -482,13 +482,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = BuyBelow10().trade(
                                         {"U123": 0.5,
@@ -566,7 +566,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
             def signals_to_target_weights(self, signals, prices):
                 return self.allocate_fixed_weights(signals, 0.5)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -592,7 +592,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -676,13 +676,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     with self.assertRaises(MoonshotParameterError) as cm:
                                         BuyBelow10().trade(

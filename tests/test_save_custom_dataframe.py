@@ -48,7 +48,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                 self.save_to_results("Signal", dollar_volumes)
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -87,7 +87,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -122,9 +122,9 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     with self.assertRaises(ValueError) as cm:
                         BuyBelow10().backtest()
@@ -168,7 +168,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                 gross_returns = pct_changes * positions
                 return gross_returns
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03"])
             fields = ["Close","Open"]
@@ -216,7 +216,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -251,9 +251,9 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     with self.assertRaises(MoonshotParameterError) as cm:
                         ShortAbove10Intraday().backtest(nlv={"USD":50000})
@@ -299,7 +299,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                 gross_returns = pct_changes * positions
                 return gross_returns
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03"])
             fields = ["Close","Open"]
@@ -346,7 +346,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -381,9 +381,9 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     with self.assertRaises(MoonshotParameterError) as cm:
                         ShortAbove10Intraday().backtest(nlv={"USD":50000})
@@ -429,7 +429,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                 gross_returns = pct_changes * positions
                 return gross_returns
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03"])
             fields = ["Close","Open"]
@@ -477,7 +477,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -512,9 +512,9 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     with self.assertRaises(MoonshotParameterError) as cm:
                         ShortAbove10Intraday().backtest(nlv={"USD":50000})
@@ -539,7 +539,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                 self.save_to_results("DollarVolume", dollar_volumes)
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -578,7 +578,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -613,9 +613,9 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10().backtest()
 
@@ -669,7 +669,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
             fields = ["Close"]
@@ -702,7 +702,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -737,9 +737,9 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10ShortAbove10ContIntraday().backtest()
 

@@ -69,7 +69,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -108,7 +108,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -143,9 +143,9 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10().backtest()
 
@@ -645,7 +645,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 signals = predictions == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -685,7 +685,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -720,9 +720,9 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest()
 

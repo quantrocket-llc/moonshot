@@ -86,7 +86,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 features.append(prices.loc["Close"] > 10)
                 return features, None
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -116,7 +116,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -151,9 +151,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     with self.assertRaises(MoonshotError) as cm:
                         results = DecisionTreeML1().backtest()
@@ -188,7 +188,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 features.append(prices.loc["Close"] > 100)
                 return features
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -218,7 +218,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -253,9 +253,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     with self.assertRaises(MoonshotError) as cm:
                         results = DecisionTreeML().backtest()
@@ -288,7 +288,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals = predictions == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -318,7 +318,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -353,9 +353,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest()
 
@@ -591,7 +591,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals = predictions == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -621,7 +621,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -656,9 +656,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest()
 
@@ -891,7 +891,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals = predictions == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -921,7 +921,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -956,9 +956,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest(model=self.model)
 
@@ -1195,7 +1195,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals = predictions == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -1225,7 +1225,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -1260,9 +1260,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest()
 
@@ -1465,7 +1465,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals = signals.unstack(level="ConId").astype(int)
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -1495,7 +1495,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -1530,9 +1530,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest()
 
@@ -1774,7 +1774,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals.loc[:, 12345] = (predictions == 0).astype(int)
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -1804,7 +1804,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -1839,9 +1839,9 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DecisionTreeML().backtest()
 
@@ -2041,7 +2041,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 signals = predictions == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -2068,7 +2068,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -2121,13 +2121,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = DecisionTreeML().trade({"U123": 1.0})
 
@@ -2214,7 +2214,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 signals = predictions.round() == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close"]
@@ -2244,7 +2244,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -2279,9 +2279,9 @@ class KerasMachineLearningTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = DeepLearningML().backtest()
 
@@ -2514,7 +2514,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 signals = predictions.round() == 0
                 return signals.astype(int)
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
             fields = ["Close"]
@@ -2541,7 +2541,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -2594,13 +2594,13 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         def mock_download_order_statuses(f, **kwargs):
             pass
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
                 with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                                     orders = DeepLearningML().trade({"U123": 1.0})
 

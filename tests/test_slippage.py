@@ -52,7 +52,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -91,7 +91,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -126,9 +126,9 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10ShortAbove10().backtest()
 
@@ -288,7 +288,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -327,7 +327,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -362,9 +362,9 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10ShortAbove10().backtest()
 
@@ -524,7 +524,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
             fields = ["Close"]
@@ -557,7 +557,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -592,9 +592,9 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
@@ -822,7 +822,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -861,7 +861,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -896,9 +896,9 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10ShortAbove10().backtest()
 
@@ -1063,7 +1063,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
                 return signals
 
-        def mock_get_historical_prices(*args, **kwargs):
+        def mock_get_prices(*args, **kwargs):
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -1102,7 +1102,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -1137,9 +1137,9 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        with patch("moonshot.strategies.base.get_historical_prices", new=mock_get_historical_prices):
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                     results = BuyBelow10ShortAbove10().backtest()
 

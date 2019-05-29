@@ -15,7 +15,6 @@
 import io
 import pandas as pd
 import numpy as np
-import warnings
 import time
 import requests
 import json
@@ -26,7 +25,9 @@ from moonshot.mixins import (
 )
 from moonshot.cache import Cache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
-from quantrocket.history import get_historical_prices, get_db_config
+from quantrocket.price import get_prices
+from quantrocket.history import get_db_config as get_history_db_config
+from quantrocket.realtime import get_db_config as get_realtime_db_config
 from quantrocket.master import list_calendar_statuses, download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions, download_order_statuses
@@ -204,24 +205,28 @@ class Moonshot(
         self._signal_time = None # set by _weights_to_today_weights
 
         if hasattr(self, "get_signals"):
+            import warnings
             warnings.warn(
                 "method name get_signals is deprecated and will be removed in a "
                 "future release, please use prices_to_signals instead", DeprecationWarning)
             self.prices_to_signals = self.get_signals
 
         if hasattr(self, "allocate_weights"):
+            import warnings
             warnings.warn(
                 "method name allocate_weights is deprecated and will be removed in a "
                 "future release, please use signals_to_target_weights instead", DeprecationWarning)
             self.signals_to_target_weights = self.allocate_weights
 
         if hasattr(self, "simulate_positions"):
+            import warnings
             warnings.warn(
                 "method name simulate_positions is deprecated and will be removed in a "
                 "future release, please use target_weights_to_positions instead", DeprecationWarning)
             self.target_weights_to_positions = self.simulate_positions
 
         if hasattr(self, "simulate_gross_returns"):
+            import warnings
             warnings.warn(
                 "method name simulate_gross_returns is deprecated and will be removed in a "
                 "future release, please use positions_to_gross_returns instead", DeprecationWarning)
@@ -673,7 +678,7 @@ class Moonshot(
                 msg += ", please adjust the review_date"
             raise MoonshotError(msg)
 
-        # get_historical_prices inserts all times into each day's index, thus
+        # _get_prices inserts all times into each day's index, thus
         # the signal_time will be in the weights DataFrame even if the data
         # is stale. Instead, to validate the data, we make sure that there is
         # at least one nonnull field in the prices DataFrame at the
@@ -958,13 +963,19 @@ class Moonshot(
 
         if securities is None:
 
-            # determine domain (all DBs must have same domain, which is check
-            # by get_historical_prices, so not checked here)
+            # determine domain (all DBs must have same domain, which is checked
+            # by get_prices, so not checked here)
             dbs = self.DB
             if not isinstance(dbs, (list, tuple)):
                 dbs = [dbs]
             first_db = dbs[0]
-            db_config = get_db_config(first_db)
+
+            # DB might be history or realtime
+            try:
+                db_config = get_history_db_config(first_db)
+            except requests.HTTPError:
+                db_config = get_realtime_db_config(first_db)
+
             domain = db_config.get("domain", "main")
 
             # query master
@@ -1024,10 +1035,10 @@ class Moonshot(
             days=lookback_window*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
-    def get_historical_prices(self, start_date, end_date=None, nlv=None):
+    def _get_prices(self, start_date, end_date=None, nlv=None):
         """
-        Downloads historical prices from a history db. Downloads security
-        details from the master db.
+        Downloads prices from a history db and/or real-time aggregate db.
+        Downloads security details from the master db.
         """
         if start_date:
             start_date = self._get_start_date_with_lookback(start_date)
@@ -1037,6 +1048,7 @@ class Moonshot(
             codes = [self.DB]
 
         if not self.DB_TIMES and getattr(self, "DB_TIME_FILTERS", None):
+            import warnings
             warnings.warn(
                 "DB_TIME_FILTERS is deprecated and will be removed in a "
                 "future release, please use DB_TIMES instead", DeprecationWarning)
@@ -1067,13 +1079,20 @@ class Moonshot(
             prices = Cache.get(kwargs, prefix="_history")
 
         if prices is None:
-            prices = get_historical_prices(**kwargs)
+            prices = get_prices(**kwargs)
             if self.is_backtest:
                 Cache.set(kwargs, prices, prefix="_history")
 
         self._load_master_file(prices.columns.tolist(), nlv=nlv)
 
         return prices
+
+    def get_historical_prices(self, *args, **kwargs):
+        import warnings
+        warnings.warn(
+            "method name get_historical_prices is deprecated and will be removed in a "
+            "future release, it has been replaced by the private method _get_prices", DeprecationWarning)
+        return self._get_prices(*args, **kwargs)
 
     def _prices_to_signals(self, prices):
         """
@@ -1117,7 +1136,7 @@ class Moonshot(
         self.is_backtest = True
         allocation = allocation or 1.0
 
-        prices = self.get_historical_prices(start_date, end_date, nlv=nlv)
+        prices = self._get_prices(start_date, end_date, nlv=nlv)
 
         signals = self._prices_to_signals(prices)
         weights = self.signals_to_target_weights(signals, prices)
@@ -1204,7 +1223,7 @@ class Moonshot(
 
         if self.BENCHMARK_DB:
             try:
-                benchmark_prices = get_historical_prices(
+                benchmark_prices = get_prices(
                     self.BENCHMARK_DB,
                     conids=self.BENCHMARK,
                     start_date=prices.index.get_level_values("Date").min(),
@@ -1364,7 +1383,7 @@ class Moonshot(
 
         start_date = review_date or pd.Timestamp.today()
 
-        prices = self.get_historical_prices(start_date)
+        prices = self._get_prices(start_date)
         prices_is_intraday = "Time" in prices.index.names
 
         signals = self._prices_to_signals(prices)

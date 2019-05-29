@@ -23,7 +23,7 @@ from moonshot import Moonshot
 from moonshot.exceptions import MoonshotParameterError
 from moonshot.cache import TMP_DIR
 
-class HistoricalPricesTestCase(unittest.TestCase):
+class GetPricesTestCase(unittest.TestCase):
 
     def tearDown(self):
         """
@@ -32,12 +32,12 @@ class HistoricalPricesTestCase(unittest.TestCase):
         for file in glob.glob("{0}/moonshot*.pkl".format(TMP_DIR)):
             os.remove(file)
 
-    @patch("moonshot.strategies.base.get_historical_prices")
+    @patch("moonshot.strategies.base.get_prices")
     @patch("moonshot.strategies.base.download_master_file")
-    @patch("moonshot.strategies.base.get_db_config")
-    def test_pass_history_and_master_db_params_correctly(self, mock_get_db_config,
+    @patch("moonshot.strategies.base.get_history_db_config")
+    def test_pass_history_and_master_db_params_correctly(self, mock_get_history_db_config,
                                                          mock_download_master_file,
-                                                         mock_get_historical_prices):
+                                                         mock_get_prices):
         """
         Tests that params related to querying the history and master DBs are
         passed correctly to the underlying functions.
@@ -60,7 +60,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 signals = prices.loc["Wap"] < 10
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Wap","Volume"]
@@ -125,14 +125,14 @@ class HistoricalPricesTestCase(unittest.TestCase):
             )
             return pd.concat((prices, securities))
 
-        def _mock_get_db_config():
+        def _mock_get_history_db_config():
             return {
                 'vendor': 'sharadar',
                 'domain': 'sharadar',
                 'bar_size': '1 day'
             }
 
-        mock_get_db_config.return_value = _mock_get_db_config()
+        mock_get_history_db_config.return_value = _mock_get_history_db_config()
 
         def _mock_download_master_file(f, *args, **kwargs):
 
@@ -165,12 +165,12 @@ class HistoricalPricesTestCase(unittest.TestCase):
             f.seek(0)
 
         mock_download_master_file.side_effect = _mock_download_master_file
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
-        get_historical_prices_call = mock_get_historical_prices.mock_calls[0]
-        _, args, kwargs = get_historical_prices_call
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
         self.assertEqual(kwargs["start_date"], "2017-03-25") # default 252+ trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
@@ -185,8 +185,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
-        get_db_config_call = mock_get_db_config.mock_calls[0]
-        _, args, kwargs = get_db_config_call
+        get_history_db_config_call = mock_get_history_db_config.mock_calls[0]
+        _, args, kwargs = get_history_db_config_call
         self.assertEqual(args, ("test-db",))
 
         download_master_file_call = mock_download_master_file.mock_calls[0]
@@ -197,8 +197,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
             "Currency", "Multiplier", "PriceMagnifier",
             "PrimaryExchange", "SecType", "Symbol", "Timezone"])
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_set_lookback_window(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_set_lookback_window(self, mock_get_prices):
         """
         Tests that setting LOOKBACK_WINDOW results in an appropriate start
         date for historical prices.
@@ -214,7 +214,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -253,7 +253,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -288,15 +288,15 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
-        get_historical_prices_call = mock_get_historical_prices.mock_calls[0]
-        _, args, kwargs = get_historical_prices_call
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
         self.assertEqual(kwargs["start_date"], "2016-10-24") # 350+ trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
@@ -310,8 +310,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_derive_lookback_window_from_window_params(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_derive_lookback_window_from_window_params(self, mock_get_prices):
         """
         Tests that lookback window is derived from the max of *_WINDOW params.
         """
@@ -328,7 +328,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -367,7 +367,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -402,15 +402,15 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
-        get_historical_prices_call = mock_get_historical_prices.mock_calls[0]
-        _, args, kwargs = get_historical_prices_call
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
         self.assertEqual(kwargs["start_date"], "2017-11-16") # 100+ trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
@@ -419,8 +419,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_derive_lookback_window_from_window_and_interval_params(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_derive_lookback_window_from_window_and_interval_params(self, mock_get_prices):
         """
         Tests that lookback window is derived from the max of *_WINDOW
         params plus the max of *_INTERVAL params.
@@ -441,7 +441,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -480,7 +480,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -515,15 +515,15 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
-        get_historical_prices_call = mock_get_historical_prices.mock_calls[0]
-        _, args, kwargs = get_historical_prices_call
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
         self.assertIn(kwargs["start_date"], ("2017-08-06", "2017-08-07")) # 100 + 60ish trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
@@ -532,8 +532,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_complain_if_cannot_infer_timezone(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_complain_if_cannot_infer_timezone(self, mock_get_prices):
         """
         Tests error handling when multiple timezones are present and we
         cannot infer the time zone.
@@ -547,7 +547,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -586,7 +586,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -621,10 +621,10 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 with self.assertRaises(MoonshotParameterError) as cm:
                     BuyBelow10().backtest(nlv={"USD":100000, "JPY":10000000})
@@ -633,8 +633,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
             "cannot infer timezone because multiple timezones are present "
             "in data, please specify TIMEZONE explicitly (timezones: America/New_York, America/Mexico_City)", repr(cm.exception))
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_complain_if_nlv_missing_required_currencies(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_complain_if_nlv_missing_required_currencies(self, mock_get_prices):
         """
         Tests error handling when NLV is provided but is missing required currencies.
         """
@@ -649,7 +649,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 signals = prices.loc["Close"] < 10
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -688,7 +688,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -723,10 +723,10 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 with self.assertRaises(MoonshotParameterError) as cm:
                     BuyBelow10().backtest(nlv={"USD":100000, "JPY":10000000})
@@ -734,8 +734,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
         self.assertIn(
             "NLV dict is missing values for required currencies: MXN", repr(cm.exception))
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_append_nlv_from_class_param(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_append_nlv_from_class_param(self, mock_get_prices):
         """
         Tests appending of NLV when provided as a class param.
         """
@@ -754,7 +754,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 self.save_to_results("Nlv", signals.apply(lambda x: self._securities_master.Nlv, axis=1))
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -793,7 +793,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -828,10 +828,10 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 results = BuyBelow10().backtest()
 
@@ -860,8 +860,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
              23456: [1000000.0,1000000.0,1000000.0,1000000.0]}
         )
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_append_nlv_from_arg(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_append_nlv_from_arg(self, mock_get_prices):
         """
         Tests appending of NLV when provided as an arg to backtest().
         """
@@ -876,7 +876,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 self.save_to_results("Nlv", signals.apply(lambda x: self._securities_master.Nlv, axis=1))
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -914,7 +914,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -949,10 +949,10 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 results = BuyBelow10().backtest(nlv={
                     "USD": 50000,
@@ -984,8 +984,8 @@ class HistoricalPricesTestCase(unittest.TestCase):
              23456: [1000000.0,1000000.0,1000000.0,1000000.0]}
         )
 
-    @patch("moonshot.strategies.base.get_historical_prices")
-    def test_append_forex_nlv_based_on_symbol(self, mock_get_historical_prices):
+    @patch("moonshot.strategies.base.get_prices")
+    def test_append_forex_nlv_based_on_symbol(self, mock_get_prices):
         """
         Tests that FX NLV is appended based on the Symbol, not the Currency.
         """
@@ -998,7 +998,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
                 self.save_to_results("Nlv", signals.apply(lambda x: self._securities_master.Nlv, axis=1))
                 return signals.astype(int)
 
-        def _mock_get_historical_prices():
+        def _mock_get_prices():
 
             dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
             fields = ["Close","Volume"]
@@ -1036,7 +1036,7 @@ class HistoricalPricesTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_db_config(db):
+        def mock_get_history_db_config(db):
             return {
                 'vendor': 'ib',
                 'domain': 'main',
@@ -1071,10 +1071,10 @@ class HistoricalPricesTestCase(unittest.TestCase):
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        mock_get_historical_prices.return_value = _mock_get_historical_prices()
+        mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_db_config", new=mock_get_db_config):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
                 results = BuyBelow10().backtest(nlv={
                     "USD": 50000,
