@@ -678,7 +678,7 @@ class Moonshot(
                 msg += ", please adjust the review_date"
             raise MoonshotError(msg)
 
-        # _get_prices inserts all times into each day's index, thus
+        # get_prices inserts all times into each day's index, thus
         # the signal_time will be in the weights DataFrame even if the data
         # is stale. Instead, to validate the data, we make sure that there is
         # at least one nonnull field in the prices DataFrame at the
@@ -1035,7 +1035,7 @@ class Moonshot(
             days=lookback_window*365.0/(260 - 25) + 10)
         return start_date.date().isoformat()
 
-    def _get_prices(self, start_date, end_date=None, nlv=None):
+    def get_prices(self, start_date, end_date=None, nlv=None):
         """
         Downloads prices from a history db and/or real-time aggregate db.
         Downloads security details from the master db.
@@ -1091,8 +1091,8 @@ class Moonshot(
         import warnings
         warnings.warn(
             "method name get_historical_prices is deprecated and will be removed in a "
-            "future release, it has been replaced by the private method _get_prices", DeprecationWarning)
-        return self._get_prices(*args, **kwargs)
+            "future release, it has been replaced by get_prices", DeprecationWarning)
+        return self.get_prices(*args, **kwargs)
 
     def _prices_to_signals(self, prices):
         """
@@ -1136,7 +1136,7 @@ class Moonshot(
         self.is_backtest = True
         allocation = allocation or 1.0
 
-        prices = self._get_prices(start_date, end_date, nlv=nlv)
+        prices = self.get_prices(start_date, end_date, nlv=nlv)
 
         signals = self._prices_to_signals(prices)
         weights = self.signals_to_target_weights(signals, prices)
@@ -1383,7 +1383,7 @@ class Moonshot(
 
         start_date = review_date or pd.Timestamp.today()
 
-        prices = self._get_prices(start_date)
+        prices = self.get_prices(start_date)
         prices_is_intraday = "Time" in prices.index.names
 
         signals = self._prices_to_signals(prices)
