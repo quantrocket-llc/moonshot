@@ -933,6 +933,279 @@ class TradeTestCase(unittest.TestCase):
             ]
         )
 
+    def test_complain_if_no_contract_value_reference_field(self):
+        """
+        Tests error handling when the prices DataFrame doesn't contain
+        typical fields and CONTRACT_VALUE_REFERENCE_FIELD is not set.
+        """
+
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+            CODE = "c-intraday-pivot-10"
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["AuctionPriceClose"] <= 10
+                short_signals = prices.loc["AuctionPriceClose"] > 10
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+        def mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["AuctionPriceClose"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product(
+                [fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # AuctionPriceClose
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # AuctionPriceClose
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        def mock_get_history_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        def mock_download_account_balances(f, **kwargs):
+            balances = pd.DataFrame(dict(Account=["U123"],
+                                         NetLiquidation=[60000],
+                                         Currency=["USD"]))
+            balances.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_exchange_rates(f, **kwargs):
+            rates = pd.DataFrame(dict(BaseCurrency=["USD"],
+                                      QuoteCurrency=["USD"],
+                                         Rate=[1.0]))
+            rates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_positions(**kwargs):
+            return []
+
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
+            with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
+                with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
+                    with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
+
+                                    with self.assertRaises(MoonshotParameterError) as cm:
+                                        BuyBelow10ShortAbove10ContIntraday().trade(
+                                            {"U123": 1.0}, review_date="2018-05-02 12:05:00")
+
+        expected_msg = "Can't identify a suitable field to use to calculate contract values. Please set CONTRACT_VALUE_REFERENCE_FIELD = '<field>' to indicate which price field to use to calculate contract values."
+        self.assertIn(expected_msg, repr(cm.exception))
+
+    def test_set_contract_value_reference_field(self):
+        """
+        Tests setting the CONTRACT_VALUE_REFERENCE_FIELD.
+        """
+
+        class BuyBelow10ShortAbove10ContIntraday(Moonshot):
+            """
+            A basic test strategy that buys below 10 and shorts above 10.
+            """
+            CODE = "c-intraday-pivot-10"
+            CONTRACT_VALUE_REFERENCE_FIELD = "AuctionPriceClose"
+
+            def prices_to_signals(self, prices):
+                long_signals = prices.loc["AuctionPriceClose"] <= 10
+                short_signals = prices.loc["AuctionPriceClose"] > 10
+                signals = long_signals.astype(int).where(long_signals, -short_signals.astype(int))
+                return signals
+
+        def mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02"])
+            fields = ["AuctionPriceClose"]
+            times = ["10:00:00", "11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product(
+                [fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # AuctionPriceClose
+                        9.6,
+                        10.45,
+                        10.12,
+                        15.45,
+                        8.67,
+                        12.30,
+                    ],
+                    23456: [
+                        # AuctionPriceClose
+                        10.56,
+                        12.01,
+                        10.50,
+                        9.80,
+                        13.40,
+                        7.50,
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        def mock_get_history_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        def mock_download_account_balances(f, **kwargs):
+            balances = pd.DataFrame(dict(Account=["U123"],
+                                         NetLiquidation=[60000],
+                                         Currency=["USD"]))
+            balances.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_exchange_rates(f, **kwargs):
+            rates = pd.DataFrame(dict(BaseCurrency=["USD"],
+                                      QuoteCurrency=["USD"],
+                                         Rate=[1.0]))
+            rates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_positions(**kwargs):
+            return []
+
+        def mock_download_order_statuses(f, **kwargs):
+            pass
+
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
+            with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
+                with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
+                    with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
+
+                                    orders = BuyBelow10ShortAbove10ContIntraday().trade(
+                                        {"U123": 1.0}, review_date="2018-05-02 12:05:00")
+
+        self.assertSetEqual(
+            set(orders.columns),
+            {'ConId',
+             'Account',
+             'Action',
+             'OrderRef',
+             'TotalQuantity',
+             'Exchange',
+             'OrderType',
+             'Tif'}
+        )
+        self.assertListEqual(
+            orders.to_dict(orient="records"),
+            [
+                {
+                    'ConId': 12345,
+                    'Account': 'U123',
+                    'Action': 'SELL',
+                    'OrderRef': 'c-intraday-pivot-10',
+                    # 1.0 allocation * 0.5 weight * 60K / 12.30 = 2439
+                    'TotalQuantity': 2439,
+                    'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'ConId': 23456,
+                    'Account': 'U123',
+                    'Action': 'BUY',
+                    'OrderRef': 'c-intraday-pivot-10',
+                    # 1.0 allocation * 0.5 weight * 60K / 7.50 = 4000
+                    'TotalQuantity': 4000,
+                    'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                }
+            ]
+        )
+
     def test_single_account(self):
         """
         Tests that the orders DataFrame is correct after running a

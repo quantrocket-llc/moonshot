@@ -155,6 +155,15 @@ class Moonshot(
         this percentage. For example 0.5 means don't rebalance a position unless
         the position will change by +/-50%.
 
+    CONTRACT_VALUE_REFERENCE_FIELD : str, optional
+        the price field to use for determining contract values for the purpose of
+        applying commissions and constraining weights in backtests and calculating
+        order quantities in trading. Defaults to the first available of Close, Open,
+        LastPriceClose, BidPriceClose, AskPriceClose, TimeSalesLastPriceClose,
+        TimeSalesFilteredLastPriceClose, LastPriceMean, BidPriceMean, AskPriceMean,
+        TimeSalesLastPriceMean, TimeSalesFilteredLastPriceMean, LastPriceOpen,
+        BidPriceOpen, AskPriceOpen, TimeSalesLastPriceOpen, TimeSalesFilteredLastPriceOpen.
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "mexi-stk-1d" and buys when
@@ -194,6 +203,7 @@ class Moonshot(
     CALENDAR = None
     POSITIONS_CLOSED_DAILY = False
     ALLOW_REBALANCE = True
+    CONTRACT_VALUE_REFERENCE_FIELD = None
 
     def __init__(self):
         self.is_trade = False
@@ -1652,16 +1662,40 @@ class Moonshot(
         multipliers and dividing by price magnifiers.
         """
         # Find a price field we can use
-        field = None
-        fields = prices.index.get_level_values("Field").unique()
-        candidate_fields = ("Close", "Open", "Bid", "Ask", "High", "Low")
-        for candidate in candidate_fields:
-            if candidate in fields:
-                field = candidate
-                break
-        else:
-            raise ValueError("Can't calculate contract values without one of {0}".format(
-                ", ".join(candidate_fields)))
+        field = self.CONTRACT_VALUE_REFERENCE_FIELD
+        if not field:
+            fields = prices.index.get_level_values("Field").unique()
+            candidate_fields = (
+                # history db candidate fields
+                'Close',
+                'Open',
+
+                # realtime db candidate fields
+                'LastPriceClose',
+                'BidPriceClose',
+                'AskPriceClose',
+                'TimeSalesLastPriceClose',
+                'TimeSalesFilteredLastPriceClose',
+                'LastPriceMean',
+                'BidPriceMean',
+                'AskPriceMean',
+                'TimeSalesLastPriceMean',
+                'TimeSalesFilteredLastPriceMean',
+                'LastPriceOpen',
+                'BidPriceOpen',
+                'AskPriceOpen',
+                'TimeSalesLastPriceOpen',
+                'TimeSalesFilteredLastPriceOpen')
+
+            for candidate in candidate_fields:
+                if candidate in fields:
+                    field = candidate
+                    break
+            else:
+                raise MoonshotParameterError(
+                    "Can't identify a suitable field to use to calculate contract values. "
+                    "Please set CONTRACT_VALUE_REFERENCE_FIELD = '<field>' to indicate which "
+                    "price field to use to calculate contract values.")
 
         closes = prices.loc[field]
 
