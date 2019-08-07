@@ -140,7 +140,9 @@ class PerShareCommission(BaseCommission):
 
         commission_per_share_with_fees = ib_commission_per_share * (1 + cls.COMMISSION_PERCENTAGE_FEE_RATE)
 
-        ib_commission_rates = float(ib_commission_per_share)/contract_values.where(contract_values > 0)
+        # Note: we take abs() of contract_values because combos can have
+        # negative prices which would cause a negative commission rate
+        ib_commission_rates = float(ib_commission_per_share)/contract_values.where(contract_values != 0).abs()
 
         # Multiply the commissions by the turnover.
         ib_commissions = ib_commission_rates * turnover
@@ -148,7 +150,7 @@ class PerShareCommission(BaseCommission):
         if nlvs is not None and cls.MIN_COMMISSION:
             ib_commissions = cls._enforce_min_commissions(ib_commissions, nlvs=nlvs)
 
-        share_based_exchange_fee_rates = exchange_fee_per_share/contract_values.where(contract_values > 0)
+        share_based_exchange_fee_rates = exchange_fee_per_share/contract_values.where(contract_values != 0).abs()
         share_based_exchange_fees = share_based_exchange_fee_rates * turnover
 
         value_based_fees = cls.PERCENTAGE_FEE_RATE * turnover
