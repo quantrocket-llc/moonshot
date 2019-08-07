@@ -18,6 +18,7 @@ import numpy as np
 import time
 import requests
 import json
+import math
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import (
     WeightAllocationMixin,
@@ -146,7 +147,7 @@ class Moonshot(
         impacts commission and slippage calculations (default is False, meaning
         adjacent positions are assumed to be held continuously)
 
-    ALLOW_REBALANCE: bool or float
+    ALLOW_REBALANCE : bool or float
         in live trading, whether to allow rebalancing of existing positions that
         are already on the correct side. If True (the default), allow rebalancing.
         If False, no rebalancing. If set to a positive decimal, allow rebalancing
@@ -1027,12 +1028,34 @@ class Moonshot(
         plus a buffer. LOOKBACK_WINDOW is measured in trading days, but we
         query the db in calendar days. Convert from weekdays (260 per year)
         to calendar days, assuming 25 holidays (NYSE has ~9 per year, TSEJ
-        has ~19), plus a 10 day buffer to be safe.
+        has ~19), plus a buffer (which varies by window size) to be safe.
         """
         lookback_window = cls._get_lookback_window()
 
+        days_per_year = 365
+        weekdays_per_year = 260
+        max_holidays_per_year = 25
+        trading_days_per_year = weekdays_per_year - max_holidays_per_year
+
+        # Vary the buffer by the window length (for very short windows, the
+        # user might not want to load too much data so we want to keep the
+        # buffer reasonably small)
+
+        # No window, no buffer
+        if lookback_window == 0:
+            buffer = 0
+
+        # for window < 1 week, a 2 day buffer (plus the calendar day to
+        # trading day conversion) will suffice
+        elif lookback_window <= 5:
+            buffer = 2
+
+        # longer than a week, err on the side of loading ample data
+        else:
+            buffer = 10
+
         start_date = pd.Timestamp(start_date) - pd.Timedelta(
-            days=lookback_window*365.0/(260 - 25) + 10)
+            days=math.ceil(lookback_window*days_per_year/trading_days_per_year) + buffer)
         return start_date.date().isoformat()
 
     def get_prices(self, start_date, end_date=None, nlv=None):

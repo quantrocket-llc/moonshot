@@ -525,7 +525,223 @@ class GetPricesTestCase(unittest.TestCase):
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
-        self.assertIn(kwargs["start_date"], ("2017-08-06", "2017-08-07")) # 100 + 60ish trading days before requested start_date
+        self.assertIn(kwargs["start_date"], ("2017-08-04", "2017-08-05")) # 100 + 60ish trading days before requested start_date
+        self.assertEqual(kwargs["end_date"], "2018-05-04")
+        self.assertEqual(kwargs["fields"], ['Open', 'High', 'Low', 'Close', 'Volume'])
+        self.assertIsNone(kwargs["master_fields"])
+        self.assertIsNone(kwargs["timezone"])
+        self.assertTrue(kwargs["infer_timezone"])
+
+    @patch("moonshot.strategies.base.get_prices")
+    def test_zero_lookback_window(self, mock_get_prices):
+        """
+        Tests that a lookback window of 0 is respected, i.e. no buffer is
+        added.
+        """
+        class BuyBelow10(Moonshot):
+            """
+            A basic test strategy that buys below 10.
+            """
+            DB = 'test-db'
+            LOOKBACK_WINDOW = 0
+
+            def prices_to_signals(self, prices):
+                signals = prices.loc["Close"] < 10
+                return signals.astype(int)
+
+        def _mock_get_prices():
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
+            fields = ["Close","Volume"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        #Close
+                        9,
+                        11,
+                        10.50,
+                        9.99,
+                        # Volume
+                        5000,
+                        16000,
+                        8800,
+                        9900
+                    ],
+                    23456: [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                 },
+                index=idx
+            )
+
+            return prices
+
+        def mock_get_history_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        mock_get_prices.return_value = _mock_get_prices()
+
+        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
+
+                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
+        self.assertListEqual(kwargs["codes"], ["test-db"])
+        self.assertEqual(kwargs["start_date"], "2018-05-01")
+        self.assertEqual(kwargs["end_date"], "2018-05-04")
+        self.assertEqual(kwargs["fields"], ['Open', 'High', 'Low', 'Close', 'Volume'])
+        self.assertIsNone(kwargs["master_fields"])
+        self.assertIsNone(kwargs["timezone"])
+        self.assertTrue(kwargs["infer_timezone"])
+
+    @patch("moonshot.strategies.base.get_prices")
+    def test_under_one_week_lookback_window(self, mock_get_prices):
+        """
+        Tests that a smaller buffer is used for a lookback window of less
+        than a week.
+        """
+        class BuyBelow10(Moonshot):
+            """
+            A basic test strategy that buys below 10.
+            """
+            DB = 'test-db'
+            LOOKBACK_WINDOW = 2
+
+            def prices_to_signals(self, prices):
+                signals = prices.loc["Close"] < 10
+                return signals.astype(int)
+
+        def _mock_get_prices():
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
+            fields = ["Close","Volume"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        #Close
+                        9,
+                        11,
+                        10.50,
+                        9.99,
+                        # Volume
+                        5000,
+                        16000,
+                        8800,
+                        9900
+                    ],
+                    23456: [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                 },
+                index=idx
+            )
+
+            return prices
+
+        def mock_get_history_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        mock_get_prices.return_value = _mock_get_prices()
+
+        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
+
+                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
+        self.assertListEqual(kwargs["codes"], ["test-db"])
+        self.assertEqual(kwargs["start_date"], "2018-04-25")
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'High', 'Low', 'Close', 'Volume'])
         self.assertIsNone(kwargs["master_fields"])
