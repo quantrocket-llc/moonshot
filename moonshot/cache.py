@@ -18,7 +18,9 @@ import pickle
 import time
 import six
 import inspect
+import itertools
 import pandas as pd
+from quantrocket.db import list_databases
 
 TMP_DIR = os.environ.get("MOONSHOT_CACHE_DIR", "/tmp")
 
@@ -44,7 +46,7 @@ class Cache:
     >>>         if self.is_backtest:
     >>>             # try to load from cache
     >>>             cache_key = [prices.index.tolist(), prices.columns.tolist()]
-    >>>             my_dataframe = Cache.get(cache_key, prefix="my_df", unless_modified=self)
+    >>>             my_dataframe = Cache.get(cache_key, prefix="my_df", unless_file_modified=self)
     >>>
     >>>         if my_dataframe is None:
     >>>             # calculate dataframe here
@@ -66,7 +68,7 @@ class Cache:
         return filepath
 
     @classmethod
-    def get(cls, key_obj, prefix=None, unless_modified=None):
+    def get(cls, key_obj, prefix=None, unless_file_modified=None, unless_dbs_modified=None):
         """
         Returns an object from cache, or None if it is not available or
         expired.
@@ -81,10 +83,16 @@ class Cache:
         prefix : str, optional
             the prefix that was used the cache key, if any
 
-        unless_modified : str or class or class instance, optional
+        unless_file_modified : str or class or class instance, optional
             don't return cached object if this file (or the file this
             class or class instance is defined in) was modified after
             the object was cached
+
+        unless_dbs_modified : dict, optional
+            don't return cached object if any of these dbs were modified
+            after the object was cached. Pass a dict of kwargs to pass
+            to list_databases, for example:
+            {"services":["history"], "codes":["my-db"]}
 
         Returns
         -------
@@ -102,21 +110,32 @@ class Cache:
 
         cache_last_modified = os.path.getmtime(filepath)
 
-        if unless_modified is not None:
+        if unless_file_modified is not None:
 
-            if not isinstance(unless_modified, six.string_types):
+            if not isinstance(unless_file_modified, six.string_types):
 
-                if hasattr(unless_modified, "__module__"):
-                    unless_modified = inspect.getmodule(unless_modified)
-                elif hasattr(unless_modified, "__class__"):
-                    unless_modified = unless_modified.__class__
+                if hasattr(unless_file_modified, "__module__"):
+                    unless_file_modified = inspect.getmodule(unless_file_modified)
+                elif hasattr(unless_file_modified, "__class__"):
+                    unless_file_modified = unless_file_modified.__class__
 
-                unless_modified = inspect.getfile(unless_modified)
+                unless_file_modified = inspect.getfile(unless_file_modified)
 
-            watch_file_last_modified = os.path.getmtime(unless_modified)
+            watch_file_last_modified = os.path.getmtime(unless_file_modified)
 
             if watch_file_last_modified > cache_last_modified:
                 return None
+
+        if unless_dbs_modified:
+            unless_dbs_modified["detail"] = True
+            databases = list_databases(**unless_dbs_modified)
+            databases = pd.DataFrame.from_records(
+                itertools.chain(databases["sqlite"], databases["postgres"]))
+            db_last_modified = databases.last_modified.dropna().max()
+            if not pd.isnull(db_last_modified):
+                db_last_modified = time.mktime(pd.Timestamp(db_last_modified).timetuple())
+                if db_last_modified > cache_last_modified:
+                    return None
 
         with open(filepath, "rb") as f:
             obj = pickle.load(f)

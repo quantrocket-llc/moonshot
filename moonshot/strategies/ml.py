@@ -294,7 +294,7 @@ class MoonshotML(Moonshot):
         raise NotImplementedError("strategies must implement predictions_to_signals")
 
     def backtest(self, model=None, start_date=None, end_date=None, nlv=None,
-                allocation=1.0, label_conids=False):
+                allocation=1.0, label_conids=False, no_cache=False):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -321,6 +321,11 @@ class MoonshotML(Moonshot):
             replace <ConId> with <Symbol>(<ConId>) in columns in output
             for better readability (default True)
 
+        no_cache : bool
+            don't use cached files even if available. Using cached files speeds
+            up backtests but may be undesirable if underlying data has changed.
+            See http://qrok.it/h/mcache to learn more about caching in Moonshot.
+
         Returns
         -------
         DataFrame
@@ -335,9 +340,10 @@ class MoonshotML(Moonshot):
 
         return super(MoonshotML, self).backtest(
             start_date=start_date, end_date=end_date, nlv=nlv,
-            allocation=allocation, label_conids=label_conids)
+            allocation=allocation, label_conids=label_conids,
+            no_cache=no_cache)
 
-    def _prices_to_signals(self, prices):
+    def _prices_to_signals(self, prices, no_cache=False):
         """
         Converts a prices DataFrame to a DataFrame of signals, by:
 
@@ -351,9 +357,9 @@ class MoonshotML(Moonshot):
         # based on the index and columns of prices. If this file has been
         # edited more recently than the features were cached, the cache is
         # not used.
-        if self.is_backtest:
+        if self.is_backtest and not no_cache:
             cache_key = [prices.index.tolist(), prices.columns.tolist()]
-            features = Cache.get(cache_key, prefix="_features", unless_modified=self)
+            features = Cache.get(cache_key, prefix="_features", unless_file_modified=self)
 
         if features is None:
             features = self.prices_to_features(prices)

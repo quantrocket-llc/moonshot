@@ -960,7 +960,7 @@ class Moonshot(
 
         return lookback_window
 
-    def _load_master_file(self, conids, nlv=None):
+    def _load_master_file(self, conids, nlv=None, no_cache=False):
         """
         Loads master file from cache or master service.
         """
@@ -970,7 +970,7 @@ class Moonshot(
             "Currency", "Multiplier", "PriceMagnifier",
             "PrimaryExchange", "SecType", "Symbol", "Timezone"]
 
-        if self.is_backtest:
+        if self.is_backtest and not no_cache:
             # try to load from cache
             securities = Cache.get(conids, prefix="_master")
 
@@ -1070,7 +1070,7 @@ class Moonshot(
             days=math.ceil(lookback_window*days_per_year/trading_days_per_year) + buffer)
         return start_date.date().isoformat()
 
-    def get_prices(self, start_date, end_date=None, nlv=None):
+    def get_prices(self, start_date, end_date=None, nlv=None, no_cache=False):
         """
         Downloads prices from a history db and/or real-time aggregate db.
         Downloads security details from the master db.
@@ -1109,16 +1109,29 @@ class Moonshot(
 
         prices = None
 
-        if self.is_backtest:
+        if self.is_backtest and not no_cache:
+
+            # If no end_date is specified (indicating the user wants
+            # up-to-date history), we don't want to use the cache if the dbs
+            # were more recently modified (indicating new data collection).
+            # If there's an end date, we use the cache if possible. (The user
+            # can use --no-cache to disable cache usage if needed.)
+            if not end_date:
+                unless_dbs_modified = {
+                    "services": ["history", "realtime"],
+                    "codes": codes}
+            else:
+                unless_dbs_modified = None
+
             # try to load from cache
-            prices = Cache.get(kwargs, prefix="_history")
+            prices = Cache.get(kwargs, prefix="_history", unless_dbs_modified=unless_dbs_modified)
 
         if prices is None:
             prices = get_prices(**kwargs)
             if self.is_backtest:
                 Cache.set(kwargs, prices, prefix="_history")
 
-        self._load_master_file(prices.columns.tolist(), nlv=nlv)
+        self._load_master_file(prices.columns.tolist(), nlv=nlv, no_cache=no_cache)
 
         return prices
 
@@ -1129,7 +1142,7 @@ class Moonshot(
             "future release, it has been replaced by get_prices", DeprecationWarning)
         return self.get_prices(*args, **kwargs)
 
-    def _prices_to_signals(self, prices):
+    def _prices_to_signals(self, prices, **kwargs):
         """
         Converts a prices DataFrame to a DataFrame of signals. This private
         method, which simply calls the user-modified public method
@@ -1139,7 +1152,7 @@ class Moonshot(
         return self.prices_to_signals(prices)
 
     def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0,
-                 label_conids=False):
+                 label_conids=False, no_cache=False):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -1162,6 +1175,11 @@ class Moonshot(
             replace <ConId> with <Symbol>(<ConId>) in columns in output
             for better readability (default True)
 
+        no_cache : bool
+            don't use cached files even if available. Using cached files speeds
+            up backtests but may be undesirable if underlying data has changed.
+            See http://qrok.it/h/mcache to learn more about caching in Moonshot.
+
         Returns
         -------
         DataFrame
@@ -1171,9 +1189,9 @@ class Moonshot(
         self.is_backtest = True
         allocation = allocation or 1.0
 
-        prices = self.get_prices(start_date, end_date, nlv=nlv)
+        prices = self.get_prices(start_date, end_date, nlv=nlv, no_cache=no_cache)
 
-        signals = self._prices_to_signals(prices)
+        signals = self._prices_to_signals(prices, no_cache=no_cache)
         weights = self.signals_to_target_weights(signals, prices)
         weights = weights * allocation
         weights = self._constrain_weights(weights, prices)
