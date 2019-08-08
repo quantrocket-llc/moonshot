@@ -2155,6 +2155,9 @@ class BacktestTestCase(unittest.TestCase):
              23456}
         )
 
+        # clear cache
+        self.tearDown()
+
         # control: run with label_conids
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):

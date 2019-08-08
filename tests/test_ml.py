@@ -162,6 +162,10 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                             "features should be either all DataFrames or all Series, not a mix of both",
                             repr(cm.exception))
 
+                    # clear cache
+                    for file in glob.glob("{0}/moonshot*.pkl".format(TMP_DIR)):
+                        os.remove(file)
+
                     with self.assertRaises(MoonshotError) as cm:
                         results = DecisionTreeML2().backtest()
 
