@@ -425,9 +425,22 @@ class MoonshotML(Moonshot):
         predictions = self.model.predict(features)
         del features
 
-        # squeeze if needed (needed for Keras output)
-        if len(predictions.shape) == 2 and predictions.shape[-1] == 1:
-            predictions = predictions.squeeze(axis=-1)
+        if len(predictions.shape) == 2:
+            # Keras output has (n_samples,1) shape and needs to be squeezed
+            if predictions.shape[-1] == 1:
+                predictions = predictions.squeeze(axis=-1)
+
+            # predict_proba has (n_samples,2) shape where first col is probablity of
+            # 0 (False) and second col is probability of 1 (True); we just want the
+            # second col (https://datascience.stackexchange.com/a/22821)
+            elif (
+                hasattr(self.model, "classes_")
+                and len(self.model.classes_) == 2
+                and list(self.model.classes_) == [0,1]):
+                predictions = predictions[:,-1]
+
+            else:
+                raise NotImplementedError("Don't know what to do with predictions having shape {}".format(predictions.shape))
 
         predictions = pd.Series(predictions, index=predictions_series_idx)
         if unstack_predictions_series:

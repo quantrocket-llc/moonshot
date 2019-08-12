@@ -874,6 +874,313 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]})
 
+    def test_predict_proba(self):
+        """
+        Tests that the resulting DataFrames are correct after running a basic
+        machine learning strategy and using predict_proba instead of predict.
+        """
+
+        # save model
+        joblib.dump(self.model, self.joblib_path)
+
+        class DecisionTreeML(MoonshotML):
+
+            MODEL = self.joblib_path
+
+            def prices_to_features(self, prices):
+
+                self.model.predict = self.model.predict_proba
+
+                features = {}
+                features["feature1"] = prices.loc["Close"] > 10
+                features["feature2"] = prices.loc["Close"] > 10 # silly, duplicate feature
+
+                return features, None
+
+            def predictions_to_signals(self, predictions, prices):
+                # Go long when <50% probability of being in class 1 (class 1 = price > 10)
+                signals = predictions < 0.5
+                return signals.astype(int)
+
+        def mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
+            fields = ["Close"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    12345: [
+                        # Close
+                        9,
+                        11,
+                        10.50,
+                        9.99,
+                    ],
+                    23456: [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+
+                    ],
+                 },
+                index=idx
+            )
+            prices.columns.name = "ConId"
+
+            return prices
+
+        def mock_get_history_db_config(db):
+            return {
+                'vendor': 'ib',
+                'domain': 'main',
+                'bar_size': '1 day'
+            }
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    12345: [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    23456: [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "ConId"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
+            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
+
+                    results = DecisionTreeML().backtest()
+
+        self.assertSetEqual(
+            set(results.index.get_level_values("Field")),
+            {'Commission',
+             'AbsExposure',
+             'Signal',
+             'Return',
+             'Slippage',
+             'NetExposure',
+             'TotalHoldings',
+             'Turnover',
+             'AbsWeight',
+             'Weight'}
+        )
+
+        # replace nan with "nan" to allow equality comparisons
+        results = results.round(7)
+        results = results.where(results.notnull(), "nan")
+
+        signals = results.loc["Signal"].reset_index()
+        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            signals.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [1.0,
+                     0.0,
+                     0.0,
+                     1.0],
+             23456: [1.0,
+                     0.0,
+                     1.0,
+                     0.0]}
+        )
+
+        weights = results.loc["Weight"].reset_index()
+        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            weights.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [0.5,
+                     0.0,
+                     0.0,
+                     1.0],
+             23456: [0.5,
+                     0.0,
+                     1.0,
+                     0.0]}
+        )
+
+        abs_weights = results.loc["AbsWeight"].reset_index()
+        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            abs_weights.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [0.5,
+                     0.0,
+                     0.0,
+                     1.0],
+             23456: [0.5,
+                     0.0,
+                     1.0,
+                     0.0]}
+        )
+
+        net_positions = results.loc["NetExposure"].reset_index()
+        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            net_positions.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: ["nan",
+                     0.5,
+                     0.0,
+                     0.0],
+             23456: ["nan",
+                     0.5,
+                     0.0,
+                     1.0]}
+        )
+
+        abs_positions = results.loc["AbsExposure"].reset_index()
+        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            abs_positions.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: ["nan",
+                     0.5,
+                     0.0,
+                     0.0],
+             23456: ["nan",
+                     0.5,
+                     0.0,
+                     1.0]}
+        )
+
+        total_holdings = results.loc["TotalHoldings"].reset_index()
+        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            total_holdings.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [0,
+                     1.0,
+                     0,
+                     0],
+             23456: [0,
+                     1.0,
+                     0,
+                     1.0]}
+        )
+
+        turnover = results.loc["Turnover"].reset_index()
+        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            turnover.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: ["nan",
+                     0.5,
+                     0.5,
+                     0.0],
+             23456: ["nan",
+                     0.5,
+                     0.5,
+                     1.0]}
+        )
+
+        commissions = results.loc["Commission"].reset_index()
+        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            commissions.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [0.0,
+                     0.0,
+                     0.0,
+                     0.0],
+             23456: [0.0,
+                     0.0,
+                     0.0,
+                     0.0]}
+        )
+
+        slippage = results.loc["Slippage"].reset_index()
+        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            slippage.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [0.0,
+                     0.0,
+                     0.0,
+                     0.0],
+             23456: [0.0,
+                     0.0,
+                     0.0,
+                     0.0]}
+        )
+
+        returns = results.loc["Return"]
+        returns = returns.reset_index()
+        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertDictEqual(
+            returns.to_dict(orient="list"),
+            {'Date': [
+                '2018-05-01T00:00:00',
+                '2018-05-02T00:00:00',
+                '2018-05-03T00:00:00',
+                '2018-05-04T00:00:00'],
+             12345: [0.0,
+                     0.0,
+                     -0.0227273, # (10.50 - 11)/11 * 0.5
+                     -0.0],
+             23456: [0.0,
+                     0.0,
+                     -0.1136364, # (8.50 - 11)/11 * 0.5
+                     0.0]})
+
     def test_backtest_pass_model(self):
         """
         Tests that the resulting DataFrames are correct after running a basic
