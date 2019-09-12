@@ -56,29 +56,28 @@ class MoonshotML(Moonshot):
         method, in which case the MODEL parameter is ignored
 
     DB : str, required
-        code of history db to pull data from
+        code of db to pull data from
 
     DB_FIELDS : list of str, optional
-        fields to retrieve from history db (defaults to ["Open", "High", "Low",
-        "Close", "Volume"])
+        fields to retrieve from db (defaults to ["Open", "Close", "Volume"])
 
     DB_TIMES : list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
     CONIDS : list of int, optional
-        limit history db query to these conids
+        limit db query to these conids
 
     UNIVERSES : list of str, optional
-        limit history db query to these universes
+        limit db query to these universes
 
     EXCLUDE_CONIDS : list of int, optional
-        exclude these conids from history db query
+        exclude these conids from db query
 
     EXCLUDE_UNIVERSES : list of str, optional
-        exclude these universes from history db query
+        exclude these universes from db query
 
     CONT_FUT : str, optional
-        pass this cont_fut option to history db query (default None)
+        pass this cont_fut option to db query (default None)
 
     LOOKBACK_WINDOW : int, optional
         get this many days additional data prior to the backtest start date or
