@@ -131,11 +131,17 @@ class Cache:
             databases = list_databases(**unless_dbs_modified)
             databases = pd.DataFrame.from_records(
                 itertools.chain(databases["sqlite"], databases["postgres"]))
-            db_last_modified = databases.last_modified.dropna().max()
-            if not pd.isnull(db_last_modified):
-                db_last_modified = time.mktime(pd.Timestamp(db_last_modified).timetuple())
-                if db_last_modified > cache_last_modified:
-                    return None
+            # databases might be empty if testing with a real-time aggregate
+            # database because list_databases doesn't report on aggregate
+            # databases, only tick databases. Ideally we should translate the
+            # aggregate code to the corresponding tick db code and pass that
+            # to list_databases, but that is not implemented.
+            if not databases.empty:
+                db_last_modified = databases.last_modified.dropna().max()
+                if not pd.isnull(db_last_modified):
+                    db_last_modified = time.mktime(pd.Timestamp(db_last_modified).timetuple())
+                    if db_last_modified > cache_last_modified:
+                        return None
 
         with open(filepath, "rb") as f:
             obj = pickle.load(f)
