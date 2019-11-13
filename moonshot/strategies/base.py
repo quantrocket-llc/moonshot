@@ -20,10 +20,7 @@ import requests
 import json
 import math
 from moonshot.slippage import FixedSlippage
-from moonshot.mixins import (
-    WeightAllocationMixin,
-    ReutersFundamentalsMixin
-)
+from moonshot.mixins import WeightAllocationMixin
 from moonshot.cache import Cache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.price import get_prices
@@ -34,8 +31,7 @@ from quantrocket.account import download_account_balances, download_exchange_rat
 from quantrocket.blotter import list_positions, download_order_statuses
 
 class Moonshot(
-    WeightAllocationMixin,
-    ReutersFundamentalsMixin):
+    WeightAllocationMixin):
     """
     Base class for Moonshot strategies.
 
@@ -70,14 +66,14 @@ class Moonshot(
     DB_TIMES : list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
-    CONIDS : list of int, optional
-        limit db query to these conids
+    SIDS : list of str, optional
+        limit db query to these sids
 
     UNIVERSES : list of str, optional
         limit db query to these universes
 
-    EXCLUDE_CONIDS : list of int, optional
-        exclude these conids from db query
+    EXCLUDE_SIDS : list of str, optional
+        exclude these sids from db query
 
     EXCLUDE_UNIVERSES : list of str, optional
         exclude these universes from db query
@@ -92,12 +88,6 @@ class Moonshot(
         252 if no such attributes, and will further pad window based on any
         `*_INTERVAL` attributes, which are interpreted as pandas offset aliases
         (for example `REBALANCE_INTERVAL = 'Q'`). Set to 0 to disable.
-
-    MASTER_FIELDS : list of str, optional
-        [DEPRECATED] get these fields from the securities master service. This
-        parameter is deprecated and will be removed in a future release. For better
-        performance, use `quantrocket.master.get_securities_reindexed_like` to get
-        securities master data shaped like prices.
 
     NLV : dict, optional
         dict of currency:NLV for each currency represented in the strategy. Can
@@ -116,8 +106,8 @@ class Moonshot(
         amount on one-slippage to apply to each trade in BPS (for example, enter 5 to deduct
         5 BPS)
 
-    BENCHMARK : int, optional
-        the conid of a security in the historical data to use as the benchmark
+    BENCHMARK : str, optional
+        the sid of a security in the historical data to use as the benchmark
 
     BENCHMARK_DB : str, optional
         the database containing the benchmark, if different from DB. BENCHMARK_DB
@@ -184,13 +174,12 @@ class Moonshot(
     DB = None
     DB_FIELDS = ["Open", "Close", "Volume"]
     DB_TIMES = None
-    CONIDS = None
+    SIDS = None
     UNIVERSES = None
-    EXCLUDE_CONIDS = None
+    EXCLUDE_SIDS = None
     EXCLUDE_UNIVERSES = None
     CONT_FUT = None
     LOOKBACK_WINDOW = None
-    MASTER_FIELDS = None
     NLV = None
     COMMISSION_CLASS = None
     SLIPPAGE_CLASSES = ()
@@ -213,34 +202,6 @@ class Moonshot(
         self._inferred_timezone = None
         self._signal_date = None # set by _weights_to_today_weights
         self._signal_time = None # set by _weights_to_today_weights
-
-        if hasattr(self, "get_signals"):
-            import warnings
-            warnings.warn(
-                "method name get_signals is deprecated and will be removed in a "
-                "future release, please use prices_to_signals instead", DeprecationWarning)
-            self.prices_to_signals = self.get_signals
-
-        if hasattr(self, "allocate_weights"):
-            import warnings
-            warnings.warn(
-                "method name allocate_weights is deprecated and will be removed in a "
-                "future release, please use signals_to_target_weights instead", DeprecationWarning)
-            self.signals_to_target_weights = self.allocate_weights
-
-        if hasattr(self, "simulate_positions"):
-            import warnings
-            warnings.warn(
-                "method name simulate_positions is deprecated and will be removed in a "
-                "future release, please use target_weights_to_positions instead", DeprecationWarning)
-            self.target_weights_to_positions = self.simulate_positions
-
-        if hasattr(self, "simulate_gross_returns"):
-            import warnings
-            warnings.warn(
-                "method name simulate_gross_returns is deprecated and will be removed in a "
-                "future release, please use positions_to_gross_returns instead", DeprecationWarning)
-            self.positions_to_gross_returns = self.simulate_gross_returns
 
     def prices_to_signals(self, prices):
         """
@@ -397,7 +358,7 @@ class Moonshot(
         Parameters
         ----------
         orders : DataFrame
-            a DataFrame of order stubs, with columns ConId, Account, Action,
+            a DataFrame of order stubs, with columns Sid, Account, Action,
             OrderRef, and TotalQuantity
 
         prices : DataFrame
@@ -415,7 +376,7 @@ class Moonshot(
         The orders DataFrame provided to this method resembles the following:
 
         >>> print(orders)
-            ConId  Account Action     OrderRef  TotalQuantity
+              Sid  Account Action     OrderRef  TotalQuantity
         0   12345   U12345   SELL  my-strategy            100
         1   12345   U55555   SELL  my-strategy             50
         2   23456   U12345    BUY  my-strategy            100
@@ -447,17 +408,17 @@ class Moonshot(
 
     def reindex_like_orders(self, df, orders):
         """
-        Reindexes a DataFrame (having ConIds as columns and dates as index)
+        Reindexes a DataFrame (having Sids as columns and dates as index)
         to match the shape of the orders DataFrame.
 
         Parameters
         ----------
         df : DataFrame, required
-            a DataFrame of arbitrary values with ConIds as columns and
+            a DataFrame of arbitrary values with Sids as columns and
             dates as index
 
         orders : DataFrame, required
-            an orders DataFrame with a ConId column
+            an orders DataFrame with a Sid column
 
         Returns
         -------
@@ -491,7 +452,7 @@ class Moonshot(
             df = df.loc[self._signal_time]
 
         df.name = "_MoonshotOther"
-        df = orders.join(df, on="ConId")._MoonshotOther
+        df = orders.join(df, on="Sid")._MoonshotOther
         df.name = None
         return df
 
@@ -518,14 +479,14 @@ class Moonshot(
         Examples
         --------
         >>> orders.head()
-            ConId   Action  TotalQuantity Exchange OrderType  Tif
+              Sid   Action  TotalQuantity Exchange OrderType  Tif
         0   12345      BUY            200    SMART       MKT  Day
         1   23456      BUY            400    SMART       MKT  Day
         >>> child_orders = self.orders_to_child_orders(orders)
         >>> child_orders.loc[:, "OrderType"] = "MOC"
         >>> orders = pd.concat([orders,child_orders])
         >>> orders.head()
-            ConId   Action  TotalQuantity Exchange OrderType  Tif  OrderId  ParentId
+              Sid   Action  TotalQuantity Exchange OrderType  Tif  OrderId  ParentId
         0   12345      BUY            200    SMART       MKT  Day        0       NaN
         1   23456      BUY            400    SMART       MKT  Day        1       NaN
         0   12345     SELL            200    SMART       MOC  Day      NaN         0
@@ -541,20 +502,20 @@ class Moonshot(
 
     def _quantities_to_order_stubs(self, quantities):
         """
-        From a DataFrame of quantities to be ordered (with ConIds as index,
+        From a DataFrame of quantities to be ordered (with Sids as index,
         Accounts as columns), returns a DataFrame of order stubs.
 
         quantities in:
 
         Account   U12345  U55555
-        ConId
+          Sid
         12345       -100     -50
         23456        100      50
         34567        200     100
 
         order_stubs out:
 
-            ConId  Account Action     OrderRef  TotalQuantity
+              Sid  Account Action     OrderRef  TotalQuantity
         0   12345   U12345   SELL  my-strategy            100
         1   12345   U55555   SELL  my-strategy             50
         2   23456   U12345    BUY  my-strategy            100
@@ -563,7 +524,7 @@ class Moonshot(
         5   34567   U55555    BUY  my-strategy            100
 
         """
-        quantities.index.name = "ConId"
+        quantities.index.name = "Sid"
         quantities.columns.name = "Account"
         quantities = quantities.stack()
         quantities.name = "Quantity"
@@ -602,9 +563,9 @@ class Moonshot(
         """
         From a DataFrame of target weights, extract the row that contains the
         weights that should be used for today's trading. Returns a Series of
-        weights by conid:
+        weights by sid:
 
-        ConId
+          Sid
         12345  -0.2
         23456     0
         34567   0.1
@@ -758,7 +719,7 @@ class Moonshot(
 
         # Reindex master fields like contract_values
         sec_types = contract_values.apply(lambda x: self._securities_master.SecType, axis=1)
-        exchanges = contract_values.apply(lambda x: self._securities_master.PrimaryExchange, axis=1)
+        exchanges = contract_values.apply(lambda x: self._securities_master.Exchange, axis=1)
         currencies = contract_values.apply(lambda x: self._securities_master.Currency, axis=1)
 
         required_sec_groups = set([
@@ -959,7 +920,7 @@ class Moonshot(
 
         return lookback_window
 
-    def _load_master_file(self, conids, nlv=None, no_cache=False):
+    def _load_master_file(self, sids, nlv=None, no_cache=False):
         """
         Loads master file from cache or master service.
         """
@@ -967,41 +928,25 @@ class Moonshot(
 
         fields = [
             "Currency", "Multiplier", "PriceMagnifier",
-            "PrimaryExchange", "SecType", "Symbol", "Timezone"]
+            "Exchange", "SecType", "Symbol", "Timezone"]
 
         if self.is_backtest and not no_cache:
             # try to load from cache
-            securities = Cache.get(conids, prefix="_master")
+            securities = Cache.get(sids, prefix="_master")
 
         if securities is None:
-
-            # determine domain (all DBs must have same domain, which is checked
-            # by get_prices, so not checked here)
-            dbs = self.DB
-            if not isinstance(dbs, (list, tuple)):
-                dbs = [dbs]
-            first_db = dbs[0]
-
-            # DB might be history or realtime
-            try:
-                db_config = get_history_db_config(first_db)
-            except requests.HTTPError:
-                db_config = get_realtime_db_config(first_db)
-
-            domain = db_config.get("domain", "main")
 
             # query master
             f = io.StringIO()
             download_master_file(
                 f,
-                conids=conids,
-                fields=fields,
-                domain=domain)
+                sids=sids,
+                fields=fields)
 
-            securities = pd.read_csv(f, index_col="ConId")
+            securities = pd.read_csv(f, index_col="Sid")
 
             if self.is_backtest:
-                Cache.set(conids, securities, prefix="_master")
+                Cache.set(sids, securities, prefix="_master")
 
         if not self.TIMEZONE:
             timezones = securities.Timezone.unique()
@@ -1081,25 +1026,17 @@ class Moonshot(
         if not isinstance(codes, (list, tuple)):
             codes = [self.DB]
 
-        if not self.DB_TIMES and getattr(self, "DB_TIME_FILTERS", None):
-            import warnings
-            warnings.warn(
-                "DB_TIME_FILTERS is deprecated and will be removed in a "
-                "future release, please use DB_TIMES instead", DeprecationWarning)
-            self.DB_TIMES = self.DB_TIME_FILTERS
-
         kwargs = dict(
             codes=codes,
             start_date=start_date,
             end_date=end_date,
             universes=self.UNIVERSES,
-            conids=self.CONIDS,
+            sids=self.SIDS,
             exclude_universes=self.EXCLUDE_UNIVERSES,
-            exclude_conids=self.EXCLUDE_CONIDS,
+            exclude_sids=self.EXCLUDE_SIDS,
             times=self.DB_TIMES,
             cont_fut=self.CONT_FUT,
             fields=self.DB_FIELDS,
-            master_fields=self.MASTER_FIELDS,
             timezone=self.TIMEZONE
         )
 
@@ -1134,13 +1071,6 @@ class Moonshot(
 
         return prices
 
-    def get_historical_prices(self, *args, **kwargs):
-        import warnings
-        warnings.warn(
-            "method name get_historical_prices is deprecated and will be removed in a "
-            "future release, it has been replaced by get_prices", DeprecationWarning)
-        return self.get_prices(*args, **kwargs)
-
     def _prices_to_signals(self, prices, **kwargs):
         """
         Converts a prices DataFrame to a DataFrame of signals. This private
@@ -1151,7 +1081,7 @@ class Moonshot(
         return self.prices_to_signals(prices)
 
     def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0,
-                 label_conids=False, no_cache=False):
+                 label_sids=False, no_cache=False):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -1170,8 +1100,8 @@ class Moonshot(
         allocation : float
             how much to allocate to the strategy
 
-        label_conids : bool
-            replace <ConId> with <Symbol>(<ConId>) in columns in output
+        label_sids : bool
+            replace <Sid> with <Symbol>(<Sid>) in columns in output
             for better readability (default True)
 
         no_cache : bool
@@ -1240,13 +1170,10 @@ class Moonshot(
 
         results.index.set_names(names, inplace=True)
 
-        if label_conids:
+        if label_sids:
             symbols = self._securities_master.Symbol
-            sec_types = self._securities_master.SecType
-            currencies = self._securities_master.Currency
-            symbols = symbols.astype(str).str.cat(currencies, sep=".").where(sec_types=="CASH", symbols)
-            symbols_with_conids = symbols.astype(str) + "(" + symbols.index.astype(str) + ")"
-            results.rename(columns=symbols_with_conids.to_dict(), inplace=True)
+            symbols_with_sids = symbols.astype(str) + "(" + symbols.index.astype(str) + ")"
+            results.rename(columns=symbols_with_sids.to_dict(), inplace=True)
 
         # truncate at requested start_date
         if start_date:
@@ -1277,7 +1204,7 @@ class Moonshot(
             try:
                 benchmark_prices = get_prices(
                     self.BENCHMARK_DB,
-                    conids=self.BENCHMARK,
+                    sids=self.BENCHMARK,
                     start_date=prices.index.get_level_values("Date").min(),
                     end_date=prices.index.get_level_values("Date").max(),
                     fields="Close"
@@ -1330,7 +1257,7 @@ class Moonshot(
         try:
             benchmark = benchmark_prices[self.BENCHMARK]
         except KeyError:
-            raise MoonshotError("BENCHMARK ConId {0} is not in {1} data".format(
+            raise MoonshotError("BENCHMARK Sid {0} is not in {1} data".format(
                 self.BENCHMARK, benchmark_db))
 
         # to avoid inserting an extra column in the results DataFrame,
@@ -1356,7 +1283,7 @@ class Moonshot(
         Saves the DataFrame to the backtest results output.
 
         DataFrame should have a Date or (Date, Time) index with
-        ConIds as columns.
+        Sids as columns.
 
         Parameters
         ----------
@@ -1585,14 +1512,14 @@ class Moonshot(
         # Adjust quantities based on existing positions_and_orders
         positions_and_orders = self._get_positions_and_orders(
             accounts=list(allocations.index),
-            conids=list(target_quantities.index))
+            sids=list(target_quantities.index))
 
         if positions_and_orders.empty:
             net_quantities = target_quantities
         else:
-            positions_and_orders = positions_and_orders.set_index(["ConId","Account"]).Quantity
+            positions_and_orders = positions_and_orders.set_index(["Sid","Account"]).Quantity
             target_quantities = target_quantities.stack()
-            target_quantities.index.set_names(["ConId","Account"], inplace=True)
+            target_quantities.index.set_names(["Sid","Account"], inplace=True)
             positions_and_orders = positions_and_orders.reindex(target_quantities.index).fillna(0)
             net_quantities = target_quantities - positions_and_orders
 
@@ -1630,7 +1557,7 @@ class Moonshot(
 
         return orders
 
-    def _get_positions_and_orders(self, accounts, conids):
+    def _get_positions_and_orders(self, accounts, sids):
         """
         Returns a DataFrame of current positions and open orders, for the
         purpose of generating an order diff in live trading.
@@ -1639,13 +1566,13 @@ class Moonshot(
         positions = list_positions(
             order_refs=[self.CODE],
             accounts=accounts,
-            conids=conids
+            sids=sids
         )
 
         if positions:
             positions = pd.DataFrame(positions)
         else:
-            positions = pd.DataFrame(columns=["ConId","Account","Quantity"])
+            positions = pd.DataFrame(columns=["Sid","Account","Quantity"])
 
         # query open orders
         f = io.StringIO()
@@ -1653,23 +1580,23 @@ class Moonshot(
             f,
             order_refs=[self.CODE],
             accounts=accounts,
-            conids=conids,
+            sids=sids,
             open_orders=True,
-            fields=["ConId","Account","OrderRef","Remaining","Action"],
+            fields=["Sid","Account","OrderRef","Remaining","Action"],
             output="json")
 
         if f.getvalue():
             orders = json.load(f)
             orders = pd.DataFrame(orders)
             orders.loc[orders.Action == "SELL", "Remaining"] = -orders.loc[orders.Action == "SELL"].Remaining
-            orders = orders.groupby([orders.ConId, orders.Account]).Remaining.sum().reset_index()
+            orders = orders.groupby([orders.Sid, orders.Account]).Remaining.sum().reset_index()
         else:
-            orders = pd.DataFrame(columns=["ConId","Account","Remaining"])
+            orders = pd.DataFrame(columns=["Sid","Account","Remaining"])
 
-        positions_and_orders = pd.merge(positions, orders, how="outer", on=["ConId","Account"])
+        positions_and_orders = pd.merge(positions, orders, how="outer", on=["Sid","Account"])
         positions_and_orders.loc[:, "Quantity"] = positions_and_orders.Quantity.fillna(0) + positions_and_orders.Remaining.fillna(0)
 
-        positions_and_orders = positions_and_orders[["ConId","Account","Quantity"]]
+        positions_and_orders = positions_and_orders[["Sid","Account","Quantity"]]
 
         return positions_and_orders
 

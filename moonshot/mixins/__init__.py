@@ -13,4 +13,3 @@
 # limitations under the License.
 
 from .weight import WeightAllocationMixin
-from .fundamental import ReutersFundamentalsMixin

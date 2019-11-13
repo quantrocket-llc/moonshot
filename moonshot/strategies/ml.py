@@ -64,14 +64,14 @@ class MoonshotML(Moonshot):
     DB_TIMES : list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
-    CONIDS : list of int, optional
-        limit db query to these conids
+    SIDS : list of str, optional
+        limit db query to these sids
 
     UNIVERSES : list of str, optional
         limit db query to these universes
 
-    EXCLUDE_CONIDS : list of int, optional
-        exclude these conids from db query
+    EXCLUDE_SIDS : list of str, optional
+        exclude these sids from db query
 
     EXCLUDE_UNIVERSES : list of str, optional
         exclude these universes from db query
@@ -104,8 +104,8 @@ class MoonshotML(Moonshot):
         amount on one-slippage to apply to each trade in BPS (for example, enter 5 to deduct
         5 BPS)
 
-    BENCHMARK : int, optional
-        the conid of a security in the historical data to use as the benchmark
+    BENCHMARK : str, optional
+        the sid of a security in the historical data to use as the benchmark
 
     BENCHMARK_DB : str, optional
         the database containing the benchmark, if different from DB. BENCHMARK_DB
@@ -196,7 +196,7 @@ class MoonshotML(Moonshot):
 
         The returned features can be a list or dict of DataFrames, where each
         DataFrame is a feature and should have the same shape, with a Date or
-        (Date, Time) index and conids as columns. (Moonshot will convert the
+        (Date, Time) index and sids as columns. (Moonshot will convert the
         DataFrames to the format expected by the machine learning model).
 
         Alternatively, a list or dict of Series can be provided, which is
@@ -293,7 +293,7 @@ class MoonshotML(Moonshot):
         raise NotImplementedError("strategies must implement predictions_to_signals")
 
     def backtest(self, model=None, start_date=None, end_date=None, nlv=None,
-                allocation=1.0, label_conids=False, no_cache=False):
+                allocation=1.0, label_sids=False, no_cache=False):
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -316,8 +316,8 @@ class MoonshotML(Moonshot):
         allocation : float
             how much to allocate to the strategy
 
-        label_conids : bool
-            replace <ConId> with <Symbol>(<ConId>) in columns in output
+        label_sids : bool
+            replace <Sid> with <Symbol>(<Sid>) in columns in output
             for better readability (default True)
 
         no_cache : bool
@@ -339,7 +339,7 @@ class MoonshotML(Moonshot):
 
         return super(MoonshotML, self).backtest(
             start_date=start_date, end_date=end_date, nlv=nlv,
-            allocation=allocation, label_conids=label_conids,
+            allocation=allocation, label_sids=label_sids,
             no_cache=no_cache)
 
     def _prices_to_signals(self, prices, no_cache=False):
@@ -443,7 +443,7 @@ class MoonshotML(Moonshot):
 
         predictions = pd.Series(predictions, index=predictions_series_idx)
         if unstack_predictions_series:
-            predictions = predictions.unstack(level="ConId")
+            predictions = predictions.unstack(level="Sid")
 
         # predictions to signals
         signals = self.predictions_to_signals(predictions, prices)
