@@ -1611,8 +1611,8 @@ class Moonshot(
             fields = prices.index.get_level_values("Field").unique()
             candidate_fields = (
                 # history db candidate fields
-                'Close',
                 'Open',
+                'Close',
 
                 # realtime db candidate fields
                 'LastPriceClose',
