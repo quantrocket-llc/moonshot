@@ -963,9 +963,10 @@ class Moonshot(
         nlvs = nlv or self._get_nlv()
         if nlvs:
 
-            # For Forex, store NLV based on the Symbol not Currency (100
-            # EUR.USD = 100 EUR, not 100 USD)
-            currencies = securities.Symbol.where(securities.SecType=="CASH", securities.Currency)
+            # For Forex, store NLV based on the quote currency (extracted from the Symbol)
+            # not Currency (100 EUR.USD = 100 EUR, not 100 USD)
+            currencies = securities.Symbol.astype(str).str.split(".").str[0].where(
+                securities.SecType=="CASH", securities.Currency)
 
             missing_nlvs = set(currencies) - set(nlvs.keys())
             if missing_nlvs:
@@ -1401,11 +1402,12 @@ class Moonshot(
         currencies = self._securities_master.Currency
         sec_types = self._securities_master.SecType
 
-        # For FX, exchange rate conversions should be based on the symbol,
-        # not the currency (i.e. 100 EUR.USD = 100 EUR, not 100 USD)
+        # For FX, exchange rate conversions should be based on the quote currency
+        # (extracted from the Symbol), not the currency (i.e. 100 EUR.USD = 100 EUR,
+        # not 100 USD)
         if (sec_types == "CASH").any():
-            symbols = self._securities_master.Symbol
-            currencies = currencies.where(sec_types != "CASH", symbols)
+            quote_currencies = self._securities_master.Symbol.astype(str).str.split(".").str[0]
+            currencies = currencies.where(sec_types != "CASH", quote_currencies)
 
         f = io.StringIO()
         download_account_balances(
