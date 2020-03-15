@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.fundamental import get_borrow_fees_reindexed_like
+from quantrocket.fundamental import get_ibkr_borrow_fees_reindexed_like
 
-class BorrowFees(object):
+class IBKRBorrowFees(object):
     """
     Applies borrow fees to each position.
 
@@ -30,7 +30,7 @@ class BorrowFees(object):
 
     def get_slippage(self, turnover, positions, prices):
 
-        borrow_fees = get_borrow_fees_reindexed_like(positions, time=self.TIME)
+        borrow_fees = get_ibkr_borrow_fees_reindexed_like(positions, time=self.TIME)
         borrow_fees = borrow_fees.fillna(0) / 100
         # Fees are assessed daily but the dataframe is expected to only
         # includes trading days, thus use 252 instead of 365. In reality the

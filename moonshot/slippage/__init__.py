@@ -1,2 +1,2 @@
 from .fixed import FixedSlippage
-from .borrowfee import BorrowFees
+from .borrowfee import IBKRBorrowFees
