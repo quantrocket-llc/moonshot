@@ -14,12 +14,12 @@
 
 from moonshot.commission import PercentageCommission
 
-class SpotForexCommission(PercentageCommission):
+class SpotFXCommission(PercentageCommission):
     """
-    Commission class for spot forex. This class can be used as-is.
+    Commission class for spot FX. This class can be used as-is.
 
-    NOTE: min commissions are not modeled for spot forex. This is because min
-    commissions for spot forex are in USD ($2), regardless of the quote
+    NOTE: min commissions are not modeled for spot FX. This is because min
+    commissions for spot FX are in USD ($2), regardless of the quote
     currency. The Moonshot class passes NLVs in the quote currency (the
     Currency field). To accurately model min commissions, these NLVs would need
     to be converted to USD.
@@ -28,8 +28,8 @@ class SpotForexCommission(PercentageCommission):
     --------
     Use this on your strategy:
 
-    >>>  class MyForexStrategy(Moonshot):
-    >>>      COMMISSION_CLASS = SpotForexCommission
+    >>>  class MyFXStrategy(Moonshot):
+    >>>      COMMISSION_CLASS = SpotFXCommission
 
     """
 

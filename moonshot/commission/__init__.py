@@ -15,4 +15,7 @@
 from .fut import FuturesCommission
 from .base import PercentageCommission, NoCommission
 from .stk import PerShareCommission
-from .fx import SpotForexCommission
+from .fx import SpotFXCommission
+
+# alias
+SpotForexCommission = SpotFXCommission

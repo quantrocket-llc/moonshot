@@ -963,7 +963,7 @@ class Moonshot(
         nlvs = nlv or self._get_nlv()
         if nlvs:
 
-            # For Forex, store NLV based on the quote currency (extracted from the Symbol)
+            # For FX, store NLV based on the quote currency (extracted from the Symbol)
             # not Currency (100 EUR.USD = 100 EUR, not 100 USD)
             currencies = securities.Symbol.astype(str).str.split(".").str[0].where(
                 securities.SecType=="CASH", securities.Currency)
@@ -1645,7 +1645,7 @@ class Moonshot(
 
         closes = prices.loc[field]
 
-        # For Forex, the value of the contract is simply 1 (1 EUR.USD = 1
+        # For FX, the value of the contract is simply 1 (1 EUR.USD = 1
         # EUR; 1 EUR.JPY = 1 EUR)
         if "CASH" in self._securities_master.SecType.values:
             sec_types = closes.apply(lambda x: self._securities_master.SecType, axis=1)

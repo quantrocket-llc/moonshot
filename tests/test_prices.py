@@ -1201,7 +1201,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
 
     @patch("moonshot.strategies.base.get_prices")
-    def test_append_forex_nlv_based_on_symbol(self, mock_get_prices):
+    def test_append_fx_nlv_based_on_symbol(self, mock_get_prices):
         """
         Tests that FX NLV is appended based on the Symbol, not the Currency.
         """

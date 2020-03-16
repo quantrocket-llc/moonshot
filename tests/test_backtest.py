@@ -2057,7 +2057,7 @@ class BacktestTestCase(unittest.TestCase):
     def test_label_conids(self):
         """
         Tests that the label_conids param causes symbols to be included in
-        the resulting columns. For forex, symbol.currency should be used as
+        the resulting columns. For FX, symbol.currency should be used as
         the label.
         """
         class BuyBelow10(Moonshot):

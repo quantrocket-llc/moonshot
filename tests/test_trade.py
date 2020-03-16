@@ -2577,10 +2577,10 @@ class TradeTestCase(unittest.TestCase):
         )
 
 
-    def test_forex(self):
+    def test_fx(self):
         """
-        Tests that the orders DataFrame is correct after running a forex
-        strategy. For forex, the contract value is always 1, regardless of
+        Tests that the orders DataFrame is correct after running a FX
+        strategy. For FX, the contract value is always 1, regardless of
         the price (1 EUR.USD is always worth 1 EUR regardless of exchange
         rate). Exchange rates between the base currency and fx pair are based
         on the Symbol, not the Currency field (e.g. trading EUR.USD with base

@@ -1046,13 +1046,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                  0.49997]}
         )
 
-    def test_limit_position_sizes_forex(self):
+    def test_limit_position_sizes_fx(self):
         """
-        Tests that Forex position sizes are limited based on the NLV of the
+        Tests that FX position sizes are limited based on the NLV of the
         Symbol, not the Currency, and are based on a contract value of 1. See
         also
-        test_historical_prices.HistoricalPricesTestCase.test_append_forex_nlv_based_on_symbol
-        and test_trade.TradeTestCase.test_forex.
+        test_historical_prices.HistoricalPricesTestCase.test_append_fx_nlv_based_on_symbol
+        and test_trade.TradeTestCase.test_fx.
         """
 
         class BuyBelow10ShortAbove10Overnight(Moonshot):

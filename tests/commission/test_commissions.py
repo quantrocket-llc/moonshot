@@ -18,7 +18,7 @@ import unittest
 import pandas as pd
 from moonshot.commission import (
     FuturesCommission, PerShareCommission, NoCommission)
-from moonshot.commission.fx import SpotForexCommission
+from moonshot.commission.fx import SpotFXCommission
 
 class TestFuturesCommission(FuturesCommission):
     IB_COMMISSION_PER_CONTRACT = 0.85
@@ -175,7 +175,7 @@ class NoCommissionTestCase(unittest.TestCase):
 
         self.assertEqual(commissions.loc[0, "WYNN"], 0)
 
-class ForexCommissionTestCase(unittest.TestCase):
+class FXCommissionTestCase(unittest.TestCase):
 
     def test_commissions_cadhkd(self):
 
@@ -184,7 +184,7 @@ class ForexCommissionTestCase(unittest.TestCase):
         contract_values = None # not used for fixed rate
         nlvs = pd.DataFrame(
             {"CAD.HKD": [700000]})
-        commissions = SpotForexCommission.get_commissions(
+        commissions = SpotFXCommission.get_commissions(
             contract_values,
             turnover,
             nlvs=nlvs)
@@ -203,7 +203,7 @@ class ForexCommissionTestCase(unittest.TestCase):
         contract_values = None # not used for fixed rate
         nlvs = pd.DataFrame(
             {"CAD.HKD": [700000,700000]})
-        commissions = SpotForexCommission.get_commissions(
+        commissions = SpotFXCommission.get_commissions(
             contract_values,
             turnover,
             nlvs=nlvs)

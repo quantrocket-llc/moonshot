@@ -10,7 +10,7 @@ Moonshot is a backtester designed for data scientists, created by and for [Quant
 
 **Fast**: Moonshot is fast because Pandas is fast. No event-driven backtester can match Moonshot's speed. Speed promotes alpha discovery by facilitating rapid experimentation and research iteration.
 
-**Multi-asset class, multi-time frame**: Moonshot supports end-of-day and intraday strategies using equities, futures, and forex.
+**Multi-asset class, multi-time frame**: Moonshot supports end-of-day and intraday strategies using equities, futures, and FX.
 
 **Machine learning support**: Moonshot [supports machine learning and deep learning strategies](#machine-learning-example) using scikit-learn or Keras.
 
