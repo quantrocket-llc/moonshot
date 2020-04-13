@@ -1027,12 +1027,17 @@ class Moonshot(
         if not isinstance(codes, (list, tuple)):
             codes = [self.DB]
 
+        sids = self.SIDS or []
+        # Add benchmark sid if needed
+        if self.is_backtest and self.BENCHMARK and not self.BENCHMARK_DB:
+            sids.append(self.BENCHMARK)
+
         kwargs = dict(
             codes=codes,
             start_date=start_date,
             end_date=end_date,
             universes=self.UNIVERSES,
-            sids=self.SIDS,
+            sids=sids,
             exclude_universes=self.EXCLUDE_UNIVERSES,
             exclude_sids=self.EXCLUDE_SIDS,
             times=self.DB_TIMES,
