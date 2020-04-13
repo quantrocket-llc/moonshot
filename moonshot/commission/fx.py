@@ -33,6 +33,6 @@ class SpotFXCommission(PercentageCommission):
 
     """
 
-    IB_COMMISSION_RATE = 0.00002 # 0.2 bps
+    BROKER_COMMISSION_RATE = 0.00002 # 0.2 bps
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 0 # see NOTE in docstring

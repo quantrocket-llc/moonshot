@@ -21,7 +21,7 @@ from moonshot.commission import (
 from moonshot.commission.fx import SpotFXCommission
 
 class TestFuturesCommission(FuturesCommission):
-    IB_COMMISSION_PER_CONTRACT = 0.85
+    BROKER_COMMISSION_PER_CONTRACT = 0.85
     EXCHANGE_FEE_PER_CONTRACT = 1.20
     CARRYING_FEE_PER_CONTRACT = 0
 
@@ -52,7 +52,7 @@ class FuturesCommissionTestCase(unittest.TestCase):
         self.assertEqual(round(commissions.loc[1, "NQ201609"], 9), 0.000006248)
 
 class TestStockCommission(PerShareCommission):
-    IB_COMMISSION_PER_SHARE = 0.0035 # IB commission per share
+    BROKER_COMMISSION_PER_SHARE = 0.0035 # broker commission per share
     EXCHANGE_FEE_PER_SHARE = 0.0003
     MAKER_FEE_PER_SHARE = -0.002 # exchange rebate
     TAKER_FEE_PER_SHARE = 0.00118 # exchange fee
@@ -85,7 +85,7 @@ class PerShareCommissionTestCase(unittest.TestCase):
         # exchange fees = 0.0003 + (0.4 * -0.002) + (0.6 * 0.00118) = 0.000208 * 50 shares = 0.0104
         # percentage fees = 0.00002 * 50 * 250 = 0.25
         # commission based fees = 0.00056 * 0.35 = 0.0196
-        # 0.35 IB min commission + 0.0104 + 0.25 + 0.0196 = 0.63 / 220000 = 0.000002864
+        # 0.35 broker min commission + 0.0104 + 0.25 + 0.0196 = 0.63 / 220000 = 0.000002864
         self.assertEqual(round(commission.loc[0, "LVS"], 9), 0.000002864)
 
     def test_maker_commissions(self):

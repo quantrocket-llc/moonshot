@@ -272,7 +272,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied and no NLV is specified.
         """
         class TestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
             EXCHANGE_FEE_RATE = 0
             MIN_COMMISSION = 800000000 # set high to verify ignored
 
@@ -507,7 +507,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied and NLV is specified.
         """
         class TestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
             EXCHANGE_FEE_RATE = 0
             MIN_COMMISSION = 500
 
@@ -758,10 +758,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         type/exchanges/currencies are provided.
         """
         class TsejTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
 
         class OseTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0002 # 2 BPS
+            BROKER_COMMISSION_RATE = 0.0002 # 2 BPS
 
         class BuyBelow10ShortAbove10(Moonshot):
             """
@@ -860,10 +860,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied per sec type/exchange/currency.
         """
         class TsejTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
 
         class OseTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0002 # 2 BPS
+            BROKER_COMMISSION_RATE = 0.0002 # 2 BPS
 
         class BuyBelow10ShortAbove10(Moonshot):
             """
@@ -1089,7 +1089,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied and no NLV is specified on a once a day intraday strategy.
         """
         class TestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
             EXCHANGE_FEE_RATE = 0
             MIN_COMMISSION = 800000000 # set high to verify ignored
 
@@ -1332,7 +1332,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         applied and NLV is specified on a once a day intraday strategy.
         """
         class TestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
             EXCHANGE_FEE_RATE = 0
             MIN_COMMISSION = 500
 
@@ -1591,10 +1591,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         strategy.
         """
         class TsejTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
 
         class OseTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0002 # 2 BPS
+            BROKER_COMMISSION_RATE = 0.0002 # 2 BPS
 
         class ShortAbove10Intraday(Moonshot):
             """
@@ -1841,7 +1841,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied and no NLV is specified on a continuous intraday strategy.
         """
         class TestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
             EXCHANGE_FEE_RATE = 0
             MIN_COMMISSION = 800000000 # set high to verify ignored
 
@@ -2144,7 +2144,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied and NLV is specified on a continuous intraday strategy.
         """
         class TestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
             EXCHANGE_FEE_RATE = 0
             MIN_COMMISSION = 500
 
@@ -2448,10 +2448,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         strategy.
         """
         class TsejTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0001 # 1 BPS
+            BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
 
         class OseTestCommission(PercentageCommission):
-            IB_COMMISSION_RATE = 0.0002 # 2 BPS
+            BROKER_COMMISSION_RATE = 0.0002 # 2 BPS
 
         class BuyBelow10ShortAbove10ContIntraday(Moonshot):
             """
@@ -2756,7 +2756,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied for a security with a multiplier.
         """
         class TestFuturesCommission(FuturesCommission):
-            IB_COMMISSION_PER_CONTRACT = 2
+            BROKER_COMMISSION_PER_CONTRACT = 2
 
         class BuyBelow1000ShortAbove1000(Moonshot):
             """
@@ -2964,7 +2964,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         are applied for a security with a price magnifier.
         """
         class TestFuturesCommission(FuturesCommission):
-            IB_COMMISSION_PER_CONTRACT = 2
+            BROKER_COMMISSION_PER_CONTRACT = 2
 
         class BuyBelow1000ShortAbove1000(Moonshot):
             """

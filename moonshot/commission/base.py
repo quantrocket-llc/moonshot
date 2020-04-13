@@ -60,7 +60,7 @@ class BaseCommission(object):
 class PercentageCommission(BaseCommission):
     """
     Base class for commissions which are a fixed percentage of the trade
-    value. These commissions consist of an IB commission percentage rate
+    value. These commissions consist of a broker commission percentage rate
     (which might vary based on monthly trade volume) plus a fixed exchange
     fee percentage rate.
 
@@ -69,11 +69,11 @@ class PercentageCommission(BaseCommission):
 
     Parameters
     ----------
-    IB_COMMISSION_RATE : float, required
-        the commission rate (as a percentage of trade value) charged by IB
+    BROKER_COMMISSION_RATE : float, required
+        the commission rate (as a percentage of trade value) charged by the broker
 
-    IB_COMMISSION_RATE_TIER_2 : float, optional
-        the commission rate (as a percentage of trade value) charged by IB
+    BROKER_COMMISSION_RATE_TIER_2 : float, optional
+        the commission rate (as a percentage of trade value) charged by the broker
         at monthly volume tier 2
 
     TIER_2_RATIO : float, optional
@@ -83,7 +83,7 @@ class PercentageCommission(BaseCommission):
         the exchange fee as a percentage of trade value
 
     MIN_COMMISSION : float, optional
-        the minimum commission charged by IB. Only enforced if NLVs are passed
+        the minimum commission charged by the broker. Only enforced if NLVs are passed
         by the backtest.
 
     Examples
@@ -91,7 +91,7 @@ class PercentageCommission(BaseCommission):
     Example commission subclass for Tokyo Stock Exchange:
 
     >>> class JapanStockCommission(PercentageCommission):
-    >>>     IB_COMMISSION_RATE = 0.0005
+    >>>     BROKER_COMMISSION_RATE = 0.0005
     >>>     EXCHANGE_FEE_RATE = 0.000004
     >>>     MIN_COMMISSION = 80.00 # JPY
     >>>
@@ -99,8 +99,8 @@ class PercentageCommission(BaseCommission):
     >>>  class MyJapanStrategy(Moonshot):
     >>>      COMMISSION_CLASS = JapanStockCommission
     """
-    IB_COMMISSION_RATE = 0
-    IB_COMMISSION_RATE_TIER_2 = None
+    BROKER_COMMISSION_RATE = 0
+    BROKER_COMMISSION_RATE_TIER_2 = None
     TIER_2_RATIO = None
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 0
@@ -132,26 +132,26 @@ class PercentageCommission(BaseCommission):
             a DataFrame of commissions, expressed as percentages of account equity
         """
         if cls.TIER_2_RATIO:
-            ib_commission_rate = (
-                ((1 - cls.TIER_2_RATIO) * cls.IB_COMMISSION_RATE)
-                + (cls.TIER_2_RATIO * cls.IB_COMMISSION_RATE_TIER_2)
+            broker_commission_rate = (
+                ((1 - cls.TIER_2_RATIO) * cls.BROKER_COMMISSION_RATE)
+                + (cls.TIER_2_RATIO * cls.BROKER_COMMISSION_RATE_TIER_2)
             )
         else:
-            ib_commission_rate = cls.IB_COMMISSION_RATE
+            broker_commission_rate = cls.BROKER_COMMISSION_RATE
 
-        ib_commissions = turnover * ib_commission_rate
+        broker_commissions = turnover * broker_commission_rate
 
         if nlvs is not None and cls.MIN_COMMISSION:
-            ib_commissions = cls._enforce_min_commissions(ib_commissions, nlvs=nlvs)
+            broker_commissions = cls._enforce_min_commissions(broker_commissions, nlvs=nlvs)
 
         exchange_commissions = turnover * cls.EXCHANGE_FEE_RATE
 
-        commissions = ib_commissions + exchange_commissions
+        commissions = broker_commissions + exchange_commissions
 
         return commissions
 
 class NoCommission(PercentageCommission):
 
-    IB_COMMISSION_RATE = 0
+    BROKER_COMMISSION_RATE = 0
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 0

@@ -20,7 +20,7 @@ class FuturesCommission(BaseCommission):
 
     Parameters
     ----------
-    IB_COMMISSION_PER_CONTRACT : float
+    BROKER_COMMISSION_PER_CONTRACT : float
         the commission per contract
 
     EXCHANGE_FEE_PER_CONTRACT : float
@@ -35,7 +35,7 @@ class FuturesCommission(BaseCommission):
     Example subclass for Globex E-Mini commissions:
 
     >>> class GlobexEquityEMiniFixedCommission(FuturesCommission):
-    >>>     IB_COMMISSION_PER_CONTRACT = 0.85
+    >>>     BROKER_COMMISSION_PER_CONTRACT = 0.85
     >>>     EXCHANGE_FEE_PER_CONTRACT = 1.18
     >>>     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
     >>>
@@ -43,7 +43,7 @@ class FuturesCommission(BaseCommission):
     >>>  class MyEminiStrategy(Moonshot):
     >>>      COMMISSION_CLASS = GlobexEquityEMiniFixedCommission
     """
-    IB_COMMISSION_PER_CONTRACT = 0
+    BROKER_COMMISSION_PER_CONTRACT = 0
     EXCHANGE_FEE_PER_CONTRACT = 0
     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
 
@@ -52,7 +52,7 @@ class FuturesCommission(BaseCommission):
         """
         Return a DataFrame of commissions as percentages of account equity.
         """
-        cost_per_contract = cls.IB_COMMISSION_PER_CONTRACT + cls.EXCHANGE_FEE_PER_CONTRACT + cls.CARRYING_FEE_PER_CONTRACT
+        cost_per_contract = cls.BROKER_COMMISSION_PER_CONTRACT + cls.EXCHANGE_FEE_PER_CONTRACT + cls.CARRYING_FEE_PER_CONTRACT
 
         # Express the commission as a percent of contract value
         commission_rates = float(cost_per_contract)/contract_values
@@ -66,7 +66,7 @@ class DemoGlobexEquityEMiniFixedCommission(FuturesCommission):
     """
     Fixed commission for Globex Equity E-Minis.
     """
-    IB_COMMISSION_PER_CONTRACT = 0.85
+    BROKER_COMMISSION_PER_CONTRACT = 0.85
     EXCHANGE_FEE_PER_CONTRACT = 1.18
     CARRYING_FEE_PER_CONTRACT = 0
 
@@ -76,7 +76,7 @@ class DemoCanadaCADFuturesTieredCommission(FuturesCommission):
     customers.
     """
 
-    IB_COMMISSION_PER_CONTRACT = 0.85
+    BROKER_COMMISSION_PER_CONTRACT = 0.85
     EXCHANGE_FEE_PER_CONTRACT = (
         1.12   # exchange fee
         + 0.03 # regulatory fee
@@ -90,7 +90,7 @@ class DemoKoreaFuturesCommission(PercentageCommission):
     """
     # 0.4 bps fixed rate, excludes stock futures and KWY futures (US dollar)
 
-    IB_COMMISSION_RATE = 0.00004
+    BROKER_COMMISSION_RATE = 0.00004
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 0
 
@@ -100,6 +100,6 @@ class DemoKoreaStockFuturesCommission(PercentageCommission):
     """
     # 4 bps fixed rate for stock futures
 
-    IB_COMMISSION_RATE = 0.0004
+    BROKER_COMMISSION_RATE = 0.0004
     EXCHANGE_FEE_RATE = 0
     MIN_COMMISSION = 0
