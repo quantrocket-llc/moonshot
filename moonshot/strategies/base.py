@@ -384,11 +384,10 @@ class Moonshot(
         4   34567   U12345    BUY  my-strategy            200
         5   34567   U55555    BUY  my-strategy            100
 
-        The default implemention creates MKT DAY orders routed to SMART and is
+        The default implemention creates MKT DAY orders and is
         shown below:
 
         >>> def order_stubs_to_orders(self, orders, prices):
-        >>>     orders["Exchange"] = "SMART"
         >>>     orders["OrderType"] = "MKT"
         >>>     orders["Tif"] = "DAY"
         >>>     return orders
@@ -401,7 +400,6 @@ class Moonshot(
         >>> orders["OrderType"] = "LMT"
         >>> orders["LmtPrice"] = prior_closes
         """
-        orders["Exchange"] = "SMART"
         orders["OrderType"] = "MKT"
         orders["Tif"] = "DAY"
         return orders
