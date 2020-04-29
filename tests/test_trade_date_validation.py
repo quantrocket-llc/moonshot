@@ -47,13 +47,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -64,26 +64,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -93,15 +86,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         BuyBelow10().trade({"U123": 1.0})
 
         self.assertIn((
@@ -136,7 +127,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -145,7 +136,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -159,26 +150,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -188,15 +172,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with self.assertRaises(MoonshotError) as cm:
                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
                         BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0})
 
         self.assertIn((
@@ -246,7 +228,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -255,7 +237,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -269,26 +251,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -298,7 +273,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -313,8 +288,6 @@ class TradeDateValidationTestCase(unittest.TestCase):
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
                         with self.assertRaises(MoonshotError) as cm:
                             BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0})
 
@@ -363,7 +336,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -372,7 +345,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -386,26 +359,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -415,15 +381,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         review_date = pd.Timestamp.today().date().isoformat()
                         BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0},
                                                                    review_date=review_date)
@@ -462,7 +426,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -478,7 +442,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         15670,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -499,26 +463,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -528,15 +485,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         BuyBelow10ShortAbove10ContIntraday().trade(
                             {"U123": 1.0}, review_date="2018-05-02 12:05:13")
 
@@ -568,13 +523,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -585,26 +540,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -614,7 +562,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -644,19 +592,16 @@ class TradeDateValidationTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders_20180503 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-03")
-                                    orders_20180501 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-01")
+                                orders_20180503 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-03")
+                                orders_20180501 = BuyBelow10().trade({"U123": 1.0}, review_date="2018-05-01")
 
         self.assertSetEqual(
             set(orders_20180503.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -665,14 +610,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders_20180503.to_dict(orient="records"),
             [
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef':
                     'buy-below-10',
                     # 1.0 allocation * 1.0 weight * 55K / 8.50
                     'TotalQuantity': 6471,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -683,24 +627,22 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders_20180501.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 1.0 allocation * 0.5 weight * 55K / 9
                     'TotalQuantity': 3056,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 1.0 allocation * 0.5 weight * 55K / 9.89
                     'TotalQuantity': 2781,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -734,7 +676,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -743,7 +685,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -757,26 +699,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -786,7 +721,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -816,21 +751,18 @@ class TradeDateValidationTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders_10 = BuyBelow10ShortAbove10ContIntraday().trade(
-                                        {"U123": 1.0}, review_date="2018-05-01 10:05:00")
-                                    orders_11 = BuyBelow10ShortAbove10ContIntraday().trade(
-                                        {"U123": 1.0}, review_date="2018-05-01 11:30:35")
+                                orders_10 = BuyBelow10ShortAbove10ContIntraday().trade(
+                                    {"U123": 1.0}, review_date="2018-05-01 10:05:00")
+                                orders_11 = BuyBelow10ShortAbove10ContIntraday().trade(
+                                    {"U123": 1.0}, review_date="2018-05-01 11:30:35")
 
         self.assertSetEqual(
             set(orders_10.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -838,24 +770,22 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders_10.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 9.60 = 3125
                     'TotalQuantity': 3125,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                     },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 10.56 = 2841
                     'TotalQuantity': 2841,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -866,24 +796,22 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders_11.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 10.45 = 2871
                     'TotalQuantity': 2871,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                     },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 12.01 = 2498
                     'TotalQuantity': 2498,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -921,14 +849,14 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
                         15.45,
                         8.67,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -940,26 +868,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -969,7 +890,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -999,18 +920,15 @@ class TradeDateValidationTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0})
+                                                orders = BuyBelow10ShortAbove10ContIntraday().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1018,24 +936,22 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 8.67 = 3460
                     'TotalQuantity': 3460,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                     },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 13.40 = 2239
                     'TotalQuantity': 2239,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1066,13 +982,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         0.99,
@@ -1083,26 +999,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1112,7 +1021,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1151,18 +1060,15 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                        orders = BuyBelow1().trade({"U123": 1.0})
+                                                        orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1171,13 +1077,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-1',
                     # 1.0 allocation * 1.0 weight * 55K / 0.99
                     'TotalQuantity': 55556,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1207,13 +1112,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         0.9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         0.89,
                         0.99,
@@ -1224,26 +1129,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/Mexico_City",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Mexico_City",
                         "STK",
                         "USD",
@@ -1253,7 +1151,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1292,18 +1190,15 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                        orders = BuyBelow1().trade({"U123": 1.0})
+                                                        orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1312,24 +1207,22 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-1',
                     # 1.0 allocation * 0.5 weight * 55K / 0.9
                     'TotalQuantity': 30556,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-1',
                     # 1.0 allocation * 0.5 weight * 55K / 0.89
                     'TotalQuantity': 30899,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1359,13 +1252,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         0.9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         0.89,
                         0.99,
@@ -1376,26 +1269,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/Mexico_City",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Mexico_City",
                         "STK",
                         "USD",
@@ -1405,7 +1291,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1444,10 +1330,8 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                        with self.assertRaises(MoonshotError) as cm:
-                                            BuyBelow1().trade({"U123": 1.0})
+                                    with self.assertRaises(MoonshotError) as cm:
+                                        BuyBelow1().trade({"U123": 1.0})
 
         self.assertIn((
             "expected signal date 2018-04-04 not found in target weights DataFrame, is "
@@ -1482,13 +1366,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         0.99,
@@ -1499,26 +1383,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1528,7 +1405,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1579,18 +1456,15 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                        orders = BuyBelow1().trade({"U123": 1.0})
+                                    orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1599,13 +1473,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-1',
                     # 1.0 allocation * 1.0 weight * 55K / 0.99
                     'TotalQuantity': 55556,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1639,13 +1512,13 @@ class TradeDateValidationTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         0.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         0.99,
@@ -1656,26 +1529,19 @@ class TradeDateValidationTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1685,7 +1551,7 @@ class TradeDateValidationTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1739,10 +1605,8 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                        with self.assertRaises(MoonshotError) as cm:
-                                            BuyBelow1().trade({"U123": 1.0})
+                                    with self.assertRaises(MoonshotError) as cm:
+                                        BuyBelow1().trade({"U123": 1.0})
 
         self.assertIn((
             "expected signal date 2018-05-04 not found in target weights DataFrame, is "
@@ -1768,18 +1632,15 @@ class TradeDateValidationTestCase(unittest.TestCase):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.pd.Timestamp.now", new=mock_pd_timestamp_now):
                                 with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                    with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                        orders = BuyBelow1().trade({"U123": 1.0})
+                                    orders = BuyBelow1().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1788,13 +1649,12 @@ class TradeDateValidationTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-1',
                     # 1.0 allocation * 1.0 weight * 55K / 0.50
                     'TotalQuantity': 110000,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }

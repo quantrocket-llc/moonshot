@@ -72,7 +72,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 features = []
                 # DataFrame then Series
                 features.append(prices.loc["Close"] > 10)
-                features.append(prices.loc["Close"][12345] > 10)
+                features.append(prices.loc["Close"]["FI12345"] > 10)
                 return features, None
 
         class DecisionTreeML2(MoonshotML):
@@ -82,7 +82,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             def prices_to_features(self, prices):
                 features = []
                 # Series then DataFrame
-                features.append(prices.loc["Close"][12345] > 10)
+                features.append(prices.loc["Close"]["FI12345"] > 10)
                 features.append(prices.loc["Close"] > 10)
                 return features, None
 
@@ -94,14 +94,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -112,23 +112,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -136,7 +129,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -147,20 +140,18 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
+                with self.assertRaises(MoonshotError) as cm:
+                    results = DecisionTreeML1().backtest()
 
-                    with self.assertRaises(MoonshotError) as cm:
-                        results = DecisionTreeML1().backtest()
-
-                        self.assertIn(
-                            "features should be either all DataFrames or all Series, not a mix of both",
-                            repr(cm.exception))
+                    self.assertIn(
+                        "features should be either all DataFrames or all Series, not a mix of both",
+                        repr(cm.exception))
 
                     # clear cache
                     for file in glob.glob("{0}/moonshot*.pkl".format(TMP_DIR)):
@@ -200,14 +191,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -218,23 +209,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -242,7 +226,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -253,15 +237,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         results = DecisionTreeML().backtest()
 
         self.assertIn(
@@ -300,14 +282,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -318,23 +300,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -342,7 +317,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -353,15 +328,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest()
+                results = DecisionTreeML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -390,11 +363,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -409,11 +382,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -428,11 +401,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -447,11 +420,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -466,11 +439,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -485,11 +458,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -504,11 +477,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -523,11 +496,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -542,11 +515,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -562,11 +535,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]})
@@ -603,14 +576,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -621,23 +594,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -645,7 +611,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -656,15 +622,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest()
+                results = DecisionTreeML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -693,11 +657,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -712,11 +676,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -731,11 +695,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -750,11 +714,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -769,11 +733,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -788,11 +752,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -807,11 +771,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -826,11 +790,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -845,11 +809,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -865,11 +829,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]})
@@ -910,14 +874,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -928,23 +892,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -952,7 +909,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -963,15 +920,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest()
+                results = DecisionTreeML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1000,11 +955,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1019,11 +974,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1038,11 +993,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1057,11 +1012,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1076,11 +1031,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1095,11 +1050,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -1114,11 +1069,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -1133,11 +1088,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1152,11 +1107,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1172,11 +1127,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]})
@@ -1210,14 +1165,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1228,23 +1183,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1252,7 +1200,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1263,15 +1211,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest(model=self.model)
+                results = DecisionTreeML().backtest(model=self.model)
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1300,11 +1246,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1319,11 +1265,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1338,11 +1284,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1357,11 +1303,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1376,11 +1322,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1395,11 +1341,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -1414,11 +1360,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -1433,11 +1379,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1452,11 +1398,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1472,11 +1418,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]})
@@ -1514,14 +1460,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1532,23 +1478,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1556,7 +1495,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1567,15 +1506,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest()
+                results = DecisionTreeML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1604,11 +1541,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1623,11 +1560,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1642,11 +1579,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1661,11 +1598,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1680,11 +1617,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1699,11 +1636,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -1718,11 +1655,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -1738,11 +1675,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                              0.0]})
@@ -1773,7 +1710,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             def predictions_to_signals(self, predictions, prices):
                 # Go long when price is predicted to be below 10
                 signals = predictions == 0
-                signals = signals.unstack(level="ConId").astype(int)
+                signals = signals.unstack(level="Sid").astype(int)
                 return signals
 
         def mock_get_prices(*args, **kwargs):
@@ -1784,14 +1721,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1802,23 +1739,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1826,7 +1756,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1837,15 +1767,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest()
+                results = DecisionTreeML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1875,11 +1803,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1894,11 +1822,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1913,11 +1841,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1932,11 +1860,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1951,11 +1879,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1970,11 +1898,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -1989,11 +1917,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -2008,11 +1936,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2027,11 +1955,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2047,11 +1975,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                              0.0]})
@@ -2073,16 +2001,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             def prices_to_features(self, prices):
                 features = {}
-                features["feature1"] = prices.loc["Close"][12345] > 10
-                features["feature2"] = prices.loc["Close"][12345] > 10 # silly duplicate feature to make model predictable
+                features["feature1"] = prices.loc["Close"]["FI12345"] > 10
+                features["feature2"] = prices.loc["Close"]["FI12345"] > 10 # silly duplicate feature to make model predictable
 
-                targets = prices.loc["Close"][12345]
+                targets = prices.loc["Close"]["FI12345"]
                 return features, targets
 
             def predictions_to_signals(self, predictions, prices):
-                # Go long on 12345 when price is predicted to be below 10
+                # Go long on FI12345 when price is predicted to be below 10
                 signals = pd.DataFrame(0, index=prices.loc["Close"].index, columns=prices.columns)
-                signals.loc[:, 12345] = (predictions == 0).astype(int)
+                signals.loc[:, "FI12345"] = (predictions == 0).astype(int)
                 return signals
 
         def mock_get_prices(*args, **kwargs):
@@ -2093,14 +2021,14 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -2111,23 +2039,16 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -2135,7 +2056,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -2146,15 +2067,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest()
+                results = DecisionTreeML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -2183,11 +2102,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2202,11 +2121,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2221,11 +2140,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2240,11 +2159,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      1.0,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0,
                      0.0,
                      0.0]}
@@ -2259,11 +2178,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      1.0,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0,
                      0.0,
                      0.0]}
@@ -2278,11 +2197,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0.0],
-             23456: [0,
+             "FI23456": [0,
                      0.0,
                      0,
                      0.0]}
@@ -2297,11 +2216,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      1.0,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0,
                      0.0,
                      0.0]}
@@ -2317,11 +2236,11 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0454545, # (10.50 - 11)/11 * 1.0
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.0,
                      0.0]})
@@ -2360,13 +2279,13 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -2375,30 +2294,23 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -2408,7 +2320,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -2438,35 +2350,31 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = DecisionTreeML().trade({"U123": 1.0})
+                                                orders = DecisionTreeML().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
 
-        # expected quantity for 23456:
+        # expected quantity for FI23456:
         # 1.0 weight * 1.0 allocation * 55K / 8.50 = 6471
 
         self.assertListEqual(
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef':'tree-ml',
                     'TotalQuantity': 6471,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -2533,14 +2441,14 @@ class KerasMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -2551,23 +2459,16 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -2575,7 +2476,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -2586,15 +2487,13 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DeepLearningML().backtest()
+                results = DeepLearningML().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -2623,11 +2522,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -2642,11 +2541,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -2661,11 +2560,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -2680,11 +2579,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -2699,11 +2598,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -2718,11 +2617,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -2737,11 +2636,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -2756,11 +2655,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2775,11 +2674,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -2795,11 +2694,11 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]})
@@ -2833,13 +2732,13 @@ class KerasMachineLearningTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -2848,30 +2747,23 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -2881,7 +2773,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -2911,35 +2803,31 @@ class KerasMachineLearningTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = DeepLearningML().trade({"U123": 1.0})
+                                                orders = DeepLearningML().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
 
-        # expected quantity for 23456:
+        # expected quantity for FI23456:
         # 1.0 weight * 1.0 allocation * 55K / 8.50 = 6471
 
         self.assertListEqual(
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef':'deep-ml',
                     'TotalQuantity': 6471,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }

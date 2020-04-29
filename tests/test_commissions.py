@@ -61,7 +61,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -73,7 +73,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -92,19 +92,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -112,7 +105,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -123,15 +116,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -159,11 +150,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -178,11 +169,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -197,11 +188,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -216,11 +207,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -235,11 +226,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -255,11 +246,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      -0.1176471] # (10.50 - 8.50)/8.50 * -0.5
@@ -296,7 +287,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -308,7 +299,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -327,19 +318,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -347,7 +331,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -358,15 +342,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -394,11 +376,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -413,11 +395,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -432,11 +414,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -451,11 +433,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -470,11 +452,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.00005,
                      0.0001,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.00005,
                      0.0001,
                      0.0001]}
@@ -490,11 +472,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      -0.00005,
                      -0.0228273, # (10.50 - 11)/11 * 0.5 - 0.0001
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: ["nan",
+             "FI23456": ["nan",
                      -0.00005,
                      -0.1137364, # (8.50 - 11)/11 * 0.5
                      -0.1177471] # (10.50 - 8.50)/8.50 * -0.5
@@ -532,7 +514,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -544,7 +526,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -563,19 +545,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -583,7 +558,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -594,15 +569,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest(nlv={"USD":50000})
+                results = BuyBelow10ShortAbove10().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -631,11 +604,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -650,11 +623,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -669,11 +642,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -688,11 +661,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -707,8 +680,8 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [50000.0, 50000.0, 50000.0, 50000.0],
-             23456: [50000.0, 50000.0, 50000.0, 50000.0]}
+             "FI12345": [50000.0, 50000.0, 50000.0, 50000.0],
+             "FI23456": [50000.0, 50000.0, 50000.0, 50000.0]}
         )
 
         commissions = results.loc["Commission"].reset_index()
@@ -720,11 +693,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.01,
                      0.01,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.01,
                      0.01,
                      0.01]}
@@ -740,11 +713,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      -0.01,
                      -0.0327273, # (10.50 - 11)/11 * 0.5 - 0.01
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5 - 0.01
-             23456: ["nan",
+             "FI23456": ["nan",
                      -0.01,
                      -0.1236364, # (8.50 - 11)/11 * 0.5 - 0.01
                      -0.1276471] # (10.50 - 8.50)/8.50 * -0.5 - 0.01
@@ -786,14 +759,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -806,19 +779,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
-            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "Exchange"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "Japan",
                         '1900',
                         "STK",
@@ -827,7 +793,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "JPY",
                         "TSEJ"
                     ],
-                    23456: [
+                    "FI23456": [
                         "Japan",
                         'N225',
                         "FUT",
@@ -839,15 +805,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotParameterError) as cm:
+                with self.assertRaises(MoonshotParameterError) as cm:
                         BuyBelow10ShortAbove10().backtest()
 
         self.assertIn((
@@ -888,14 +852,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50,
                         9.99
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -908,19 +872,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
-            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "Exchange"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "Japan",
                         "1500",
                         "STK",
@@ -929,7 +886,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "JPY",
                         "TSEJ"
                     ],
-                    23456: [
+                    "FI23456": [
                         "Japan",
                         "N225",
                         "FUT",
@@ -941,15 +898,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -977,11 +932,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -996,11 +951,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -1015,11 +970,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -1034,11 +989,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -1053,11 +1008,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.00005,
                      0.0001,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0001,
                      0.0002,
                      0.0002]}
@@ -1073,11 +1028,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      -0.00005,
                      -0.022827272727272706, # (10.50 - 11)/11 * 0.5 - 0.0001
                      0.0242857142857143], # (9.99 - 10.50)/10.50 * -0.5
-             23456: ["nan",
+             "FI23456": ["nan",
                      -0.0001,
                      -0.11383636363636365, # (8.50 - 11)/11 * 0.5
                      -0.11784705882352944] # (10.50 - 8.50)/8.50 * -0.5
@@ -1133,7 +1088,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1149,7 +1104,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1170,19 +1125,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '30 mins'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1190,7 +1138,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         1,
                         1
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1201,15 +1149,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1236,10 +1182,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -1.0]}
         )
@@ -1252,10 +1198,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1268,10 +1214,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1284,10 +1230,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.5,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.5]}
         )
@@ -1300,10 +1246,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.00005,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.00005]}
         )
@@ -1317,10 +1263,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.13172, # (15.45 - 10.12)/10.12 * -0.25 - 0.00005
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.0205724] # (14.50 - 13.40)/13.40 * 0.25 - 0.00005
              }
@@ -1377,7 +1323,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1393,7 +1339,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1415,19 +1361,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '30 mins'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1435,7 +1374,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         1,
                         1
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1446,15 +1385,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest(nlv={"USD":50000})
+                results = ShortAbove10Intraday().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1482,10 +1419,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -1.0]}
         )
@@ -1498,10 +1435,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1514,10 +1451,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1530,10 +1467,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.5,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.5]}
         )
@@ -1546,8 +1483,8 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [50000.0, 50000.0, 50000.0],
-             23456: [50000.0, 50000.0, 50000.0]}
+             "FI12345": [50000.0, 50000.0, 50000.0],
+             "FI23456": [50000.0, 50000.0, 50000.0]}
         )
 
         commissions = results.loc["Commission"].reset_index()
@@ -1558,10 +1495,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.01,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.01]}
         )
@@ -1575,10 +1512,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.14167, # (15.45 - 10.12)/10.12 * -0.25 - 0.01
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.0305224] # (14.50 - 13.40)/13.40 * 0.25 - 0.01
              }
@@ -1639,7 +1576,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1655,7 +1592,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1677,19 +1614,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
-            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "Exchange"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "Japan",
                         "1900",
                         "STK",
@@ -1698,7 +1628,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "JPY",
                         "TSEJ"
                     ],
-                    23456: [
+                    "FI23456": [
                         "Japan",
                         "N225",
                         "FUT",
@@ -1710,15 +1640,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1745,10 +1673,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -1.0]}
         )
@@ -1761,10 +1689,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1777,10 +1705,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1793,10 +1721,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.5,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.5]}
         )
@@ -1809,10 +1737,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.00005,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0001]}
         )
@@ -1826,10 +1754,10 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.1317199604743083, # (15.45 - 10.12)/10.12 * -0.25 - 0.00005
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.020622388059701485] # (14.50 - 13.40)/13.40 * 0.25 - 0.0001
              }
@@ -1867,7 +1795,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1876,7 +1804,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1891,19 +1819,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1911,7 +1832,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         1,
                         1
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1922,16 +1843,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1967,13 +1886,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      -1.0,
                      1.0,
                      -1.0],
-             23456: [-1.0,
+             "FI23456": [-1.0,
                      -1.0,
                      -1.0,
                      1.0,
@@ -1998,13 +1917,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      -0.5,
                      0.5,
                      -0.5],
-             23456: [-0.5,
+             "FI23456": [-0.5,
                      -0.5,
                      -0.5,
                      0.5,
@@ -2029,13 +1948,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      -0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: ['nan',
+             "FI23456": ['nan',
                      -0.5,
                      -0.5,
                      -0.5,
@@ -2060,13 +1979,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: ['nan',
+             "FI23456": ['nan',
                      0.5,
                      0.0,
                      0.0,
@@ -2091,13 +2010,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.00005,
                      0.0001,
                      0.0,
                      0.0,
                      0.0001],
-             23456: ['nan',
+             "FI23456": ['nan',
                      0.00005,
                      0.0,
                      0.0,
@@ -2122,14 +2041,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      -0.00005,
                      -0.0158895, # (10.12-10.45)/10.45 * 0.5 - 0.0001
                      -0.2633399, # (15.45-10.12)/10.12 * -0.5
                      0.2194175,  # (8.67-15.45)/15.45 * -0.5
                      -0.2094426  # (12.30-8.67)/8.67 * -0.5 - 0.0001
                      ],
-             23456: ['nan',
+             "FI23456": ['nan',
                      -0.00005,
                      0.0628643, # (10.50-12.01)/12.01 * -0.5
                      0.0333333, # (9.80-10.50)/10.50 * -0.5
@@ -2170,7 +2089,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -2179,7 +2098,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -2194,19 +2113,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -2214,7 +2126,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         1,
                         1
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -2225,16 +2137,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD":25000})
+                results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD":25000})
 
             self.assertSetEqual(
                 set(results.index.get_level_values("Field")),
@@ -2270,13 +2180,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: [1.0,
+                 "FI12345": [1.0,
                          -1.0,
                          -1.0,
                          -1.0,
                          1.0,
                          -1.0],
-                 23456: [-1.0,
+                 "FI23456": [-1.0,
                          -1.0,
                          -1.0,
                          1.0,
@@ -2301,13 +2211,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: [0.5,
+                 "FI12345": [0.5,
                          -0.5,
                          -0.5,
                          -0.5,
                          0.5,
                          -0.5],
-                 23456: [-0.5,
+                 "FI23456": [-0.5,
                          -0.5,
                          -0.5,
                          0.5,
@@ -2332,13 +2242,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          0.5,
                          -0.5,
                          -0.5,
                          -0.5,
                          0.5],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          -0.5,
                          -0.5,
                          -0.5,
@@ -2363,13 +2273,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          0.5,
                          1.0,
                          0.0,
                          0.0,
                          1.0],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          0.5,
                          0.0,
                          0.0,
@@ -2394,13 +2304,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          0.02,
                          0.02,
                          0.0,
                          0.0,
                          0.02],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          0.02,
                          0.0,
                          0.0,
@@ -2425,14 +2335,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          -0.02,
                          -0.0357895, # (10.12-10.45)/10.45 * 0.5 - 0.02
                          -0.2633399, # (15.45-10.12)/10.12 * -0.5
                          0.2194175,  # (8.67-15.45)/15.45 * -0.5
                          -0.2293426  # (12.30-8.67)/8.67 * -0.5 - 0.02
                          ],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          -0.02,
                          0.0628643, # (10.50-12.01)/12.01 * -0.5
                          0.0333333, # (9.80-10.50)/10.50 * -0.5
@@ -2478,7 +2388,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -2487,7 +2397,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -2502,19 +2412,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
-            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "PrimaryExchange"]
+            master_fields = ["Timezone", "Symbol", "SecType", "PriceMagnifier", "Multiplier", "Currency", "Exchange"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "Japan",
                         "1500",
                         "STK",
@@ -2523,7 +2426,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         "JPY",
                         "TSEJ"
                     ],
-                    23456: [
+                    "FI23456": [
                         "Japan",
                         "N225",
                         "FUT",
@@ -2535,15 +2438,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
             self.assertSetEqual(
                 set(results.index.get_level_values("Field")),
@@ -2579,13 +2480,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: [1.0,
+                 "FI12345": [1.0,
                          -1.0,
                          -1.0,
                          -1.0,
                          1.0,
                          -1.0],
-                 23456: [-1.0,
+                 "FI23456": [-1.0,
                          -1.0,
                          -1.0,
                          1.0,
@@ -2610,13 +2511,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: [0.5,
+                 "FI12345": [0.5,
                          -0.5,
                          -0.5,
                          -0.5,
                          0.5,
                          -0.5],
-                 23456: [-0.5,
+                 "FI23456": [-0.5,
                          -0.5,
                          -0.5,
                          0.5,
@@ -2641,13 +2542,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          0.5,
                          -0.5,
                          -0.5,
                          -0.5,
                          0.5],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          -0.5,
                          -0.5,
                          -0.5,
@@ -2672,13 +2573,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          0.5,
                          1.0,
                          0.0,
                          0.0,
                          1.0],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          0.5,
                          0.0,
                          0.0,
@@ -2703,13 +2604,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          0.00005,
                          0.0001,
                          0.0,
                          0.0,
                          0.0001],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          0.0001,
                          0.0,
                          0.0,
@@ -2734,14 +2635,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '10:00:00',
                           '11:00:00',
                           '12:00:00'],
-                 12345: ['nan',
+                 "FI12345": ['nan',
                          -0.00005,
                          -0.01588947368421052, # (10.12-10.45)/10.45 * 0.5 - 0.0001
                          -0.2633399209486166, # (15.45-10.12)/10.12 * -0.5
                          0.21941747572815534,  # (8.67-15.45)/15.45 * -0.5
                          -0.2094425605536333  # (12.30-8.67)/8.67 * -0.5 - 0.0001
                          ],
-                 23456: ['nan',
+                 "FI23456": ['nan',
                          -0.0001,
                          0.06286427976686093, # (10.50-12.01)/12.01 * -0.5
                          0.033333333333333326, # (9.80-10.50)/10.50 * -0.5
@@ -2778,14 +2679,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         900,
                         1100,
                         1050,
                         999,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         900,
                         1100,
@@ -2798,19 +2699,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "Currency", "SecType", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/Chicago",
                         "HE",
                         "USD",
@@ -2818,7 +2712,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         1,
                         10
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Chicago",
                         "HE",
                         "USD",
@@ -2829,15 +2723,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow1000ShortAbove1000().backtest()
+                results = BuyBelow1000ShortAbove1000().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -2865,11 +2757,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1,
+             "FI12345": [1,
                      -1,
                      -1,
                      1],
-             23456: [1,
+             "FI23456": [1,
                      -1,
                      -1,
                      1]}
@@ -2884,11 +2776,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      -0.5,
                      0.5]}
@@ -2903,11 +2795,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      -0.5]}
@@ -2922,11 +2814,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      0.0]}
@@ -2941,11 +2833,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.0000909,
                      0.0001905,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0000455,
                      0.0000952,
                      0.0]}
@@ -2954,7 +2846,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         # The FUT with double the multiplier requires half the contracts and
         # therefore incurs half the commission
         self.assertAlmostEqual(
-            commissions[12345].iloc[1], commissions[23456].iloc[1] * 2,
+            commissions["FI12345"].iloc[1], commissions["FI23456"].iloc[1] * 2,
             places=5
         )
 
@@ -2986,14 +2878,14 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         900,
                         1100,
                         1050,
                         999,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         900,
                         1100,
@@ -3006,19 +2898,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "Currency", "SecType", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/Chicago",
                         "HE",
                         "USD",
@@ -3026,7 +2911,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                         1,
                         10
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Chicago",
                         "HE",
                         "USD",
@@ -3037,15 +2922,13 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow1000ShortAbove1000().backtest()
+                results = BuyBelow1000ShortAbove1000().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -3073,11 +2956,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1,
+             "FI12345": [1,
                      -1,
                      -1,
                      1],
-             23456: [1,
+             "FI23456": [1,
                      -1,
                      -1,
                      1]}
@@ -3092,11 +2975,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      -0.5,
                      0.5]}
@@ -3111,11 +2994,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      -0.5]}
@@ -3130,11 +3013,11 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      0.0]}
@@ -3149,19 +3032,19 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.0000909,
                      0.0001905,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0090909,
                      0.0190476,
                      0.0]}
         )
 
-        # The FUT with 100x the price magnifier (23456) requires 100x the
+        # The FUT with 100x the price magnifier ("FI23456") requires 100x the
         # contracts and therefore incurs 100x the commission
         self.assertAlmostEqual(
-            commissions[12345].iloc[1] * 100, commissions[23456].iloc[1],
+            commissions["FI12345"].iloc[1] * 100, commissions["FI23456"].iloc[1],
             places=5
         )

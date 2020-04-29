@@ -34,8 +34,7 @@ class GetPricesTestCase(unittest.TestCase):
 
     @patch("moonshot.strategies.base.get_prices")
     @patch("moonshot.strategies.base.download_master_file")
-    @patch("moonshot.strategies.base.get_history_db_config")
-    def test_pass_history_and_master_db_params_correctly(self, mock_get_history_db_config,
+    def test_pass_history_and_master_db_params_correctly(self,
                                                          mock_download_master_file,
                                                          mock_get_prices):
         """
@@ -48,11 +47,10 @@ class GetPricesTestCase(unittest.TestCase):
             """
             DB = 'test-db'
             DB_FIELDS = ["Volume", "Wap", "Close"]
-            MASTER_FIELDS = ["Timezone", "PrimaryExchange"]
             DB_TIMES = ["00:00:00"]
             UNIVERSES = "us-stk"
-            CONIDS = [12345,23456]
-            EXCLUDE_CONIDS = 34567
+            SIDS = ["FI12345","FI23456"]
+            EXCLUDE_SIDS = "FI34567"
             EXCLUDE_UNIVERSES = ["usa-stk-pharm", "usa-stk-biotech"]
             CONT_FUT = False
 
@@ -68,7 +66,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -85,7 +83,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -106,40 +104,14 @@ class GetPricesTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-
-            # This tests requests MASTER_FIELDS, which is deprecated but still supported
-            master_fields = ["Timezone", "PrimaryExchange"]
-            idx = pd.MultiIndex.from_product((master_fields, [dt_idx[0]]), names=["Field", "Date"])
-            securities = pd.DataFrame(
-                {
-                    12345: [
-                        "America/New_York",
-                        "NASDAQ"
-                        ],
-                    23456: [
-                        "America/New_York",
-                        "NASDAQ"
-                    ]
-                    },
-                index=idx
-            )
-            return pd.concat((prices, securities))
-
-        def _mock_get_history_db_config():
-            return {
-                'vendor': 'sharadar',
-                'domain': 'sharadar',
-                'bar_size': '1 day'
-            }
-
-        mock_get_history_db_config.return_value = _mock_get_history_db_config()
+            return prices
 
         def _mock_download_master_file(f, *args, **kwargs):
 
-            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier", "PrimaryExchange"]
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier", "Exchange"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -148,7 +120,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         "NASDAQ",
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -160,7 +132,7 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -175,27 +147,21 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["start_date"], "2017-03-25") # default 252+ trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["universes"], "us-stk")
-        self.assertEqual(kwargs["conids"], [12345, 23456])
+        self.assertEqual(kwargs["sids"], ["FI12345", "FI23456"])
         self.assertEqual(kwargs["exclude_universes"], ['usa-stk-pharm', 'usa-stk-biotech'])
-        self.assertEqual(kwargs["exclude_conids"], 34567)
+        self.assertEqual(kwargs["exclude_sids"], "FI34567")
         self.assertEqual(kwargs["fields"], ['Volume', 'Wap', 'Close'])
         self.assertEqual(kwargs["times"], ["00:00:00"])
-        self.assertEqual(kwargs["master_fields"], ['Timezone', 'PrimaryExchange'])
         self.assertFalse(kwargs["cont_fut"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
-        get_history_db_config_call = mock_get_history_db_config.mock_calls[0]
-        _, args, kwargs = get_history_db_config_call
-        self.assertEqual(args, ("test-db",))
-
         download_master_file_call = mock_download_master_file.mock_calls[0]
         _, args, kwargs = download_master_file_call
-        self.assertListEqual(kwargs["conids"], [12345, 23456])
-        self.assertEqual(kwargs["domain"], "sharadar")
+        self.assertListEqual(kwargs["sids"], ["FI12345", "FI23456"])
         self.assertListEqual(kwargs["fields"], [
             "Currency", "Multiplier", "PriceMagnifier",
-            "PrimaryExchange", "SecType", "Symbol", "Timezone"])
+            "Exchange", "SecType", "Symbol", "Timezone"])
 
     @patch("moonshot.strategies.base.get_prices")
     def test_set_lookback_window(self, mock_get_prices):
@@ -222,7 +188,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -234,7 +200,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -253,19 +219,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -273,7 +232,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -284,16 +243,14 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+            results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
@@ -301,12 +258,11 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["start_date"], "2016-10-24") # 350+ trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertIsNone(kwargs["universes"])
-        self.assertIsNone(kwargs["conids"])
+        self.assertListEqual(kwargs["sids"], [])
         self.assertIsNone(kwargs["exclude_universes"])
-        self.assertIsNone(kwargs["exclude_conids"])
+        self.assertIsNone(kwargs["exclude_sids"])
         self.assertEqual(kwargs["fields"], ['Open', 'Close', 'Volume'])
         self.assertIsNone(kwargs["times"])
-        self.assertIsNone(kwargs["master_fields"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
@@ -336,7 +292,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -348,7 +304,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -367,19 +323,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -387,7 +336,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -398,16 +347,14 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+            results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
@@ -415,7 +362,6 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["start_date"], "2017-11-16") # 100+ trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'Close', 'Volume'])
-        self.assertIsNone(kwargs["master_fields"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
@@ -449,7 +395,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -461,7 +407,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -480,19 +426,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -500,7 +439,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -511,16 +450,14 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+            results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
@@ -528,7 +465,6 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertIn(kwargs["start_date"], ("2017-08-04", "2017-08-05")) # 100 + 60ish trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'Close', 'Volume'])
-        self.assertIsNone(kwargs["master_fields"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
@@ -557,7 +493,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -569,7 +505,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -588,19 +524,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -608,7 +537,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -619,16 +548,14 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+            results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
@@ -636,7 +563,6 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["start_date"], "2018-05-01")
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'Close', 'Volume'])
-        self.assertIsNone(kwargs["master_fields"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
@@ -665,7 +591,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -677,7 +603,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -696,19 +622,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -716,7 +635,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -727,16 +646,14 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
+            results = BuyBelow10().backtest(start_date="2018-05-01", end_date="2018-05-04")
 
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
@@ -744,7 +661,6 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["start_date"], "2018-04-25")
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'Close', 'Volume'])
-        self.assertIsNone(kwargs["master_fields"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
 
@@ -771,7 +687,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -783,7 +699,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -802,19 +718,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -822,7 +731,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Mexico_City",
                         "DEF",
                         "STK",
@@ -833,17 +742,15 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                with self.assertRaises(MoonshotParameterError) as cm:
-                    BuyBelow10().backtest(nlv={"USD":100000, "JPY":10000000})
+            with self.assertRaises(MoonshotParameterError) as cm:
+                BuyBelow10().backtest(nlv={"USD":100000, "JPY":10000000})
 
         self.assertIn(
             "cannot infer timezone because multiple timezones are present "
@@ -873,7 +780,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -885,7 +792,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -904,19 +811,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -924,7 +824,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Mexico_City",
                         "DEF",
                         "STK",
@@ -935,17 +835,15 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                with self.assertRaises(MoonshotParameterError) as cm:
-                    BuyBelow10().backtest(nlv={"USD":100000, "JPY":10000000})
+            with self.assertRaises(MoonshotParameterError) as cm:
+                BuyBelow10().backtest(nlv={"USD":100000, "JPY":10000000})
 
         self.assertIn(
             "NLV dict is missing values for required currencies: MXN", repr(cm.exception))
@@ -978,7 +876,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -990,7 +888,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1009,19 +907,12 @@ class GetPricesTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1029,7 +920,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Mexico_City",
                         "DEF",
                         "STK",
@@ -1040,16 +931,14 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest()
+            results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1072,8 +961,8 @@ class GetPricesTestCase(unittest.TestCase):
             nlvs.to_dict(orient="list"),
             {'Date': [
                 "2018-05-01T00:00:00","2018-05-02T00:00:00","2018-05-03T00:00:00", "2018-05-04T00:00:00"],
-             12345: [50000.0,50000.0,50000.0,50000.0],
-             23456: [1000000.0,1000000.0,1000000.0,1000000.0]}
+             "FI12345": [50000.0,50000.0,50000.0,50000.0],
+             "FI23456": [1000000.0,1000000.0,1000000.0,1000000.0]}
         )
 
     @patch("moonshot.strategies.base.get_prices")
@@ -1100,7 +989,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -1112,7 +1001,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1130,19 +1019,12 @@ class GetPricesTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1150,7 +1032,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Mexico_City",
                         "DEF",
                         "STK",
@@ -1161,19 +1043,17 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(nlv={
-                    "USD": 50000,
-                    "MXN": 1000000
-                })
+            results = BuyBelow10().backtest(nlv={
+                "USD": 50000,
+                "MXN": 1000000
+            })
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1196,8 +1076,8 @@ class GetPricesTestCase(unittest.TestCase):
             nlvs.to_dict(orient="list"),
             {'Date': [
                 "2018-05-01T00:00:00","2018-05-02T00:00:00","2018-05-03T00:00:00", "2018-05-04T00:00:00"],
-             12345: [50000.0,50000.0,50000.0,50000.0],
-             23456: [1000000.0,1000000.0,1000000.0,1000000.0]}
+             "FI12345": [50000.0,50000.0,50000.0,50000.0],
+             "FI23456": [1000000.0,1000000.0,1000000.0,1000000.0]}
         )
 
     @patch("moonshot.strategies.base.get_prices")
@@ -1222,7 +1102,7 @@ class GetPricesTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         #Close
                         9,
                         11,
@@ -1234,7 +1114,7 @@ class GetPricesTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1252,19 +1132,12 @@ class GetPricesTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "EUR",
                         "CASH",
@@ -1272,7 +1145,7 @@ class GetPricesTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "EUR",
                         "STK",
@@ -1283,19 +1156,17 @@ class GetPricesTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         mock_get_prices.return_value = _mock_get_prices()
 
         with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-            with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                results = BuyBelow10().backtest(nlv={
-                    "USD": 50000,
-                    "EUR": 40000,
-                })
+            results = BuyBelow10().backtest(nlv={
+                "USD": 50000,
+                "EUR": 40000,
+            })
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1318,6 +1189,6 @@ class GetPricesTestCase(unittest.TestCase):
             nlvs.to_dict(orient="list"),
             {'Date': [
                 "2018-05-01T00:00:00","2018-05-02T00:00:00","2018-05-03T00:00:00", "2018-05-04T00:00:00"],
-             12345: [40000.0,40000.0,40000.0,40000.0],
-             23456: [50000.0,50000.0,50000.0,50000.0]}
+             "FI12345": [40000.0,40000.0,40000.0,40000.0],
+             "FI23456": [50000.0,50000.0,50000.0,50000.0]}
         )

@@ -31,8 +31,8 @@ class WeightAllocationsTestCase(unittest.TestCase):
         """
         signals = pd.DataFrame(
             data={
-                12345: [1, 1, 1, 0, 0],
-                23456: [0, -1, 1, 0, -1],
+                "FI12345": [1, 1, 1, 0, 0],
+                "FI23456": [0, -1, 1, 0, -1],
             }
         )
 
@@ -40,16 +40,16 @@ class WeightAllocationsTestCase(unittest.TestCase):
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [1.0, 0.5, 0.5, 0.0, 0.0],
-             23456: [0.0, -0.5, 0.5, 0.0, -1.0]}
+            {"FI12345": [1.0, 0.5, 0.5, 0.0, 0.0],
+             "FI23456": [0.0, -0.5, 0.5, 0.0, -1.0]}
         )
 
         target_weights = Moonshot().allocate_equal_weights(signals, cap=0.5)
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [0.5, 0.25, 0.25, 0.0, 0.0],
-             23456: [0.0, -0.25, 0.25, 0.0, -0.5]}
+            {"FI12345": [0.5, 0.25, 0.25, 0.0, 0.0],
+             "FI23456": [0.0, -0.25, 0.25, 0.0, -0.5]}
         )
 
     def test_allocate_fixed_weights(self):
@@ -59,9 +59,9 @@ class WeightAllocationsTestCase(unittest.TestCase):
         """
         signals = pd.DataFrame(
             data={
-                12345: [1, 1, 1, 0, 0],
-                23456: [0, -1, 1, 0, -1],
-                34567: [1, 1, 1, -1, -1]
+                "FI12345": [1, 1, 1, 0, 0],
+                "FI23456": [0, -1, 1, 0, -1],
+                "FI34567": [1, 1, 1, -1, -1]
             }
         )
 
@@ -69,9 +69,9 @@ class WeightAllocationsTestCase(unittest.TestCase):
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [0.34, 0.34, 0.34, 0.0, 0.0],
-             23456: [0.0, -0.34, 0.34, 0.0, -0.34],
-             34567: [0.34, 0.34, 0.34, -0.34, -0.34]}
+            {"FI12345": [0.34, 0.34, 0.34, 0.0, 0.0],
+             "FI23456": [0.0, -0.34, 0.34, 0.0, -0.34],
+             "FI34567": [0.34, 0.34, 0.34, -0.34, -0.34]}
         )
 
     def test_allocate_fixed_weights_capped(self):
@@ -81,9 +81,9 @@ class WeightAllocationsTestCase(unittest.TestCase):
         """
         signals = pd.DataFrame(
             data={
-                12345: [1, 1, 1, 0, 0],
-                23456: [0, -1, 1, 0, -1],
-                34567: [1, 1, 1, -1, -1]
+                "FI12345": [1, 1, 1, 0, 0],
+                "FI23456": [0, -1, 1, 0, -1],
+                "FI34567": [1, 1, 1, -1, -1]
             }
         )
 
@@ -91,18 +91,18 @@ class WeightAllocationsTestCase(unittest.TestCase):
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [0.34, 0.34, 0.34, 0.0, 0.0],
-             23456: [0.0, -0.34, 0.34, 0.0, -0.34],
-             34567: [0.34, 0.34, 0.34, -0.34, -0.34]}
+            {"FI12345": [0.34, 0.34, 0.34, 0.0, 0.0],
+             "FI23456": [0.0, -0.34, 0.34, 0.0, -0.34],
+             "FI34567": [0.34, 0.34, 0.34, -0.34, -0.34]}
         )
 
         target_weights = Moonshot().allocate_fixed_weights_capped(signals, 0.34, cap=0.81)
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [0.34, 0.27, 0.27, 0.0, 0.0],
-             23456: [0.0, -0.27, 0.27, 0.0, -0.34],
-             34567: [0.34, 0.27, 0.27, -0.34, -0.34]}
+            {"FI12345": [0.34, 0.27, 0.27, 0.0, 0.0],
+             "FI23456": [0.0, -0.27, 0.27, 0.0, -0.34],
+             "FI34567": [0.34, 0.27, 0.27, -0.34, -0.34]}
         )
 
     def test_allocate_market_neutral_fixed_weights_capped(self):
@@ -112,9 +112,9 @@ class WeightAllocationsTestCase(unittest.TestCase):
         """
         signals = pd.DataFrame(
             data={
-                12345: [1, 1, 1, 0, 0],
-                23456: [0, -1, 1, 1, -1],
-                34567: [1, 1, -1, -1, -1]
+                "FI12345": [1, 1, 1, 0, 0],
+                "FI23456": [0, -1, 1, 1, -1],
+                "FI34567": [1, 1, -1, -1, -1]
             }
         )
 
@@ -123,9 +123,9 @@ class WeightAllocationsTestCase(unittest.TestCase):
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [0.3, 0.3, 0.3, 0.0, 0.0],
-             23456: [0.0, -0.34, 0.3, 0.34, -0.3],
-             34567: [0.3, 0.3, -0.34, -0.34, -0.3]}
+            {"FI12345": [0.3, 0.3, 0.3, 0.0, 0.0],
+             "FI23456": [0.0, -0.34, 0.3, 0.34, -0.3],
+             "FI34567": [0.3, 0.3, -0.34, -0.34, -0.3]}
         )
 
         target_weights = Moonshot().allocate_market_neutral_fixed_weights_capped(
@@ -133,7 +133,7 @@ class WeightAllocationsTestCase(unittest.TestCase):
 
         self.assertDictEqual(
             target_weights.to_dict(orient="list"),
-            {12345: [0.0, 0.17, 0.17, 0.0, 0.0],
-             23456: [0.0, -0.34, 0.17, 0.34, -0.0],
-             34567: [0.0, 0.17, -0.34, -0.34, -0.0]}
+            {"FI12345": [0.0, 0.17, 0.17, 0.0, 0.0],
+             "FI23456": [0.0, -0.34, 0.17, 0.34, -0.0],
+             "FI34567": [0.0, 0.17, -0.34, -0.34, -0.0]}
         )

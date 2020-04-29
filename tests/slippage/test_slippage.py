@@ -17,7 +17,7 @@
 import unittest
 from unittest.mock import patch
 import pandas as pd
-from moonshot.slippage import FixedSlippage, BorrowFees
+from moonshot.slippage import FixedSlippage, IBKRBorrowFees
 from moonshot import Moonshot
 
 class TestFixedSlippage(FixedSlippage):
@@ -39,48 +39,48 @@ class FixedSlippageTestCase(unittest.TestCase):
              {'ES201609': 0.0002, 'NQ201609': 0.00032}]
         )
 
-class BorrowFeesSlippageTestCase(unittest.TestCase):
+class IBKRBorrowFeesSlippageTestCase(unittest.TestCase):
 
-    @patch("moonshot.slippage.borrowfee.get_borrow_fees_reindexed_like")
-    def test_borrow_fees_slippage(self, mock_get_borrow_fees_reindexed_like):
+    @patch("moonshot.slippage.borrowfee.get_ibkr_borrow_fees_reindexed_like")
+    def test_borrow_fees_slippage(self, mock_get_ibkr_borrow_fees_reindexed_like):
 
         positions = pd.DataFrame(
-            {12345: [0.1, 0, -0.2, -0.2, -0.1, 0.5, -0.25],
-            23456: [-0.17, 0.32, 0.23, 0, -0.4, -0.4, -0.4]},
+            {"FI12345": [0.1, 0, -0.2, -0.2, -0.1, 0.5, -0.25],
+            "FI23456": [-0.17, 0.32, 0.23, 0, -0.4, -0.4, -0.4]},
             index=pd.DatetimeIndex(["2018-06-01", "2018-06-02", "2018-06-03",
                                    "2018-06-04", "2018-06-05", "2018-06-08",
                                    "2018-06-09"]))
 
         borrow_fee_rates = pd.DataFrame(
-            {12345: [1.75, 1.75, 1.75, 1.85, 1.85, 1.85, 1.2],
-            23456: [8.0, 8.0, 8.23, 8.5, 0, 0, None]},
+            {"FI12345": [1.75, 1.75, 1.75, 1.85, 1.85, 1.85, 1.2],
+            "FI23456": [8.0, 8.0, 8.23, 8.5, 0, 0, None]},
             index=pd.DatetimeIndex(["2018-06-01", "2018-06-02", "2018-06-03",
                                    "2018-06-04", "2018-06-05", "2018-06-08",
                                    "2018-06-09"]))
 
-        mock_get_borrow_fees_reindexed_like.return_value = borrow_fee_rates
+        mock_get_ibkr_borrow_fees_reindexed_like.return_value = borrow_fee_rates
 
         turnover = prices = None
-        fees = BorrowFees().get_slippage(turnover, positions, prices)
+        fees = IBKRBorrowFees().get_slippage(turnover, positions, prices)
 
-        mock_get_borrow_fees_reindexed_like.assert_called_with(positions, time=None)
+        mock_get_ibkr_borrow_fees_reindexed_like.assert_called_with(positions, time=None)
 
         fees.index.name = "Date"
         fees.index = fees.index.strftime("%Y-%m-%d")
         fees = fees.to_dict(orient="dict")
 
-        self.assertAlmostEqual(fees[12345]["2018-06-01"], 0)
-        self.assertAlmostEqual(fees[12345]["2018-06-02"], 0)
-        self.assertAlmostEqual(fees[12345]["2018-06-03"], 0.000013889, 9)
-        self.assertAlmostEqual(fees[12345]["2018-06-04"], 0.000014683, 9)
-        self.assertAlmostEqual(fees[12345]["2018-06-05"], 0.000007341, 9)
-        self.assertAlmostEqual(fees[12345]["2018-06-08"], 0)
-        self.assertAlmostEqual(fees[12345]["2018-06-09"], 0.000011905, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-01"], 0)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-02"], 0)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-03"], 0.000013889, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-04"], 0.000014683, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-05"], 0.000007341, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-08"], 0)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-09"], 0.000011905, 9)
 
-        self.assertAlmostEqual(fees[23456]["2018-06-01"], 0.000053968, 9)
-        self.assertAlmostEqual(fees[23456]["2018-06-02"], 0)
-        self.assertAlmostEqual(fees[23456]["2018-06-03"], 0)
-        self.assertAlmostEqual(fees[23456]["2018-06-04"], 0)
-        self.assertAlmostEqual(fees[23456]["2018-06-05"], 0)
-        self.assertAlmostEqual(fees[23456]["2018-06-08"], 0)
-        self.assertAlmostEqual(fees[23456]["2018-06-09"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-01"], 0.000053968, 9)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-02"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-03"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-04"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-05"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-08"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-09"], 0)

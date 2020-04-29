@@ -66,13 +66,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -83,19 +83,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -103,7 +96,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -114,15 +107,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotParameterError) as cm:
+                with self.assertRaises(MoonshotParameterError) as cm:
 
                         BuyBelow10ShortAbove10Overnight().backtest()
 
@@ -154,13 +145,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -171,19 +162,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -191,7 +175,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -202,15 +186,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest()
+                results = BuyBelow10ShortAbove10Overnight().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -238,10 +220,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0]}
         )
@@ -254,10 +236,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5]}
         )
@@ -293,7 +275,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -303,7 +285,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         150000,
                         125000
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -318,19 +300,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -338,7 +313,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -349,15 +324,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
+                results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -381,10 +354,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0]}
         )
@@ -397,14 +370,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [
+             "FI12345": [
                  # 100K volume * 1% * 9 / 50K
                  0.18,
                  # 150K volume * 1% * 11 / 50K
                  -0.33,
                  # 125K volume * 1% * 10.50 / 50K
                  -0.2625],
-             23456: [
+             "FI23456": [
                  # 50K volume * 1% * 9.89 / 50K
                  0.0989,
                  # 60K volume * 1% * 11 / 50K
@@ -465,7 +438,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -474,7 +447,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -488,19 +461,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -508,7 +474,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -519,15 +485,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest(nlv={"USD": 100000})
+                results = BuyBelow10ShortAbove10().backtest(nlv={"USD": 100000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -551,10 +515,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1,
+             "FI12345": [1,
                      -1,
                      1],
-             23456: [-1,
+             "FI23456": [-1,
                      1,
                      -1]}
         )
@@ -567,14 +531,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [
+             "FI12345": [
                  # 300 * 9.6 / 100K
                  0.0288,
                  # 600 * 10.12 / 100K
                  -0.06071999999999999,
                  # 300 * 8.67 / 100K
                  0.02601],
-             23456: [
+             "FI23456": [
                  # 600 * 10.56 / 100K
                  -0.06336,
                  # 300 * 8.5 / 100K
@@ -618,7 +582,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -627,7 +591,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -641,19 +605,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -661,7 +618,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -672,15 +629,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD": 100000})
+                results = BuyBelow10ShortAbove10ContIntraday().backtest(nlv={"USD": 100000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -717,13 +672,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.0288, # 300 * 9.6 / 100K
+             "FI12345": [0.0288, # 300 * 9.6 / 100K
                      -0.0627, # 600 * 10.45 / 100K
                      -0.06072, # 600 * 10.12 / 100K
                      -0.0927, # 600 * 15.45 / 100K
                      0.02601, # 300 * 8.67 / 100K
                      -0.0738], # 600 * 12.30 / 100K
-             23456: [-0.06336, # 600 * 10.56 / 100K
+             "FI23456": [-0.06336, # 600 * 10.56 / 100K
                      -0.07206, # 600 * 12.01 / 100K
                      -0.063, # 600 * 10.50 / 100K
                      0.0294, # 300 * 9.80 / 100K
@@ -763,7 +718,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -773,7 +728,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         150000,
                         125000
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -788,19 +743,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -808,7 +756,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -819,15 +767,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
+                results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -851,10 +797,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0]}
         )
@@ -867,14 +813,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [
+             "FI12345": [
                  # 0.5 expected but watch out for floating point
                  0.50004,
                  # 150K volume * 1% * 11 / 50K
                  -0.33,
                  # 125K volume * 1% * 10.50 / 50K
                  -0.2625],
-             23456: [
+             "FI23456": [
                  # 0.5 expected but watch out for floating point
                  0.5000384,
                  # 60K volume * 1% * 11 / 50K
@@ -904,12 +850,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_longs = max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             300,
                             None,
                             np.nan
                         ],
-                        23456:[
+                        "FI23456":[
                             np.nan,
                             400,
                             None
@@ -926,7 +872,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -936,7 +882,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         150000,
                         125000
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -951,19 +897,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -971,7 +910,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -982,15 +921,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
+                results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":50000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1014,10 +951,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0]}
         )
@@ -1030,14 +967,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [
+             "FI12345": [
                  # 300 * 9 / 50K
                  0.054,
                  # -0.5 expected but watch out for floating point
                  -0.50006,
                  # -0.5 expected but watch out for floating point
                  -0.50001],
-             23456: [
+             "FI23456": [
                  # 0.5 expected but watch out for floating point
                  0.5000384,
                  # 400 * 11 / 50K
@@ -1070,12 +1007,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_longs = max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             300,
                             400,
                             500
                         ],
-                        23456:[
+                        "FI23456":[
                             300,
                             400,
                             500
@@ -1092,7 +1029,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -1102,7 +1039,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         150000,
                         125000
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1117,19 +1054,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "EUR",
                         "CASH",
@@ -1137,7 +1067,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1148,15 +1078,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest(
+                results = BuyBelow10ShortAbove10Overnight().backtest(
                         nlv={
                             "USD":50000,
                             "EUR": 35000,
@@ -1184,10 +1112,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0]}
         )
@@ -1200,14 +1128,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [
+             "FI12345": [
                  # 300 / 35K EUR
                  0.008571428571428572,
                  # 400 / 35K EUR
                  -0.011428571428571429,
                  # 500 / 35K EUR
                  -0.014285714285714285],
-             23456: [
+             "FI23456": [
                  # 300 * 9.89 / 50K USD
                  0.05934,
                  # 400 * 11 / 50K USD
@@ -1237,12 +1165,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_longs = max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             30,
                             40,
                             50
                         ],
-                        23456:[
+                        "FI23456":[
                             30,
                             40,
                             50
@@ -1259,7 +1187,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -1269,7 +1197,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         150000,
                         125000
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1284,19 +1212,12 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/Chicago",
                         "ABC",
                         "FUT",
@@ -1304,7 +1225,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                         None,
                         20
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/Chicago",
                         "DEF",
                         "FUT",
@@ -1315,15 +1236,13 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":500000})
+                results = BuyBelow10ShortAbove10Overnight().backtest(nlv={"USD":500000})
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1347,10 +1266,10 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0]}
         )
@@ -1363,14 +1282,14 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [
+             "FI12345": [
                  # 30 * 20 * 9 / 500K
                  0.0108,
                  # 40 * 20 * 11 / 500K
                  -0.0176,
                  # 50 * 20 * 10.50 / 500K
                  -0.021],
-             23456: [
+             "FI23456": [
                  # 30 * 50 / 10 * 9.89 / 500K
                  0.002967,
                  # 40 * 50 / 10 * 11 / 500K
@@ -1406,13 +1325,13 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Open
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Open
                         9.89,
                         11,
@@ -1423,26 +1342,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1452,7 +1364,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1482,18 +1394,15 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1502,24 +1411,22 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
                     # allocation 1.0 * weight 0.5 * 60K NLV / 10.50
                     'TotalQuantity': 2857,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'long-short-10',
                     # allocation 1.0 * weight 0.5 * 60K NLV / 8.50
                     'TotalQuantity': 3529,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1546,12 +1453,12 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_longs = max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             1200,
                             1200,
                             1350
                             ],
-                        23456:[
+                        "FI23456":[
                             2300,
                             2300,
                             2199
@@ -1568,13 +1475,13 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Open
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Open
                         9.89,
                         11,
@@ -1585,26 +1492,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1614,7 +1514,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1644,18 +1544,15 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1664,22 +1561,20 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 1350,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 2199,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1706,12 +1601,12 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             1200,
                             1200,
                             1350
                             ],
-                        23456:[
+                        "FI23456":[
                             2300,
                             2300,
                             2199
@@ -1728,13 +1623,13 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Open
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Open
                         9.89,
                         11,
@@ -1745,26 +1640,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1774,7 +1662,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1804,18 +1692,15 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -1824,22 +1709,20 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 1350,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 3529,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1867,17 +1750,17 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_longs = max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             1200,
                             1200,
                             1450
                             ],
-                        23456:[
+                        "FI23456":[
                             2300,
                             2300,
                             None
                         ],
-                        34567: [
+                        "FI34567": [
                             None,
                             500,
                             np.nan
@@ -1894,19 +1777,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Open
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Open
                         9.89,
                         11,
                         8.50,
                     ],
-                    34567: [
+                    "FI34567": [
                         # Open
                         9.99,
                         10,
@@ -1917,33 +1800,26 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None,
                     ],
-                    34567: [
+                    "FI34567": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -1953,7 +1829,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -1983,17 +1859,15 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-                                    orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -2002,34 +1876,31 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 1450, # limited
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'long-short-10',
                     # allocation 1.0 * weight 0.3333 * 60K NLV / 8.50
                     'TotalQuantity': 2353,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 34567,
+                    'Sid': "FI34567",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
                     # allocation 1.0 * weight 0.3333 * 60K NLV / 10.50
                     'TotalQuantity': 1905,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
@@ -2059,12 +1930,12 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             def limit_position_sizes(self, prices):
                 max_shares_for_longs = max_shares_for_shorts = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             1200,
                             1200,
                             1350
                             ],
-                        23456:[
+                        "FI23456":[
                             2300,
                             2300,
                             2199
@@ -2081,13 +1952,13 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Open
                         9,
                         11,
                         10.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Open
                         9.89,
                         11,
@@ -2098,26 +1969,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -2127,7 +1991,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -2150,7 +2014,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 {
                     "Account": "U123",
                     "OrderRef": "long-short-10",
-                    "ConId": 23456,
+                    "Sid": "FI23456",
                     "Quantity": 400
                     },
             ]
@@ -2165,18 +2029,15 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -2185,22 +2046,20 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 1350,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'long-short-10',
                     'TotalQuantity': 1799, # 2199 - 400
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -2247,7 +2106,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -2256,7 +2115,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -2270,26 +2129,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -2299,7 +2151,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -2329,18 +2181,15 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
+                                                orders = BuyBelow10ShortAbove10().trade({"U123": 1.0})
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -2348,23 +2197,21 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'pivot-10',
                     # 1.0 allocation * 0.25 weight * 60K / 12.30 = 1220, but reduced to 300
                     'TotalQuantity': 300,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'pivot-10',
                     'TotalQuantity': 600,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -2407,7 +2254,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -2416,7 +2263,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -2430,26 +2277,19 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -2459,7 +2299,7 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -2489,19 +2329,16 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                                    orders = BuyBelow10ShortAbove10ContIntraday().trade(
+                                                orders = BuyBelow10ShortAbove10ContIntraday().trade(
                                         {"U123": 1.0}, review_date="2018-05-02 12:05:00")
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -2509,23 +2346,21 @@ class LimitPositionSizesTradeTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'c-intraday-pivot-10',
                     # 1.0 allocation * 0.5 weight * 60K / 12.30 = 2439, but reduced to 600
                     'TotalQuantity': 600,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'c-intraday-pivot-10',
                     'TotalQuantity': 300,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }

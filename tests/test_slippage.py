@@ -60,7 +60,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -72,7 +72,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -91,19 +91,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -111,7 +104,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -122,15 +115,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -158,11 +149,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -177,11 +168,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -196,11 +187,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -215,11 +206,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -234,11 +225,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -254,11 +245,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      -0.1176471] # (10.50 - 8.50)/8.50 * -0.5
@@ -296,7 +287,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -308,7 +299,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -327,19 +318,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -347,7 +331,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -358,15 +342,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -394,11 +376,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -413,11 +395,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -432,11 +414,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -451,11 +433,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -470,11 +452,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0005,
                      0.001,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0005,
                      0.001,
                      0.001]}
@@ -490,11 +472,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.0005,
                      -0.0237273, # (10.50 - 11)/11 * 0.5 - 0.001
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      -0.0005,
                      -0.1146364, # (8.50 - 11)/11 * 0.5 - 0.001
                      -0.1186471] # (10.50 - 8.50)/8.50 * -0.5 - 0.001
@@ -533,7 +515,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -542,7 +524,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -557,19 +539,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -577,7 +552,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -588,15 +563,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -632,13 +605,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      -1.0,
                      1.0,
                      -1.0],
-             23456: [-1.0,
+             "FI23456": [-1.0,
                      -1.0,
                      -1.0,
                      1.0,
@@ -663,13 +636,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      -0.5,
                      0.5,
                      -0.5],
-             23456: [-0.5,
+             "FI23456": [-0.5,
                      -0.5,
                      -0.5,
                      0.5,
@@ -694,13 +667,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      -0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: ['nan',
+             "FI23456": ['nan',
                      -0.5,
                      -0.5,
                      -0.5,
@@ -725,13 +698,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: ['nan',
+             "FI23456": ['nan',
                      0.5,
                      0.0,
                      0.0,
@@ -756,13 +729,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0005,
                      0.001,
                      0.0,
                      0.0,
                      0.001],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0005,
                      0.0,
                      0.0,
@@ -787,14 +760,14 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.0005,
                      -0.0167895, # (10.12-10.45)/10.45 * 0.5 - 0.001
                      -0.2633399, # (15.45-10.12)/10.12 * -0.5
                      0.2194175,  # (8.67-15.45)/15.45 * -0.5
                      -0.2103426  # (12.30-8.67)/8.67 * -0.5 - 0.001
                      ],
-             23456: [0.0,
+             "FI23456": [0.0,
                      -0.0005,
                      0.0628643, # (10.50-12.01)/12.01 * -0.5
                      0.0333333, # (9.80-10.50)/10.50 * -0.5
@@ -830,7 +803,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -842,7 +815,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -861,19 +834,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -881,7 +847,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -892,15 +858,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -928,11 +892,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -947,11 +911,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -966,11 +930,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -985,11 +949,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -1004,11 +968,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.001,
                      0.002,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.001,
                      0.002,
                      0.002]}
@@ -1024,11 +988,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.001,
                      -0.0247273, # (10.50 - 11)/11 * 0.5 - 0.002
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      -0.001,
                      -0.1156364, # (8.50 - 11)/11 * 0.5 - 0.002
                      -0.1196471] # (10.50 - 8.50)/8.50 * -0.5 - 0.002
@@ -1071,7 +1035,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -1083,7 +1047,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1102,19 +1066,12 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1122,7 +1079,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1133,15 +1090,13 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1169,11 +1124,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -1188,11 +1143,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -1207,11 +1162,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -1226,11 +1181,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -1245,11 +1200,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.005,
                      0.01,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.005,
                      0.01,
                      0.01]}
@@ -1265,11 +1220,11 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.005,
                      -0.0327273, # (10.50 - 11)/11 * 0.5 - 0.01
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      -0.005,
                      -0.1236364, # (8.50 - 11)/11 * 0.5 - 0.001
                      -0.1276471] # (10.50 - 8.50)/8.50 * -0.5 - 0.01

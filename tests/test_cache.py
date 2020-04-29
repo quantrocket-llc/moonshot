@@ -77,7 +77,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -89,7 +89,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -108,19 +108,12 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -128,7 +121,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -139,15 +132,13 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest(end_date="2018-05-04")
+                results = BuyBelow10().backtest(end_date="2018-05-04")
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -176,11 +167,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -195,11 +186,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -214,11 +205,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -233,11 +224,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -252,11 +243,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -271,11 +262,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -290,11 +281,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -309,11 +300,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -329,11 +320,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -383,11 +374,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -402,11 +393,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -421,11 +412,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -440,11 +431,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -459,11 +450,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -478,11 +469,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -497,11 +488,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -516,11 +507,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -536,11 +527,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -652,11 +643,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -671,11 +662,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -690,11 +681,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -709,11 +700,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -728,11 +719,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -747,11 +738,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -766,11 +757,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -785,11 +776,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -805,11 +796,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -838,7 +829,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -850,7 +841,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -869,19 +860,12 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -889,7 +873,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -900,15 +884,13 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest()
+                results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -937,11 +919,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -956,11 +938,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -976,11 +958,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -1045,11 +1027,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1064,11 +1046,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1084,11 +1066,11 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -1214,7 +1196,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -1226,7 +1208,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1242,23 +1224,16 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1266,7 +1241,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1277,15 +1252,13 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = DecisionTreeML().backtest(end_date="2018-05-04")
+                results = DecisionTreeML().backtest(end_date="2018-05-04")
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1314,11 +1287,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1333,11 +1306,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1352,11 +1325,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1371,11 +1344,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1390,11 +1363,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1409,11 +1382,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -1428,11 +1401,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1447,11 +1420,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1467,11 +1440,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -1529,11 +1502,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -1548,11 +1521,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1567,11 +1540,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -1586,11 +1559,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1605,11 +1578,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -1624,11 +1597,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -1643,11 +1616,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1662,11 +1635,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1682,11 +1655,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -1720,7 +1693,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -1732,7 +1705,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1748,23 +1721,16 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                  },
                 index=idx
             )
-            prices.columns.name = "ConId"
+            prices.columns.name = "Sid"
 
             return prices
-
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
 
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1772,7 +1738,7 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1783,15 +1749,13 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(CustomError) as cm:
+                with self.assertRaises(CustomError) as cm:
 
                         DecisionTreeML().backtest(end_date="2018-05-04", no_cache=True)
 
@@ -1886,11 +1850,11 @@ class MLFeaturesCacheTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.022727272727272707, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.11363636363636365, # (8.50 - 11)/11 * 0.5
                      0.0]}

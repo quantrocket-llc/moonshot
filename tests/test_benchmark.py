@@ -49,7 +49,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = "buy-and-hold"
             DB = "sample-stk-1d"
-            BENCHMARK = 12345
+            BENCHMARK = "FI12345"
 
             def prices_to_signals(self, prices):
                 signals = pd.DataFrame(1,
@@ -68,13 +68,13 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Volume
                         5000,
                         16000,
                         8800
                     ],
-                    23456: [
+                    "FI23456": [
                         # Volume
                         15000,
                         14000,
@@ -86,19 +86,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -106,7 +99,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -117,20 +110,18 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotParameterError) as cm:
+                with self.assertRaises(MoonshotParameterError) as cm:
                         BuyAndHold().backtest()
 
-        self.assertIn("Cannot extract BENCHMARK 12345 from sample-stk-1d data without one of Close, Open, Bid, Ask, High, Low", repr(cm.exception))
+        self.assertIn("Cannot extract BENCHMARK FI12345 from sample-stk-1d data without one of Close, Open, Bid, Ask, High, Low", repr(cm.exception))
 
-    def test_complain_if_benchmark_conid_missing(self):
+    def test_complain_if_benchmark_sid_missing(self):
         """
         Tests error handling when a benchmark is specified that is not in the
         data.
@@ -156,7 +147,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -168,7 +159,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -187,19 +178,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -207,7 +191,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -218,23 +202,21 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         BuyBelow10().backtest()
 
-        self.assertIn("BENCHMARK ConId 99999 is not in sample-stk-1d data", repr(cm.exception))
+        self.assertIn("BENCHMARK Sid 99999 is not in sample-stk-1d data", repr(cm.exception))
 
     def test_benchmark_eod(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified.
+        Benchmark Sid is specified.
         """
 
         class BuyBelow10(Moonshot):
@@ -242,7 +224,7 @@ class BenchmarkTestCase(unittest.TestCase):
             A basic test strategy that buys below 10.
             """
             CODE = 'buy-below-10'
-            BENCHMARK = 23456
+            BENCHMARK = "FI23456"
 
             def prices_to_signals(self, prices):
                 signals = prices.loc["Close"] < 10
@@ -256,7 +238,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -268,7 +250,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -287,19 +269,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -307,7 +282,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -318,15 +293,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest()
+                results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -354,20 +327,271 @@ class BenchmarkTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      "nan",
                      "nan",
                      "nan"],
-             23456: [9.89,
+             "FI23456": [9.89,
                      11.0,
                      8.5,
                      10.5]}
         )
 
+    @patch("moonshot.strategies.base.get_prices")
+    @patch("moonshot.strategies.base.download_master_file")
+    def test_request_benchmark_sid_if_universes_or_sids(
+        self, mock_download_master_file, mock_get_prices):
+        """
+        Tests that the benchmark sid is requested from get_prices if SIDS
+        or UNIVERSES are specified (which would limit the query and thus
+        potentially exclude the benchmark).
+        """
+
+        class BuyBelow10(Moonshot):
+            """
+            A basic test strategy that buys below 10.
+            """
+            CODE = 'buy-below-10'
+            BENCHMARK = "FI34567"
+            SIDS = ["FI12345", "FI23456"]
+
+            def prices_to_signals(self, prices):
+                signals = prices.loc["Close"] < 10
+                return signals.astype(int)
+
+        class BuyBelow10Universe(BuyBelow10):
+
+            CODE = 'buy-below-10-universe'
+            SIDS = None
+            UNIVERSES = "my-universe"
+
+        def _mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
+            fields = ["Close","Volume"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        # Close
+                        9,
+                        11,
+                        10.50,
+                        9.99,
+                        # Volume
+                        5000,
+                        16000,
+                        8800,
+                        9900
+                    ],
+                    "FI23456": [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                    "FI34567": [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                 },
+                index=idx
+            )
+
+            return prices
+
+        def _mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    "FI12345": [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    "FI23456": [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ],
+                    "FI23456": [
+                        "America/New_York",
+                        "XYZ",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "Sid"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        mock_download_master_file.side_effect = _mock_download_master_file
+        mock_get_prices.return_value = _mock_get_prices()
+
+        results = BuyBelow10().backtest()
+        results = BuyBelow10Universe().backtest()
+
+        get_prices_call_1 = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call_1
+        self.assertEqual(kwargs["sids"], ["FI12345", "FI23456", "FI34567"])
+        self.assertIsNone(kwargs["universes"])
+
+        get_prices_call_2 = mock_get_prices.mock_calls[1]
+        _, args, kwargs = get_prices_call_2
+        self.assertEqual(kwargs["sids"], ["FI34567"])
+        self.assertEqual(kwargs["universes"], "my-universe")
+
+    @patch("moonshot.strategies.base.get_prices")
+    @patch("moonshot.strategies.base.download_master_file")
+    def test_dont_request_benchmark_sid_if_no_universes_or_sids(
+        self, mock_download_master_file, mock_get_prices):
+        """
+        Tests that the benchmark sid is not requested from get_prices if SIDS
+        or UNIVERSES are not specified (as requesting the benchmark would result
+        in limiting the otherwise unlimited query).
+        """
+
+        class BuyBelow10(Moonshot):
+            """
+            A basic test strategy that buys below 10.
+            """
+            CODE = 'buy-below-10'
+            BENCHMARK = "FI34567"
+
+            def prices_to_signals(self, prices):
+                signals = prices.loc["Close"] < 10
+                return signals.astype(int)
+
+        def _mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03", "2018-05-04"])
+            fields = ["Close","Volume"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        # Close
+                        9,
+                        11,
+                        10.50,
+                        9.99,
+                        # Volume
+                        5000,
+                        16000,
+                        8800,
+                        9900
+                    ],
+                    "FI23456": [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                    "FI34567": [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                        10.50,
+                        # Volume
+                        15000,
+                        14000,
+                        28800,
+                        17000
+
+                    ],
+                 },
+                index=idx
+            )
+
+            return prices
+
+        def _mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    "FI12345": [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    "FI23456": [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ],
+                    "FI23456": [
+                        "America/New_York",
+                        "XYZ",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "Sid"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        mock_download_master_file.side_effect = _mock_download_master_file
+        mock_get_prices.return_value = _mock_get_prices()
+
+        results = BuyBelow10().backtest()
+
+        get_prices_call_1 = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call_1
+        self.assertEqual(kwargs["sids"], [])
+        self.assertIsNone(kwargs["universes"])
+
     def test_benchmark_eod_with_benchmark_db(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified and a BENCHMARK_DB is used.
+        Benchmark Sid is specified and a BENCHMARK_DB is used.
         """
 
         class BuyBelow10(Moonshot):
@@ -376,7 +600,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = 'buy-below-10'
             DB = "demo-stk-1d"
-            BENCHMARK = 34567
+            BENCHMARK = "FI34567"
             BENCHMARK_DB = "etf-1d"
 
             def prices_to_signals(self, prices):
@@ -392,7 +616,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             # Close
                             9,
                             11,
@@ -404,7 +628,7 @@ class BenchmarkTestCase(unittest.TestCase):
                             8800,
                             9900
                         ],
-                        23456: [
+                        "FI23456": [
                             # Close
                             9.89,
                             11,
@@ -432,7 +656,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        34567: [
+                        "FI34567": [
                             # Close
                             199.6,
                             210.45,
@@ -445,19 +669,12 @@ class BenchmarkTestCase(unittest.TestCase):
                 return prices
 
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -465,7 +682,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -476,15 +693,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest()
+                results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -512,12 +727,12 @@ class BenchmarkTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             # with BENCHMARK_DB, benchmark prices are stored under the first conid
-             12345: [199.6,
+             # with BENCHMARK_DB, benchmark prices are stored under the first sid
+             "FI12345": [199.6,
                      210.45,
                      210.12,
                      'nan'],
-             23456: ["nan",
+             "FI23456": ["nan",
                      "nan",
                      "nan",
                      "nan"]}
@@ -535,7 +750,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = "short-above-10"
             DB = "sample-stk-15min"
-            BENCHMARK = 12345
+            BENCHMARK = "FI12345"
 
             def prices_to_signals(self, prices):
                 morning_prices = prices.loc["Open"].xs("09:30:00", level="Time")
@@ -570,7 +785,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -586,7 +801,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -608,19 +823,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -628,7 +836,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -639,19 +847,17 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotParameterError) as cm:
+                with self.assertRaises(MoonshotParameterError) as cm:
                         ShortAbove10Intraday().backtest()
 
         self.assertIn((
-            "Cannot extract BENCHMARK 12345 from sample-stk-15min data because prices contains intraday "
+            "Cannot extract BENCHMARK FI12345 from sample-stk-15min data because prices contains intraday "
             "prices but no BENCHMARK_TIME specified"), repr(cm.exception))
 
     def test_complain_if_benchmark_time_not_in_data(self):
@@ -666,7 +872,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = "short-above-10"
             DB = "sample-stk-15min"
-            BENCHMARK = 12345
+            BENCHMARK = "FI12345"
             BENCHMARK_TIME = "15:45:00"
 
             def prices_to_signals(self, prices):
@@ -702,7 +908,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -718,7 +924,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -740,19 +946,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -760,7 +959,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -771,15 +970,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         ShortAbove10Intraday().backtest()
 
         self.assertIn(
@@ -796,7 +993,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = "short-above-10"
             DB = "sample-stk-15min"
-            BENCHMARK = 12345
+            BENCHMARK = "FI12345"
             BENCHMARK_DB = "etf-15min"
             BENCHMARK_TIME = "15:45:00"
 
@@ -834,7 +1031,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        34567: [
+                        "FI34567": [
                             # Close
                             9.6,
                             10.45,
@@ -850,7 +1047,7 @@ class BenchmarkTestCase(unittest.TestCase):
                             8.90,
                             11.30,
                         ],
-                        23456: [
+                        "FI23456": [
                             # Close
                             10.56,
                             12.01,
@@ -880,7 +1077,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             # Close
                             9.6,
                             10.45,
@@ -895,19 +1092,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -915,7 +1105,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -926,15 +1116,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         ShortAbove10Intraday().backtest()
 
         self.assertIn(
@@ -951,7 +1139,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = "short-above-10"
             DB = "sample-stk-15min"
-            BENCHMARK = 12345
+            BENCHMARK = "FI12345"
             BENCHMARK_DB = "etf-15min"
             BENCHMARK_TIME = "15:45:00"
 
@@ -989,7 +1177,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        34567: [
+                        "FI34567": [
                             # Close
                             9.6,
                             10.45,
@@ -1005,7 +1193,7 @@ class BenchmarkTestCase(unittest.TestCase):
                             8.90,
                             11.30,
                         ],
-                        23456: [
+                        "FI23456": [
                             # Close
                             10.56,
                             12.01,
@@ -1029,19 +1217,12 @@ class BenchmarkTestCase(unittest.TestCase):
             else:
                 raise NoHistoricalData(requests.HTTPError("No history matches the query parameters"))
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1049,7 +1230,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1060,15 +1241,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    with self.assertRaises(MoonshotError) as cm:
+                with self.assertRaises(MoonshotError) as cm:
                         ShortAbove10Intraday().backtest()
 
         self.assertIn(
@@ -1077,7 +1256,7 @@ class BenchmarkTestCase(unittest.TestCase):
     def test_benchmark_once_a_day_intraday(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified on a once a day intraday strategy.
+        Benchmark Sid is specified on a once a day intraday strategy.
         """
 
         class ShortAbove10Intraday(Moonshot):
@@ -1085,7 +1264,7 @@ class BenchmarkTestCase(unittest.TestCase):
             A basic test strategy that shorts above 10 and holds intraday.
             """
             CODE = "short-above-10"
-            BENCHMARK = 12345
+            BENCHMARK = "FI12345"
             BENCHMARK_TIME = "15:30:00"
 
             def prices_to_signals(self, prices):
@@ -1121,7 +1300,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1137,7 +1316,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1159,19 +1338,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1179,7 +1351,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1190,15 +1362,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1210,10 +1380,10 @@ class BenchmarkTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [10.45,
+             "FI12345": [10.45,
                      15.45,
                      12.30],
-             23456: ["nan",
+             "FI23456": ["nan",
                      "nan",
                      "nan"]}
         )
@@ -1221,7 +1391,7 @@ class BenchmarkTestCase(unittest.TestCase):
     def test_benchmark_once_a_day_intraday_with_benchmark_db(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified using a BENCHMARK_DB on a once a day
+        Benchmark Sid is specified using a BENCHMARK_DB on a once a day
         intraday strategy.
         """
 
@@ -1231,7 +1401,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
             CODE = "short-above-10"
             DB = "demo-stk-15min"
-            BENCHMARK = 34567
+            BENCHMARK = "FI34567"
             BENCHMARK_DB = "etf-1d"
 
             def prices_to_signals(self, prices):
@@ -1268,7 +1438,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             # Close
                             9.6,
                             10.45,
@@ -1284,7 +1454,7 @@ class BenchmarkTestCase(unittest.TestCase):
                             8.90,
                             11.30,
                         ],
-                        23456: [
+                        "FI23456": [
                             # Close
                             10.56,
                             12.01,
@@ -1313,7 +1483,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        34567: [
+                        "FI34567": [
                             # Close
                             199.6,
                             210.45,
@@ -1325,19 +1495,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1345,7 +1508,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1356,15 +1519,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1376,10 +1537,10 @@ class BenchmarkTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [199.6,
+             "FI12345": [199.6,
                      210.45,
                      210.12],
-             23456: ["nan",
+             "FI23456": ["nan",
                      "nan",
                      "nan"]}
         )
@@ -1387,7 +1548,7 @@ class BenchmarkTestCase(unittest.TestCase):
     def test_benchmark_continuous_intraday(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified on a continuous intraday strategy.
+        Benchmark Sid is specified on a continuous intraday strategy.
         """
 
         class BuyBelow10ShortAbove10ContIntraday(Moonshot):
@@ -1395,7 +1556,7 @@ class BenchmarkTestCase(unittest.TestCase):
             A basic test strategy that buys below 10 and shorts above 10.
             """
 
-            BENCHMARK = 23456
+            BENCHMARK = "FI23456"
 
             def prices_to_signals(self, prices):
                 long_signals = prices.loc["Close"] <= 10
@@ -1412,7 +1573,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1421,7 +1582,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1436,19 +1597,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 hour'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1456,7 +1610,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1467,15 +1621,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1496,13 +1648,13 @@ class BenchmarkTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      'nan',
                      'nan',
                      'nan',
                      'nan',
                      'nan'],
-             23456: [10.56,
+             "FI23456": [10.56,
                      12.01,
                      10.50,
                      9.80,
@@ -1513,7 +1665,7 @@ class BenchmarkTestCase(unittest.TestCase):
     def test_benchmark_continuous_intraday_with_benchmark_db(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a
-        Benchmark ConId is specified using a BENCHMARK_DB on a continuous
+        Benchmark Sid is specified using a BENCHMARK_DB on a continuous
         intraday strategy.
         """
 
@@ -1523,7 +1675,7 @@ class BenchmarkTestCase(unittest.TestCase):
             """
 
             DB = "demo-stk-15min"
-            BENCHMARK = 34567
+            BENCHMARK = "FI34567"
             BENCHMARK_DB = "etf-1d"
 
             def prices_to_signals(self, prices):
@@ -1543,7 +1695,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        12345: [
+                        "FI12345": [
                             # Close
                             9.6,
                             10.45,
@@ -1552,7 +1704,7 @@ class BenchmarkTestCase(unittest.TestCase):
                             8.67,
                             12.30,
                         ],
-                        23456: [
+                        "FI23456": [
                             # Close
                             10.56,
                             12.01,
@@ -1575,7 +1727,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 prices = pd.DataFrame(
                     {
-                        34567: [
+                        "FI34567": [
                             # Close
                             199.6,
                             210.45,
@@ -1586,19 +1738,12 @@ class BenchmarkTestCase(unittest.TestCase):
 
                 return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1606,7 +1751,7 @@ class BenchmarkTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1617,15 +1762,13 @@ class BenchmarkTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         results = results.where(results.notnull(), "nan")
 
@@ -1646,13 +1789,13 @@ class BenchmarkTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [199.6,
+             "FI12345": [199.6,
                      199.6,
                      199.6,
                      210.45,
                      210.45,
                      210.45],
-             23456: ["nan",
+             "FI23456": ["nan",
                      "nan",
                      "nan",
                      "nan",

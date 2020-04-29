@@ -44,7 +44,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -54,7 +54,7 @@ class BacktestTestCase(unittest.TestCase):
                         16000,
                         8800
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         12,
                         11,
@@ -69,19 +69,12 @@ class BacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -89,7 +82,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -100,16 +93,15 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
-                    with self.assertRaises(NotImplementedError) as cm:
-                        Moonshot().backtest()
+                with self.assertRaises(NotImplementedError) as cm:
+                    Moonshot().backtest()
 
         self.assertIn("strategies must implement prices_to_signals", repr(cm.exception))
 
@@ -136,7 +128,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -148,7 +140,7 @@ class BacktestTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -167,19 +159,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -187,7 +172,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -198,15 +183,13 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest()
+                results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -235,11 +218,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      0.0,
                      1.0,
                      0.0]}
@@ -254,11 +237,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -273,11 +256,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.0,
                      0.0,
                      1.0],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.0,
                      1.0,
                      0.0]}
@@ -292,11 +275,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -311,11 +294,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.0,
                      1.0]}
@@ -330,11 +313,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      0,
                      0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      0,
                      1.0]}
@@ -349,11 +332,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      1.0]}
@@ -368,11 +351,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -387,11 +370,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -407,11 +390,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      -0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      0.0]}
@@ -442,7 +425,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -454,7 +437,7 @@ class BacktestTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -473,19 +456,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -493,7 +469,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -504,15 +480,13 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest()
+                results = BuyBelow10ShortAbove10().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -541,11 +515,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -560,11 +534,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      -0.5,
                      0.5,
                      -0.5]}
@@ -579,11 +553,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.5,
                      0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.5,
                      0.5,
                      0.5]}
@@ -598,11 +572,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      -0.5,
                      -0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      -0.5,
                      0.5]}
@@ -617,11 +591,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.5,
                      0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      0.5]}
@@ -636,11 +610,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      1.0,
                      1.0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      1.0,
                      1.0]}
@@ -655,11 +629,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      1.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      1.0,
                      1.0]}
@@ -674,11 +648,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -693,11 +667,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -713,11 +687,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0227273, # (10.50 - 11)/11 * 0.5
                      0.0242857], # (9.99 - 10.50)/10.50 * -0.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.1136364, # (8.50 - 11)/11 * 0.5
                      -0.1176471] # (10.50 - 8.50)/8.50 * -0.5
@@ -766,7 +740,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -783,7 +757,7 @@ class BacktestTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -807,19 +781,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -827,7 +794,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -838,15 +805,13 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10Overnight().backtest()
+                results = BuyBelow10ShortAbove10Overnight().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -875,11 +840,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -894,11 +859,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.25,
+             "FI12345": [0.25,
                      -0.25,
                      -0.25,
                      0.25],
-             23456: [0.25,
+             "FI23456": [0.25,
                      -0.25,
                      0.25,
                      -0.25]}
@@ -913,11 +878,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.25,
+             "FI12345": [0.25,
                      0.25,
                      0.25,
                      0.25],
-             23456: [0.25,
+             "FI23456": [0.25,
                      0.25,
                      0.25,
                      0.25]}
@@ -932,11 +897,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.25,
+             "FI12345": [0.25,
                      -0.25,
                      -0.25,
                      0.25],
-             23456: [0.25,
+             "FI23456": [0.25,
                      -0.25,
                      0.25,
                      -0.25]}
@@ -951,11 +916,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.25,
+             "FI12345": [0.25,
                      0.25,
                      0.25,
                      0.25],
-             23456: [0.25,
+             "FI23456": [0.25,
                      0.25,
                      0.25,
                      0.25]}
@@ -970,11 +935,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      1.0,
                      1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      1.0,
                      1.0,
                      1.0]}
@@ -989,11 +954,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.5,
                      0.0,
                      0.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.5,
                      0.5,
                      0.5]}
@@ -1008,11 +973,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1027,11 +992,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0]}
@@ -1047,11 +1012,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0364583, # (11 - 9.6)/9.6 * 0.25
                      -0.0011962, # (10.50 - 10.45)/10.45 * -0.25
                      0.0058651], # (9.99 - 10.23)/10.23 * 0.25
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0104167,# (11 - 10.56)/10.56 * 0.25
                      0.0730641, # (8.50 - 12.01)/12.01 * -0.25
                      0.0] # (10.50 - 10.50)/10.50 * 0.25
@@ -1103,7 +1068,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1119,7 +1084,7 @@ class BacktestTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1141,19 +1106,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1161,7 +1119,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1172,16 +1130,14 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1209,10 +1165,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -1.0]}
         )
@@ -1225,10 +1181,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1241,10 +1197,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.25]}
         )
@@ -1257,10 +1213,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -1273,10 +1229,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.25]}
         )
@@ -1289,10 +1245,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      1.0]}
         )
@@ -1305,10 +1261,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.5,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.5]}
         )
@@ -1321,10 +1277,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0]}
         )
@@ -1337,10 +1293,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0]}
         )
@@ -1354,10 +1310,10 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.13167, # (15.45 - 10.12)/10.12 * -0.25
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.0205224] # (14.50 - 13.40)/13.40 * 0.25
              }
@@ -1390,7 +1346,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -1399,7 +1355,7 @@ class BacktestTestCase(unittest.TestCase):
                         8.67,
                         12.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -1414,19 +1370,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 hour'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1434,7 +1383,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1445,15 +1394,13 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10ContIntraday().backtest()
+                results = BuyBelow10ShortAbove10ContIntraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1490,13 +1437,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      -1.0,
                      1.0,
                      -1.0],
-             23456: [-1.0,
+             "FI23456": [-1.0,
                      -1.0,
                      -1.0,
                      1.0,
@@ -1521,13 +1468,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      -0.5,
                      -0.5,
                      -0.5,
                      0.5,
                      -0.5],
-             23456: [-0.5,
+             "FI23456": [-0.5,
                      -0.5,
                      -0.5,
                      0.5,
@@ -1552,13 +1499,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.5,
+             "FI12345": [0.5,
                      0.5,
                      0.5,
                      0.5,
                      0.5,
                      0.5],
-             23456: [0.5,
+             "FI23456": [0.5,
                      0.5,
                      0.5,
                      0.5,
@@ -1584,13 +1531,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      -0.5,
                      -0.5,
                      -0.5,
                      0.5],
-             23456: ['nan',
+             "FI23456": ['nan',
                      -0.5,
                      -0.5,
                      -0.5,
@@ -1615,13 +1562,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      0.5,
                      0.5,
                      0.5,
                      0.5],
-             23456: ['nan',
+             "FI23456": ['nan',
                      0.5,
                      0.5,
                      0.5,
@@ -1646,13 +1593,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      1.0,
                      1.0,
                      1.0,
                      1.0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      1.0,
                      1.0,
@@ -1677,13 +1624,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: ['nan',
+             "FI12345": ['nan',
                      0.5,
                      1.0,
                      0.0,
                      0.0,
                      1.0],
-             23456: ['nan',
+             "FI23456": ['nan',
                      0.5,
                      0.0,
                      0.0,
@@ -1708,13 +1655,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0,
@@ -1739,13 +1686,13 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      0.0,
                      0.0,
                      0.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0,
                      0.0,
@@ -1770,14 +1717,14 @@ class BacktestTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0157895, # (10.12-10.45)/10.45 * 0.5
                      -0.2633399, # (15.45-10.12)/10.12 * -0.5
                      0.2194175,  # (8.67-15.45)/15.45 * -0.5
                      -0.2093426  # (12.30-8.67)/8.67 * -0.5
                      ],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0628643, # (10.50-12.01)/12.01 * -0.5
                      0.0333333, # (9.80-10.50)/10.50 * -0.5
@@ -1811,7 +1758,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -1823,7 +1770,7 @@ class BacktestTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -1842,19 +1789,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -1862,7 +1802,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -1873,15 +1813,13 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10ShortAbove10().backtest(allocation=3.0)
+                results = BuyBelow10ShortAbove10().backtest(allocation=3.0)
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -1910,11 +1848,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.0,
+             "FI12345": [1.0,
                      -1.0,
                      -1.0,
                      1.0],
-             23456: [1.0,
+             "FI23456": [1.0,
                      -1.0,
                      1.0,
                      -1.0]}
@@ -1929,11 +1867,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.5,
+             "FI12345": [1.5,
                      -1.5,
                      -1.5,
                      1.5],
-             23456: [1.5,
+             "FI23456": [1.5,
                      -1.5,
                      1.5,
                      -1.5]}
@@ -1948,11 +1886,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [1.5,
+             "FI12345": [1.5,
                      1.5,
                      1.5,
                      1.5],
-             23456: [1.5,
+             "FI23456": [1.5,
                      1.5,
                      1.5,
                      1.5]}
@@ -1967,11 +1905,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      1.5,
                      -1.5,
                      -1.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      1.5,
                      -1.5,
                      1.5]}
@@ -1986,11 +1924,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      1.5,
                      1.5,
                      1.5],
-             23456: ["nan",
+             "FI23456": ["nan",
                      1.5,
                      1.5,
                      1.5]}
@@ -2004,11 +1942,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0,
+             "FI12345": [0,
                      1.0,
                      1.0,
                      1.0],
-             23456: [0,
+             "FI23456": [0,
                      1.0,
                      1.0,
                      1.0]}
@@ -2023,11 +1961,11 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      1.5,
                      3.0,
                      0.0],
-             23456: ["nan",
+             "FI23456": ["nan",
                      1.5,
                      3.0,
                      3.0]}
@@ -2043,20 +1981,20 @@ class BacktestTestCase(unittest.TestCase):
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0,
                      -0.0681818, # (10.50 - 11)/11 * 1.5
                      0.0728571], # (9.99 - 10.50)/10.50 * -1.5
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.3409091, # (8.50 - 11)/11 * 1.5
                      -0.3529412] # (10.50 - 8.50)/8.50 * -1.5
              }
         )
 
-    def test_label_conids(self):
+    def test_label_sids(self):
         """
-        Tests that the label_conids param causes symbols to be included in
+        Tests that the label_sids param causes symbols to be included in
         the resulting columns. For FX, symbol.currency should be used as
         the label.
         """
@@ -2077,7 +2015,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -2089,7 +2027,7 @@ class BacktestTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -2107,19 +2045,12 @@ class BacktestTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "AAPL",
                         "STK",
@@ -2127,9 +2058,9 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
-                        "EUR",
+                        "EUR.JPY",
                         "CASH",
                         "JPY",
                         None,
@@ -2138,37 +2069,33 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
-        # control: run without label_conids
+        # control: run without label_sids
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest()
+                results = BuyBelow10().backtest()
 
         self.assertSetEqual(
             set(results.columns),
-            {12345,
-             23456}
+            {"FI12345",
+             "FI23456"}
         )
 
         # clear cache
         self.tearDown()
 
-        # control: run with label_conids
+        # control: run with label_sids
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest(label_conids=True)
+                results = BuyBelow10().backtest(label_sids=True)
 
         self.assertSetEqual(
             set(results.columns),
-            {"AAPL(12345)",
-             "EUR.JPY(23456)"}
+            {"AAPL(FI12345)",
+             "EUR.JPY(FI23456)"}
         )
 
     def test_truncate_at_start_date(self):
@@ -2196,7 +2123,7 @@ class BacktestTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -2208,7 +2135,7 @@ class BacktestTestCase(unittest.TestCase):
                         8800,
                         9900
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         9.89,
                         11,
@@ -2227,19 +2154,12 @@ class BacktestTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -2247,7 +2167,7 @@ class BacktestTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -2258,15 +2178,13 @@ class BacktestTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = BuyBelow10().backtest(start_date="2018-05-03")
+                results = BuyBelow10().backtest(start_date="2018-05-03")
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),

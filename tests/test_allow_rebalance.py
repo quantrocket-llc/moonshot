@@ -52,7 +52,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
@@ -63,19 +63,12 @@ class AllowRebalanceTestCase(unittest.TestCase):
             )
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -85,7 +78,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -108,13 +101,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 {
                     "Account": "U123",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 2240
                 },
                 {
                     "Account": "DU234",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 7100
                 },
             ]
@@ -129,46 +122,42 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
-                                    orders = BuyBelow10().trade(
-                                        {"U123": 0.5,
-                                         "DU234": 0.3,
-                                         })
+                                orders = BuyBelow10().trade(
+                                    {"U123": 0.5,
+                                        "DU234": 0.3,
+                                        })
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
         self.assertListEqual(
             orders.to_dict(orient="records"),
             [
-                {
-                    'ConId': 12345,
-                    'Account': 'U123',
-                    'Action': 'SELL',
-                    'OrderRef': 'buy-below-10',
-                    # 0.5 allocation * 0.5 weight * 85K / 9.50 - 2240
-                    'TotalQuantity': 3,
-                    'Exchange': 'SMART',
-                    'OrderType': 'MKT',
-                    'Tif': 'DAY'
-                },
-                {
-                    'ConId': 12345,
+                                {
+                    'Sid': "FI12345",
                     'Account': 'DU234',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 0.3 allocation * 0.5 weight * 450K / 9.50 - 7100
                     'TotalQuantity': 5,
-                    'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI12345",
+                    'Account': 'U123',
+                    'Action': 'SELL',
+                    'OrderRef': 'buy-below-10',
+                    # 0.5 allocation * 0.5 weight * 85K / 9.50 - 2240
+                    'TotalQuantity': 3,
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -204,13 +193,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         9.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         8.9,
                         12,
@@ -222,26 +211,19 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -251,7 +233,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -275,21 +257,21 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     # this position won't be rebalanced
                     "Account": "U123",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 200
                 },
                 {
                       # this position will switch sides
                       "Account": "DU234",
                       "OrderRef": "buy-below-10",
-                      "ConId": 12345,
+                      "Sid": "FI12345",
                       "Quantity": -4
                 },
                 {
                     # this position will be closed
                     "Account": "DU234",
                     "OrderRef": "buy-below-10",
-                    "ConId": 23456,
+                    "Sid": "FI23456",
                     "Quantity": -7
                 },
 
@@ -305,21 +287,19 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
-                                    orders = BuyBelow10().trade(
-                                        {"U123": 0.5,
-                                         "DU234": 0.3,
-                                         })
+                                orders = BuyBelow10().trade(
+                                    {"U123": 0.5,
+                                        "DU234": 0.3,
+                                        })
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -327,24 +307,22 @@ class AllowRebalanceTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'DU234',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 0.3 allocation * 0.5 weight * 450K / 9.50 - (-4)
                     'TotalQuantity': 7109.0,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'DU234',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 0 - (-7)
                     'TotalQuantity': 7.0,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -380,13 +358,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         9.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         8.9,
                         12,
@@ -398,26 +376,19 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -427,7 +398,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -451,28 +422,28 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     # this position won't be rebalanced
                     "Account": "U123",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 2000
                 },
                 {
                     # this position will be rebalanced
                     "Account": "U999",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 3000
                     },
                 {
                     # this position will switch sides
                     "Account": "DU234",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": -4
                 },
                 {
                     # this position will be closed
                     "Account": "DU234",
                     "OrderRef": "buy-below-10",
-                    "ConId": 23456,
+                    "Sid": "FI23456",
                     "Quantity": -7
                 },
 
@@ -488,22 +459,20 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
-                                    orders = BuyBelow10().trade(
-                                        {"U123": 0.5,
-                                         "DU234": 0.3,
-                                         "U999": 0.5
-                                         })
+                                orders = BuyBelow10().trade(
+                                    {"U123": 0.5,
+                                    "DU234": 0.3,
+                                    "U999": 0.5
+                                    })
 
         self.assertSetEqual(
             set(orders.columns),
-            {'ConId',
+            {'Sid',
              'Account',
              'Action',
              'OrderRef',
              'TotalQuantity',
-             'Exchange',
              'OrderType',
              'Tif'}
         )
@@ -511,36 +480,33 @@ class AllowRebalanceTestCase(unittest.TestCase):
             orders.to_dict(orient="records"),
             [
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'DU234',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 0.3 allocation * 0.5 weight * 450K / 9.50 - (-4)
                     'TotalQuantity': 7109.0,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
                 {
-                    'ConId': 12345,
+                    'Sid': "FI12345",
                     'Account': 'U999',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 0.5 allocation * 0.5 weight * 200K / 9.50 - 3000
                     'TotalQuantity': 2263,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
 
                 {
-                    'ConId': 23456,
+                    'Sid': "FI23456",
                     'Account': 'DU234',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
                     # 0 - (-7)
                     'TotalQuantity': 7.0,
-                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -574,13 +540,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9,
                         11,
                         9.50
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         8.9,
                         12,
@@ -592,26 +558,19 @@ class AllowRebalanceTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "STK",
                         "USD",
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "STK",
                         "USD",
@@ -621,7 +580,7 @@ class AllowRebalanceTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
@@ -645,28 +604,28 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     # this position won't be rebalanced
                     "Account": "U123",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 2000
                 },
                 {
                     # this position will be rebalanced
                     "Account": "U999",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": 3000
                     },
                 {
                     # this position will switch sides
                     "Account": "DU234",
                     "OrderRef": "buy-below-10",
-                    "ConId": 12345,
+                    "Sid": "FI12345",
                     "Quantity": -4
                 },
                 {
                     # this position will be closed
                     "Account": "DU234",
                     "OrderRef": "buy-below-10",
-                    "ConId": 23456,
+                    "Sid": "FI23456",
                     "Quantity": -7
                 },
 
@@ -682,14 +641,13 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
                         with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
                             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
 
-                                    with self.assertRaises(MoonshotParameterError) as cm:
-                                        BuyBelow10().trade(
-                                            {"U123": 0.5,
-                                             "DU234": 0.3,
-                                             "U999": 0.5
-                                             })
+                                with self.assertRaises(MoonshotParameterError) as cm:
+                                    BuyBelow10().trade(
+                                        {"U123": 0.5,
+                                            "DU234": 0.3,
+                                            "U999": 0.5
+                                            })
 
         self.assertIn(
             "invalid value for ALLOW_REBALANCE: always (should be a float)", repr(cm.exception))

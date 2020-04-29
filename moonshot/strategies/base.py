@@ -24,8 +24,6 @@ from moonshot.mixins import WeightAllocationMixin
 from moonshot.cache import Cache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.price import get_prices
-from quantrocket.history import get_db_config as get_history_db_config
-from quantrocket.realtime import get_db_config as get_realtime_db_config
 from quantrocket.master import list_calendar_statuses, download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions, download_order_statuses
@@ -1026,8 +1024,17 @@ class Moonshot(
             codes = [self.DB]
 
         sids = self.SIDS or []
-        # Add benchmark sid if needed
-        if self.is_backtest and self.BENCHMARK and not self.BENCHMARK_DB:
+        # Add benchmark sid if needed. It's needed if there is no
+        # BENCHMARK_DB, and sids or universes are specified (if they're
+        # not specified, the whole db will be queried, including the
+        # benchmark)
+        if (
+            self.is_backtest
+            and self.BENCHMARK
+            and not self.BENCHMARK_DB
+            and (sids or self.UNIVERSES)
+            ):
+            sids = list(sids).copy()
             sids.append(self.BENCHMARK)
 
         kwargs = dict(

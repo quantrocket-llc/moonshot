@@ -77,7 +77,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -93,7 +93,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -115,19 +115,12 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -135,7 +128,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -146,15 +139,13 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -182,10 +173,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -1.0]}
         )
@@ -198,10 +189,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -214,10 +205,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -230,10 +221,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.5,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.5]}
         )
@@ -246,10 +237,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.0005,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.0005]}
         )
@@ -300,7 +291,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
 
             prices = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         # Close
                         9.6,
                         10.45,
@@ -316,7 +307,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                         8.90,
                         11.30,
                     ],
-                    23456: [
+                    "FI23456": [
                         # Close
                         10.56,
                         12.01,
@@ -338,19 +329,12 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
 
             return prices
 
-        def mock_get_history_db_config(db):
-            return {
-                'vendor': 'ib',
-                'domain': 'main',
-                'bar_size': '1 day'
-            }
-
         def mock_download_master_file(f, *args, **kwargs):
 
             master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
             securities = pd.DataFrame(
                 {
-                    12345: [
+                    "FI12345": [
                         "America/New_York",
                         "ABC",
                         "STK",
@@ -358,7 +342,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                         None,
                         None
                     ],
-                    23456: [
+                    "FI23456": [
                         "America/New_York",
                         "DEF",
                         "STK",
@@ -369,15 +353,13 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 },
                 index=master_fields
             )
-            securities.columns.name = "ConId"
+            securities.columns.name = "Sid"
             securities.T.to_csv(f, index=True, header=True)
             f.seek(0)
 
         with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
             with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
-                with patch("moonshot.strategies.base.get_history_db_config", new=mock_get_history_db_config):
-
-                    results = ShortAbove10Intraday().backtest()
+                results = ShortAbove10Intraday().backtest()
 
         self.assertSetEqual(
             set(results.index.get_level_values("Field")),
@@ -405,10 +387,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -1.0,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -1.0]}
         )
@@ -421,10 +403,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -437,10 +419,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      -0.25,
                      0.0],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      -0.25]}
         )
@@ -453,10 +435,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: ["nan",
+             "FI12345": ["nan",
                      0.25,
                      0.25],
-             23456: ["nan",
+             "FI23456": ["nan",
                      0.0,
                      0.25]}
         )
@@ -469,10 +451,10 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             12345: [0.0,
+             "FI12345": [0.0,
                      0.00025,
                      0.00025],
-             23456: [0.0,
+             "FI23456": [0.0,
                      0.0,
                      0.00025]}
         )
