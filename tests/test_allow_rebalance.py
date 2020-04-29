@@ -141,16 +141,6 @@ class AllowRebalanceTestCase(unittest.TestCase):
         self.assertListEqual(
             orders.to_dict(orient="records"),
             [
-                                {
-                    'Sid': "FI12345",
-                    'Account': 'DU234',
-                    'Action': 'BUY',
-                    'OrderRef': 'buy-below-10',
-                    # 0.3 allocation * 0.5 weight * 450K / 9.50 - 7100
-                    'TotalQuantity': 5,
-                    'OrderType': 'MKT',
-                    'Tif': 'DAY'
-                },
                 {
                     'Sid': "FI12345",
                     'Account': 'U123',
@@ -158,6 +148,16 @@ class AllowRebalanceTestCase(unittest.TestCase):
                     'OrderRef': 'buy-below-10',
                     # 0.5 allocation * 0.5 weight * 85K / 9.50 - 2240
                     'TotalQuantity': 3,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI12345",
+                    'Account': 'DU234',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.3 allocation * 0.5 weight * 450K / 9.50 - 7100
+                    'TotalQuantity': 5,
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }

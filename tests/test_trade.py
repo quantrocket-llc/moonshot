@@ -1390,17 +1390,6 @@ class TradeTestCase(unittest.TestCase):
             [
                 {
                     'Sid': "FI12345",
-                    'Account': 'DU234',
-                    'Action': 'SELL',
-                    'OrderRef': 'long-short-10',
-                    # 0.3 allocation * 0.25 weight * 450K / 10.50
-                    'TotalQuantity': 3214,
-                    'Exchange': 'SMART',
-                    'OrderType': 'MKT',
-                    'Tif': 'GTC'
-                },
-                {
-                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
@@ -1411,12 +1400,12 @@ class TradeTestCase(unittest.TestCase):
                     'Tif': 'GTC'
                 },
                 {
-                    'Sid': "FI23456",
+                    'Sid': "FI12345",
                     'Account': 'DU234',
-                    'Action': 'BUY',
+                    'Action': 'SELL',
                     'OrderRef': 'long-short-10',
-                    # 0.3 allocation * 0.25 weight * 450K / 8.50
-                    'TotalQuantity': 3971,
+                    # 0.3 allocation * 0.25 weight * 450K / 10.50
+                    'TotalQuantity': 3214,
                     'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'GTC'
@@ -1429,6 +1418,17 @@ class TradeTestCase(unittest.TestCase):
                     # 0.5 allocation * 0.25 weight * 85K / 8.50
                     'TotalQuantity': 1250,
                      'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'GTC'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': 'DU234',
+                    'Action': 'BUY',
+                    'OrderRef': 'long-short-10',
+                    # 0.3 allocation * 0.25 weight * 450K / 8.50
+                    'TotalQuantity': 3971,
+                    'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'GTC'
                 }
@@ -1592,16 +1592,6 @@ class TradeTestCase(unittest.TestCase):
                 },
                 {
                     'Sid': "FI23456",
-                    'Account': 'DU111',
-                    'Action': 'BUY',
-                    'OrderRef': 'buy-below-10',
-                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-300)
-                    'TotalQuantity': 2065.0,
-                    'OrderType': 'MKT',
-                    'Tif': 'DAY'
-                },
-                {
-                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
@@ -1617,6 +1607,16 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'buy-below-10',
                     # 0.6 allocation * 0.5 weight * 56K / 8.5
                     'TotalQuantity': 1976.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': 'DU111',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-300)
+                    'TotalQuantity': 2065.0,
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -1809,16 +1809,6 @@ class TradeTestCase(unittest.TestCase):
                 },
                 {
                     'Sid': "FI23456",
-                    'Account': 'DU111',
-                    'Action': 'BUY',
-                    'OrderRef': 'buy-below-10',
-                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-600)
-                    'TotalQuantity': 2365.0,
-                    'OrderType': 'MKT',
-                    'Tif': 'DAY'
-                },
-                {
-                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
@@ -1834,6 +1824,16 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'buy-below-10',
                     # 0.6 allocation * 0.5 weight * 56K / 8.5
                     'TotalQuantity': 1976.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': 'DU111',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-600)
+                    'TotalQuantity': 2365.0,
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -2041,16 +2041,6 @@ class TradeTestCase(unittest.TestCase):
                 },
                 {
                     'Sid': "FI23456",
-                    'Account': 'DU111',
-                    'Action': 'BUY',
-                    'OrderRef': 'buy-below-10',
-                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-900)
-                    'TotalQuantity': 2665.0,
-                    'OrderType': 'MKT',
-                    'Tif': 'DAY'
-                },
-                {
-                    'Sid': "FI23456",
                     'Account': 'U123',
                     'Action': 'BUY',
                     'OrderRef': 'buy-below-10',
@@ -2066,6 +2056,16 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'buy-below-10',
                     # 0.6 allocation * 0.5 weight * 56K / 8.5
                     'TotalQuantity': 1976.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': 'DU111',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-900)
+                    'TotalQuantity': 2665.0,
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
@@ -2368,17 +2368,6 @@ class TradeTestCase(unittest.TestCase):
             [
                 {
                     'Sid': "FI12345",
-                    'Account': 'DU234',
-                    'Action': 'SELL',
-                    'OrderRef': 'long-short-10',
-                    # 0.4 allocation * 0.25 weight * 450K CAD * 0.7 CAD.EUR / 10.50
-                    'TotalQuantity': 3000,
-                    'Exchange': 'SMART',
-                    'OrderType': 'MKT',
-                    'Tif': 'DAY'
-                },
-                {
-                    'Sid': "FI12345",
                     'Account': 'U123',
                     'Action': 'SELL',
                     'OrderRef': 'long-short-10',
@@ -2389,12 +2378,12 @@ class TradeTestCase(unittest.TestCase):
                     'Tif': 'DAY'
                 },
                 {
-                    'Sid': "FI23456",
+                    'Sid': "FI12345",
                     'Account': 'DU234',
-                    'Action': 'BUY',
+                    'Action': 'SELL',
                     'OrderRef': 'long-short-10',
-                    # 0.4 allocation * 0.25 weight * 450K CAD * 0.8 CAD.USD / 8.50
-                    'TotalQuantity': 4235,
+                    # 0.4 allocation * 0.25 weight * 450K CAD * 0.7 CAD.EUR / 10.50
+                    'TotalQuantity': 3000,
                     'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
@@ -2406,6 +2395,17 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'long-short-10',
                     # 0.75 allocation * 0.25 weight * 85K USD * 1.0 USD.USD / 8.50
                     'TotalQuantity': 1875,
+                    'Exchange': 'SMART',
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': 'DU234',
+                    'Action': 'BUY',
+                    'OrderRef': 'long-short-10',
+                    # 0.4 allocation * 0.25 weight * 450K CAD * 0.8 CAD.USD / 8.50
+                    'TotalQuantity': 4235,
                     'Exchange': 'SMART',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
