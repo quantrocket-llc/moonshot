@@ -1173,7 +1173,7 @@ class Moonshot(
         if self.BENCHMARK:
             all_results["Benchmark"] = self._get_benchmark(prices, daily=not results_are_intraday)
 
-        results = pd.concat(all_results)
+        results = pd.concat(all_results, keys=list(sorted(all_results.keys())))
 
         names = ["Field","Date"]
         if results.index.nlevels == 3:
