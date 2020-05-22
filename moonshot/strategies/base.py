@@ -1147,16 +1147,16 @@ class Moonshot(
         results_are_intraday = "Time" in signals.index.names
 
         all_results = dict(
-            Signal=signals,
-            Weight=weights,
-            AbsWeight=weights.abs(),
             AbsExposure=positions.abs(),
-            NetExposure=positions,
-            Turnover=turnover,
-            TotalHoldings=total_holdings,
+            AbsWeight=weights.abs(),
             Commission=commissions,
+            NetExposure=positions,
+            Return=returns,
+            Signal=signals,
             Slippage=slippages,
-            Return=returns)
+            TotalHoldings=total_holdings,
+            Turnover=turnover,
+            Weight=weights)
 
         # validate that custom backtest results are daily if results are
         # daily
