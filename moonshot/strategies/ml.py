@@ -356,8 +356,8 @@ class MoonshotML(Moonshot):
         # based on the index and columns of prices. If this file has been
         # edited more recently than the features were cached, the cache is
         # not used.
+        cache_key = [self.CODE, prices.index.tolist(), prices.columns.tolist()]
         if self.is_backtest and not no_cache:
-            cache_key = [prices.index.tolist(), prices.columns.tolist()]
             features = Cache.get(cache_key, prefix="_features", unless_file_modified=self)
 
         if features is None:
