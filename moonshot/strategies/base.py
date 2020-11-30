@@ -64,6 +64,12 @@ class Moonshot(
     DB_TIMES : list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
+    DB_DATA_FREQUENCY : str, optional
+        Only applicable when DB specifies a Zipline bundle. Whether to query minute or
+        daily data.  If omitted, defaults to minute data for minute bundles and to daily
+        data for daily bundles. This parameter only needs to be set to request daily data
+        from a minute bundle. Possible choices: daily, minute (or aliases d, m).
+
     SIDS : list of str, optional
         limit db query to these sids
 
@@ -172,6 +178,7 @@ class Moonshot(
     DB = None
     DB_FIELDS = ["Open", "Close", "Volume"]
     DB_TIMES = None
+    DB_DATA_FREQUENCY = None
     SIDS = None
     UNIVERSES = None
     EXCLUDE_SIDS = None
@@ -1048,7 +1055,8 @@ class Moonshot(
             times=self.DB_TIMES,
             cont_fut=self.CONT_FUT,
             fields=self.DB_FIELDS,
-            timezone=self.TIMEZONE
+            timezone=self.TIMEZONE,
+            data_frequency=self.DB_DATA_FREQUENCY
         )
 
         if not self.TIMEZONE:
@@ -1218,7 +1226,11 @@ class Moonshot(
                     sids=self.BENCHMARK,
                     start_date=prices.index.get_level_values("Date").min(),
                     end_date=prices.index.get_level_values("Date").max(),
-                    fields="Close"
+                    fields="Close",
+                    # if this is a minute Zipline bundle, we want to query
+                    # daily bars; data_frequency is ignored if this is not
+                    # a Zipline bundle
+                    data_frequency="daily"
                 )
             except requests.HTTPError as e:
                 raise MoonshotError("error querying BENCHMARK_DB {0}: {1}".format(

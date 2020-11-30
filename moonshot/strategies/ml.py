@@ -64,6 +64,12 @@ class MoonshotML(Moonshot):
     DB_TIMES : list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
+    DB_DATA_FREQUENCY : str, optional
+        Only applicable when DB specifies a Zipline bundle. Whether to query minute or
+        daily data.  If omitted, defaults to minute data for minute bundles and to daily
+        data for daily bundles. This parameter only needs to be set to request daily data
+        from a minute bundle. Possible choices: daily, minute (or aliases d, m).
+
     SIDS : list of str, optional
         limit db query to these sids
 

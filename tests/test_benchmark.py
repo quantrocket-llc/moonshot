@@ -1545,6 +1545,115 @@ class BenchmarkTestCase(unittest.TestCase):
                      "nan"]}
         )
 
+    @patch('moonshot.strategies.base.get_prices')
+    def test_pass_benchmark_db_args_correctly(self, mock_get_prices):
+        """
+        Tests that benchmark db args are passed correctly.
+        """
+
+        class ShortAbove10Intraday(Moonshot):
+            """
+            A basic test strategy that shorts above 10 and holds intraday.
+            """
+            CODE = "short-above-10"
+            BENCHMARK = "FI12345"
+            BENCHMARK_DB = "benchmark-db"
+            DB_DATA_FREQUENCY = "daily"
+
+            def prices_to_signals(self, prices):
+                morning_prices = prices.loc["Open"]
+                short_signals = morning_prices > 10
+                return -short_signals.astype(int)
+
+            def signals_to_target_weights(self, signals, prices):
+                weights = self.allocate_fixed_weights(signals, 0.25)
+                return weights
+
+            def target_weights_to_positions(self, weights, prices):
+                # enter on same day
+                positions = weights.copy()
+                return positions
+
+            def positions_to_gross_returns(self, positions, prices):
+                closes = prices.loc["Close"]
+                gross_returns = closes.pct_change() * positions.shift()
+                return gross_returns
+
+        def _mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.DatetimeIndex(["2018-05-01","2018-05-02","2018-05-03"])
+            fields = ["Close","Open"]
+            idx = pd.MultiIndex.from_product(
+                [fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        # Close
+                        9.6,
+                        10.45,
+                        10.12,
+                        # Open
+                        9.88,
+                        10.34,
+                        10.23,
+                    ],
+                    "FI23456": [
+                        # Close
+                        10.56,
+                        12.01,
+                        10.50,
+                        # Open
+                        9.89,
+                        11,
+                        8.50,
+                    ],
+                 },
+                index=idx
+            )
+
+            return prices
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "Symbol", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    "FI12345": [
+                        "America/New_York",
+                        "ABC",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    "FI23456": [
+                        "America/New_York",
+                        "DEF",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "Sid"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        mock_get_prices.side_effect = _mock_get_prices
+        with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+            results = ShortAbove10Intraday().backtest()
+
+        self.assertEqual(len(mock_get_prices.mock_calls), 2)
+        benchmark_get_prices_call = mock_get_prices.mock_calls[1]
+        _, args, kwargs = benchmark_get_prices_call
+        self.assertEqual(args[0], "benchmark-db")
+        self.assertEqual(kwargs["sids"], "FI12345")
+        self.assertEqual(kwargs["fields"], 'Close')
+        self.assertEqual(kwargs["data_frequency"], "daily")
+
     def test_benchmark_continuous_intraday(self):
         """
         Tests that the results DataFrame contains Benchmark prices when a

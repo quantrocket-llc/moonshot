@@ -48,6 +48,7 @@ class GetPricesTestCase(unittest.TestCase):
             DB = 'test-db'
             DB_FIELDS = ["Volume", "Wap", "Close"]
             DB_TIMES = ["00:00:00"]
+            DB_DATA_FREQUENCY = "daily"
             UNIVERSES = "us-stk"
             SIDS = ["FI12345","FI23456"]
             EXCLUDE_SIDS = "FI34567"
@@ -152,6 +153,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["exclude_sids"], "FI34567")
         self.assertEqual(kwargs["fields"], ['Volume', 'Wap', 'Close'])
         self.assertEqual(kwargs["times"], ["00:00:00"])
+        self.assertEqual(kwargs["data_frequency"], "daily")
         self.assertFalse(kwargs["cont_fut"])
         self.assertIsNone(kwargs["timezone"])
         self.assertTrue(kwargs["infer_timezone"])
