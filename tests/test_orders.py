@@ -59,7 +59,7 @@ class OrdersTestCase(unittest.TestCase):
 
         def mock_get_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True).tz_localize(None)
             fields = ["Open"]
             idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
 
@@ -256,7 +256,7 @@ class OrdersTestCase(unittest.TestCase):
 
         def mock_get_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True).tz_localize(None)
             fields = ["Close","Open"]
             times = ["09:30:00", "15:30:00"]
             idx = pd.MultiIndex.from_product(
@@ -393,7 +393,7 @@ class OrdersTestCase(unittest.TestCase):
 
         def mock_get_prices(*args, **kwargs):
 
-            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True)
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True).tz_localize(None)
             fields = ["Close"]
             idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
 
