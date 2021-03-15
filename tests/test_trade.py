@@ -2072,6 +2072,240 @@ class TradeTestCase(unittest.TestCase):
             ]
         )
 
+    def test_existing_positions_and_open_orders_with_integer_account_number(self):
+        """
+        Tests that the orders DataFrame is correct after running a long only
+        strategy allocated to multiple accounts where some of the accounts
+        have existing positions and open orders, and the accounts have integer
+        account numbers. Integer account numbers should be cast to strings.
+        """
+
+        class BuyBelow10(Moonshot):
+            """
+            A basic test strategy that buys below 10.
+            """
+            CODE = "buy-below-10"
+
+            def prices_to_signals(self, prices):
+                signals = prices.loc["Close"] < 10
+                return signals.astype(int)
+
+            def signals_to_target_weights(self, signals, prices):
+                return self.allocate_fixed_weights(signals, 0.5)
+
+        def mock_get_prices(*args, **kwargs):
+
+            dt_idx = pd.date_range(end=pd.Timestamp.today(tz="America/New_York"), periods=3, normalize=True).tz_localize(None)
+            fields = ["Close"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        # Close
+                        9,
+                        11,
+                        10.50
+                    ],
+                    "FI23456": [
+                        # Close
+                        9.89,
+                        11,
+                        8.50,
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        def mock_download_master_file(f, *args, **kwargs):
+
+            master_fields = ["Timezone", "SecType", "Currency", "PriceMagnifier", "Multiplier"]
+            securities = pd.DataFrame(
+                {
+                    "FI12345": [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None
+                    ],
+                    "FI23456": [
+                        "America/New_York",
+                        "STK",
+                        "USD",
+                        None,
+                        None,
+                    ]
+                },
+                index=master_fields
+            )
+            securities.columns.name = "Sid"
+            securities.T.to_csv(f, index=True, header=True)
+            f.seek(0)
+
+        def mock_download_account_balances(f, **kwargs):
+            balances = pd.DataFrame(dict(Account=[123, 234, 999, 111],
+                                         NetLiquidation=[85000, 450000, 56000, 150000],
+                                         Currency=["USD", "USD", "USD", "USD"]))
+            balances.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_exchange_rates(f, **kwargs):
+            rates = pd.DataFrame(dict(BaseCurrency=["USD"],
+                                      QuoteCurrency=["USD"],
+                                         Rate=[1.0]))
+            rates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_positions(**kwargs):
+            positions = [
+                {
+                    "Account": 123,
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI23456",
+                    "Quantity": 400
+                },
+                # this is the position we want, so no order will be needed
+                {
+                    "Account": 234,
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI23456",
+                    "Quantity": 7941
+                },
+                {
+                    "Account": 234,
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI12345",
+                    "Quantity": 300
+                },
+                {
+                    "Account": 111,
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI23456",
+                    "Quantity": -300
+                },
+
+            ]
+            return positions
+
+        def mock_download_order_statuses(f, **kwargs):
+            orders = [
+                {
+                    "Account": 123,
+                    "Action": "SELL",
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI23456",
+                    "Filled": 200,
+                    "Remaining": 200,
+                    "TotalQuantity": 400,
+                    "Status": "Submitted"
+                },
+                # Next two orders are for same sid/account, should be summed
+                {
+                    "Account": 234,
+                    "Action": "SELL",
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI12345",
+                    "Filled": 0,
+                    "Remaining": 100,
+                    "TotalQuantity": 200,
+                    "Status": "Submitted"
+                },
+                {
+                    "Account": 234,
+                    "Action": "BUY",
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI12345",
+                    "Filled": 0,
+                    "Remaining": 200,
+                    "TotalQuantity": 200,
+                    "Status": "Submitted"
+                },
+                {
+                    "Account": 111,
+                    "Action": "SELL",
+                    "OrderRef": "buy-below-10",
+                    "Sid": "FI23456",
+                    "Filled": 0,
+                    "Remaining": 600,
+                    "TotalQuantity": 600,
+                    "Status": "Submitted"
+                },
+
+            ]
+            json.dump(orders, f)
+            f.seek(0)
+
+        with patch("moonshot.strategies.base.get_prices", new=mock_get_prices):
+            with patch("moonshot.strategies.base.download_account_balances", new=mock_download_account_balances):
+                with patch("moonshot.strategies.base.download_exchange_rates", new=mock_download_exchange_rates):
+                    with patch("moonshot.strategies.base.list_positions", new=mock_list_positions):
+                        with patch("moonshot.strategies.base.download_order_statuses", new=mock_download_order_statuses):
+                            with patch("moonshot.strategies.base.download_master_file", new=mock_download_master_file):
+                                                orders = BuyBelow10().trade(
+                                        {"123": 0.5,
+                                         "234": 0.3,
+                                         "999": 0.6,
+                                         "111": 0.2
+                                         })
+
+        self.assertSetEqual(
+            set(orders.columns),
+            {'Sid',
+             'Account',
+             'Action',
+             'OrderRef',
+             'TotalQuantity',
+             'OrderType',
+             'Tif'}
+        )
+        self.assertListEqual(
+            orders.to_dict(orient="records"),
+            [
+                {
+                    'Sid': "FI12345",
+                    'Account': '234',
+                    'Action': 'SELL',
+                    'OrderRef': 'buy-below-10',
+                    # close open position (300) + pending open position (100)
+                    'TotalQuantity': 400.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': '123',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.5 allocation * 0.5 weight * 85K / 8.50 - 400 (position) + 200 (order)
+                    'TotalQuantity': 2300.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': '999',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.6 allocation * 0.5 weight * 56K / 8.5
+                    'TotalQuantity': 1976.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                },
+                {
+                    'Sid': "FI23456",
+                    'Account': '111',
+                    'Action': 'BUY',
+                    'OrderRef': 'buy-below-10',
+                    # 0.2 allocation * 0.5 weight * 150K / 8.50 - (-900)
+                    'TotalQuantity': 2665.0,
+                    'OrderType': 'MKT',
+                    'Tif': 'DAY'
+                }
+            ]
+        )
+
     def test_price_magnifier_and_multiplier(self):
         """
         Tests that the orders DataFrame is correct after running a

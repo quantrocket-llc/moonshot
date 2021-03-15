@@ -1438,7 +1438,10 @@ class Moonshot(
             accounts=list(allocations.index),
             fields=["NetLiquidation"])
 
-        balances = pd.read_csv(f, index_col="Account")
+        balances = pd.read_csv(f)
+        # Cast account numbers to strings
+        balances["Account"] = balances.Account.astype(str)
+        balances = balances.set_index("Account")
 
         f = io.StringIO()
         download_exchange_rates(
@@ -1595,6 +1598,8 @@ class Moonshot(
 
         if positions:
             positions = pd.DataFrame(positions)
+            # Cast account numbers to strings
+            positions["Account"] = positions.Account.astype(str)
         else:
             positions = pd.DataFrame(columns=["Sid","Account","Quantity"])
 
@@ -1612,6 +1617,8 @@ class Moonshot(
         if f.getvalue():
             orders = json.load(f)
             orders = pd.DataFrame(orders)
+            # cast account numbers to strings
+            orders["Account"] = orders.Account.astype(str)
             orders.loc[orders.Action == "SELL", "Remaining"] = -orders.loc[orders.Action == "SELL"].Remaining
             orders = orders.groupby([orders.Sid, orders.Account]).Remaining.sum().reset_index()
         else:
