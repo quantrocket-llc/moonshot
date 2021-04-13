@@ -152,10 +152,11 @@ class MoonshotML(Moonshot):
         the price field to use for determining contract values for the purpose of
         applying commissions and constraining weights in backtests and calculating
         order quantities in trading. Defaults to the first available of Close, Open,
-        LastPriceClose, BidPriceClose, AskPriceClose, TimeSalesLastPriceClose,
-        TimeSalesFilteredLastPriceClose, LastPriceMean, BidPriceMean, AskPriceMean,
-        TimeSalesLastPriceMean, TimeSalesFilteredLastPriceMean, LastPriceOpen,
-        BidPriceOpen, AskPriceOpen, TimeSalesLastPriceOpen, TimeSalesFilteredLastPriceOpen.
+        MinuteCloseClose, SecondCloseClose, LastPriceClose, BidPriceClose, AskPriceClose,
+        TimeSalesLastPriceClose, TimeSalesFilteredLastPriceClose, LastPriceMean,
+        BidPriceMean, AskPriceMean, TimeSalesLastPriceMean, TimeSalesFilteredLastPriceMean,
+        MinuteOpenOpen, SecondOpenOpen, LastPriceOpen, BidPriceOpen, AskPriceOpen,
+        TimeSalesLastPriceOpen, TimeSalesFilteredLastPriceOpen.
 
     ACCOUNT_BALANCE_FIELD : str or list of str, optional
         the account field to use for calculating order quantities as a percentage of
