@@ -148,6 +148,22 @@ class MoonshotML(Moonshot):
         this percentage. For example 0.5 means don't rebalance a position unless
         the position will change by +/-50%.
 
+    CONTRACT_VALUE_REFERENCE_FIELD : str, optional
+        the price field to use for determining contract values for the purpose of
+        applying commissions and constraining weights in backtests and calculating
+        order quantities in trading. Defaults to the first available of Close, Open,
+        LastPriceClose, BidPriceClose, AskPriceClose, TimeSalesLastPriceClose,
+        TimeSalesFilteredLastPriceClose, LastPriceMean, BidPriceMean, AskPriceMean,
+        TimeSalesLastPriceMean, TimeSalesFilteredLastPriceMean, LastPriceOpen,
+        BidPriceOpen, AskPriceOpen, TimeSalesLastPriceOpen, TimeSalesFilteredLastPriceOpen.
+
+    ACCOUNT_BALANCE_FIELD : str or list of str, optional
+        the account field to use for calculating order quantities as a percentage of
+        account equity. Applies to trading only, not backtesting. Default is
+        NetLiquidation. If a list of fields is provided, the minimum value is used.
+        For example, ['NetLiquidation', 'PreviousEquity'] means to use the lesser of
+        NetLiquidation or PreviousEquity to determine order quantities.
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "usa-stk-1d", trains

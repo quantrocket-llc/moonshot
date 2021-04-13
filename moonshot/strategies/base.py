@@ -157,6 +157,13 @@ class Moonshot(
         TimeSalesLastPriceMean, TimeSalesFilteredLastPriceMean, LastPriceOpen,
         BidPriceOpen, AskPriceOpen, TimeSalesLastPriceOpen, TimeSalesFilteredLastPriceOpen.
 
+    ACCOUNT_BALANCE_FIELD : str or list of str, optional
+        the account field to use for calculating order quantities as a percentage of
+        account equity. Applies to trading only, not backtesting. Default is
+        NetLiquidation. If a list of fields is provided, the minimum value is used.
+        For example, ['NetLiquidation', 'PreviousEquity'] means to use the lesser of
+        NetLiquidation or PreviousEquity to determine order quantities.
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "mexi-stk-1d" and buys when
@@ -197,6 +204,7 @@ class Moonshot(
     POSITIONS_CLOSED_DAILY = False
     ALLOW_REBALANCE = True
     CONTRACT_VALUE_REFERENCE_FIELD = None
+    ACCOUNT_BALANCE_FIELD = None
 
     def __init__(self):
         self.is_trade = False
@@ -1431,12 +1439,16 @@ class Moonshot(
             quote_currencies = self._securities_master.Symbol.astype(str).str.split(".").str[0]
             currencies = currencies.where(sec_types != "CASH", quote_currencies)
 
+        account_balance_fields = self.ACCOUNT_BALANCE_FIELD or "NetLiquidation"
+        if not isinstance(account_balance_fields, (list, tuple)):
+            account_balance_fields = [account_balance_fields]
+
         f = io.StringIO()
         download_account_balances(
             f,
             latest=True,
             accounts=list(allocations.index),
-            fields=["NetLiquidation"])
+            fields=account_balance_fields)
 
         balances = pd.read_csv(f)
         # Cast account numbers to strings
@@ -1450,7 +1462,8 @@ class Moonshot(
             quote_currencies=list(currencies.unique()))
         exchange_rates = pd.read_csv(f)
 
-        nlvs = balances.NetLiquidation.reindex(allocations.index)
+        # Use the lesser field if multiple fields were given (see class docstring)
+        nlvs = balances[account_balance_fields].min(axis=1).reindex(allocations.index)
         # Out:
         # U12345 1000000
         # U55555  500000
