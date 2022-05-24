@@ -511,7 +511,7 @@ class OrdersTestCase(unittest.TestCase):
             ]
         )
 
-    def test_reindex_like_orders_continous_intraday(self):
+    def test_reindex_like_orders_continuous_intraday(self):
         """
         Tests that the orders DataFrame is correct when using
         reindex_like_orders on a continuous intraday strategy.

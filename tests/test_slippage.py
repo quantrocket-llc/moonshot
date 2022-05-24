@@ -23,7 +23,7 @@ from moonshot import Moonshot
 from moonshot.slippage import FixedSlippage
 from moonshot.cache import TMP_DIR
 
-class MoonshotSlippgeTestCase(unittest.TestCase):
+class MoonshotSlippageTestCase(unittest.TestCase):
     """
     Test cases related to applying slippage in a backtest.
     """
@@ -999,7 +999,7 @@ class MoonshotSlippgeTestCase(unittest.TestCase):
              }
         )
 
-    def test_apply_mulitple_slippages(self):
+    def test_apply_multiple_slippages(self):
         """
         Tests that the resulting DataFrames are correct when multiple
         slippage classes and SLIPPAGE_BPS are applied.
