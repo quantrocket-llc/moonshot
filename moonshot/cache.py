@@ -159,7 +159,7 @@ class Cache:
             an arbitrary object to cache using pickle
 
         key_obj : object, required
-            an abitrary object to use as the cache key (a hash of the object
+            an arbitrary object to use as the cache key (a hash of the object
             will be used as the key)
 
         prefix : str, optional
