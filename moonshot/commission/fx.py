@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from moonshot.commission import PercentageCommission
+from moonshot.commission.base import PercentageCommission
 
 class SpotFXCommission(PercentageCommission):
     """
