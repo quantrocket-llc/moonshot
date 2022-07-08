@@ -20,7 +20,7 @@ import pandas as pd
 from moonshot.slippage import FixedSlippage, IBKRBorrowFees
 from moonshot import Moonshot
 
-class TestFixedSlippage(FixedSlippage):
+class FixedSlippageForTest(FixedSlippage):
     ONE_WAY_SLIPPAGE = 0.0010
 
 class FixedSlippageTestCase(unittest.TestCase):
@@ -31,7 +31,7 @@ class FixedSlippageTestCase(unittest.TestCase):
             {"ES201609": [0.1, 0.2],
             "NQ201609": [0.17, 0.32]},
             )
-        slippage = TestFixedSlippage().get_slippage(turnover)
+        slippage = FixedSlippageForTest().get_slippage(turnover)
 
         self.assertListEqual(
             slippage.to_dict(orient="records"),
