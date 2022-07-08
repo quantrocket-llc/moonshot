@@ -614,8 +614,10 @@ class Moonshot(
             tz = self.TIMEZONE or self._inferred_timezone
             dt = pd.Timestamp.now(tz=tz)
 
+        prices_tz = prices.index.get_level_values("Date").tz
+
         # Keep only the date as the signal_date
-        self._signal_date = pd.Timestamp(dt.date())
+        self._signal_date = pd.Timestamp(dt.date(), tz=prices_tz)
 
         # extract the current time (or review date time)
         trade_time = dt.strftime("%H:%M:%S")
