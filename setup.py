@@ -26,7 +26,7 @@ setup(name='quantrocket-moonshot',
     license='Apache-2.0',
     packages=find_packages(),
     install_requires=[
-        "quantrocket-client>=2.0.0",
-        "pandas>=0.20"
+        "quantrocket-client",
+        "pandas"
     ]
 )

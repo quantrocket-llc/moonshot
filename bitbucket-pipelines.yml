@@ -5,6 +5,4 @@ pipelines:
         '*':
             - step:
                 script:
-                    - pip install -U tox wheel twine
-                    - tox
                     - ./deploy.bash
