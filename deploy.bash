@@ -13,5 +13,5 @@ password=$PYPI_PASSWORD
 EOF
 
 # Deploy to pip
-python setup.py sdist bdist_wheel
+python -m build
 twine upload dist/*
