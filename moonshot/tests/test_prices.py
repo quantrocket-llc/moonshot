@@ -464,7 +464,7 @@ class GetPricesTestCase(unittest.TestCase):
         get_prices_call = mock_get_prices.mock_calls[0]
         _, args, kwargs = get_prices_call
         self.assertListEqual(kwargs["codes"], ["test-db"])
-        self.assertIn(kwargs["start_date"], ("2017-08-04", "2017-08-05", "2017-08-06")) # 100 + 60ish trading days before requested start_date
+        self.assertIn(kwargs["start_date"], ("2017-08-04", "2017-08-05", "2017-08-06", "2017-08-07")) # 100 + 60ish trading days before requested start_date
         self.assertEqual(kwargs["end_date"], "2018-05-04")
         self.assertEqual(kwargs["fields"], ['Open', 'Close', 'Volume'])
         self.assertIsNone(kwargs["timezone"])
