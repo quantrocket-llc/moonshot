@@ -53,7 +53,7 @@ class IBKRBorrowFeesSlippageTestCase(unittest.TestCase):
 
         borrow_fee_rates = pd.DataFrame(
             {"FI12345": [1.75, 1.75, 1.75, 1.85, 1.85, 1.85, 1.2],
-            "FI23456": [8.0, 8.0, 8.23, 8.5, 0, 0, None]},
+            "FI23456": [8.0, 8.0, 8.23, 8.5, 0.25, 0.25, 0.25]},
             index=pd.DatetimeIndex(["2018-06-01", "2018-06-02", "2018-06-03",
                                    "2018-06-04", "2018-06-05", "2018-06-08",
                                    "2018-06-09"]))
@@ -63,7 +63,7 @@ class IBKRBorrowFeesSlippageTestCase(unittest.TestCase):
         turnover = prices = None
         fees = IBKRBorrowFees().get_slippage(turnover, positions, prices)
 
-        mock_get_ibkr_borrow_fees_reindexed_like.assert_called_with(positions, time=None)
+        mock_get_ibkr_borrow_fees_reindexed_like.assert_called_with(positions)
 
         fees.index.name = "Date"
         fees.index = fees.index.strftime("%Y-%m-%d")
@@ -71,16 +71,16 @@ class IBKRBorrowFeesSlippageTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(fees["FI12345"]["2018-06-01"], 0)
         self.assertAlmostEqual(fees["FI12345"]["2018-06-02"], 0)
-        self.assertAlmostEqual(fees["FI12345"]["2018-06-03"], 0.000013889, 9)
-        self.assertAlmostEqual(fees["FI12345"]["2018-06-04"], 0.000014683, 9)
-        self.assertAlmostEqual(fees["FI12345"]["2018-06-05"], 0.000007341, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-03"], 0.000009917, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-04"], 0.000010483, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-05"], 0.0000052417, 9)
         self.assertAlmostEqual(fees["FI12345"]["2018-06-08"], 0)
-        self.assertAlmostEqual(fees["FI12345"]["2018-06-09"], 0.000011905, 9)
+        self.assertAlmostEqual(fees["FI12345"]["2018-06-09"], 0.0000085, 9)
 
-        self.assertAlmostEqual(fees["FI23456"]["2018-06-01"], 0.000053968, 9)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-01"], 0.00003853, 8)
         self.assertAlmostEqual(fees["FI23456"]["2018-06-02"], 0)
         self.assertAlmostEqual(fees["FI23456"]["2018-06-03"], 0)
         self.assertAlmostEqual(fees["FI23456"]["2018-06-04"], 0)
-        self.assertAlmostEqual(fees["FI23456"]["2018-06-05"], 0)
-        self.assertAlmostEqual(fees["FI23456"]["2018-06-08"], 0)
-        self.assertAlmostEqual(fees["FI23456"]["2018-06-09"], 0)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-05"], 0.000002833, 9)
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-08"], 0.0000085) # 3x b/c of weekend
+        self.assertAlmostEqual(fees["FI23456"]["2018-06-09"], 0.000002833, 9)

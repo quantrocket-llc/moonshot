@@ -12,30 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from quantrocket.fundamental import get_ibkr_borrow_fees_reindexed_like
 
 class IBKRBorrowFees(object):
     """
-    Applies borrow fees to each position.
+    Applies borrow fees to each short position.
 
-    Parameters
-    ----------
-    TIME : str (HH:MM:SS[ TZ]), optional
-         Query and assess borrow fees as of this time of day. See
-         `quantrocket.fundamental.get_borrow_fees_reindexed_like`
-         for more details.
+    Examples
+    --------
+    Use this on your strategy:
+
+    >>>  class MyStrategy(Moonshot):
+    >>>      SLIPPAGE_CLASSES = IBKRBorrowFees
     """
-
-    TIME = None
 
     def get_slippage(self, turnover, positions, prices):
 
-        borrow_fees = get_ibkr_borrow_fees_reindexed_like(positions, time=self.TIME)
-        borrow_fees = borrow_fees.fillna(0) / 100
-        # Fees are assessed daily but the dataframe is expected to only
-        # includes trading days, thus use 252 instead of 365. In reality the
-        # borrow fee is greater for weekend positions than weekday positions,
-        # but this implementation doesn't model that.
-        daily_borrow_fees = borrow_fees / 252
-        assessed_fees = positions.where(positions < 0, 0).abs() * daily_borrow_fees
+        borrow_fees = get_ibkr_borrow_fees_reindexed_like(positions)
+
+        # convert to decimals
+        borrow_fees = borrow_fees / 100
+        # convert to daily rates
+        daily_borrow_fees = borrow_fees / 360 # industry convention is to divide annual fee by 360, not 365
+
+        # account for weekends, which are assessed the borrow fee x 3 days
+        dates = borrow_fees.apply(lambda x: borrow_fees.index)
+        days_held = (dates - dates.shift()).fillna(pd.Timedelta('1d')).apply(lambda x: x.dt.days)
+        daily_borrow_fees *= days_held
+
+        # by industry convention, collateral amount is 102% of borrow amount
+        assessed_fees = positions.where(positions < 0, 0).abs() * 1.02 * daily_borrow_fees
+
         return assessed_fees
