@@ -32,16 +32,16 @@ class FuturesCommission(BaseCommission):
 
     Examples
     --------
-    Example subclass for Globex E-Mini commissions:
+    Example subclass for CME E-Mini commissions:
 
-    >>> class GlobexEquityEMiniFixedCommission(FuturesCommission):
+    >>> class CMEEquityEMiniFixedCommission(FuturesCommission):
     >>>     BROKER_COMMISSION_PER_CONTRACT = 0.85
     >>>     EXCHANGE_FEE_PER_CONTRACT = 1.18
     >>>     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
     >>>
     >>>  # then, use this on your strategy:
     >>>  class MyEminiStrategy(Moonshot):
-    >>>      COMMISSION_CLASS = GlobexEquityEMiniFixedCommission
+    >>>      COMMISSION_CLASS = CMEEquityEMiniFixedCommission
     """
     BROKER_COMMISSION_PER_CONTRACT = 0
     EXCHANGE_FEE_PER_CONTRACT = 0
@@ -62,9 +62,9 @@ class FuturesCommission(BaseCommission):
 
         return commissions
 
-class DemoGlobexEquityEMiniFixedCommission(FuturesCommission):
+class DemoCMEEquityEMiniFixedCommission(FuturesCommission):
     """
-    Fixed commission for Globex Equity E-Minis.
+    Fixed commission for CME Equity E-Minis.
     """
     BROKER_COMMISSION_PER_CONTRACT = 0.85
     EXCHANGE_FEE_PER_CONTRACT = 1.18

@@ -2650,7 +2650,7 @@ class TradeTestCase(unittest.TestCase):
                 return weights
 
             def order_stubs_to_orders(self, orders, prices):
-                orders["Exchange"] = "GLOBEX"
+                orders["Exchange"] = "CME"
                 orders["OrderType"] = 'MKT'
                 orders["Tif"] = "DAY"
                 return orders
@@ -2768,7 +2768,7 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'long-short-10',
                     # 0.5 allocation * 0.25 weight * 85K / multiplier 20 / 10.50
                     'TotalQuantity': 51,
-                    'Exchange': 'GLOBEX',
+                    'Exchange': 'CME',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
@@ -2779,7 +2779,7 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'long-short-10',
                     # 0.5 allocation * 0.25 weight * 85K / multiplier 50 / 10.50
                     'TotalQuantity': 25,
-                    'Exchange': 'GLOBEX',
+                    'Exchange': 'CME',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 },
@@ -2790,7 +2790,7 @@ class TradeTestCase(unittest.TestCase):
                     'OrderRef': 'long-short-10',
                     # 0.5 allocation * 0.25 weight * 85K * magnifier 10 / 11.50
                     'TotalQuantity': 9239,
-                    'Exchange': 'GLOBEX',
+                    'Exchange': 'CME',
                     'OrderType': 'MKT',
                     'Tif': 'DAY'
                 }
