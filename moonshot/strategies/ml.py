@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pickle
+from typing import Union, Any
 try:
     import joblib
 except ImportError:
@@ -212,7 +213,10 @@ class MoonshotML(Moonshot):
             with open(self.MODEL, "rb") as f:
                 self.model = pickle.load(f)
 
-    def prices_to_features(self, prices):
+    def prices_to_features(
+        self,
+        prices: pd.DataFrame
+        ) -> tuple[Union[pd.DataFrame, pd.Series], Union[pd.DataFrame, pd.Series]]:
         """
         From a DataFrame of prices, return a tuple of features and targets to be
         provided to the machine learning model.
@@ -272,7 +276,11 @@ class MoonshotML(Moonshot):
         """
         raise NotImplementedError("strategies must implement prices_to_features")
 
-    def predictions_to_signals(self, predictions, prices):
+    def predictions_to_signals(
+        self,
+        predictions: pd.DataFrame,
+        prices: pd.DataFrame
+        ) -> pd.DataFrame:
         """
         From a DataFrame of predictions produced by a machine learning model,
         return a DataFrame of signals. By convention, signals should be
@@ -315,8 +323,16 @@ class MoonshotML(Moonshot):
         """
         raise NotImplementedError("strategies must implement predictions_to_signals")
 
-    def backtest(self, model=None, start_date=None, end_date=None, nlv=None,
-                allocation=1.0, label_sids=False, no_cache=False):
+    def backtest(
+        self,
+        model: Any = None,
+        start_date: str = None,
+        end_date: str = None,
+        nlv: dict[str, float] = None,
+        allocation: float = 1.0,
+        label_sids: bool = False,
+        no_cache: bool = False
+        ) -> pd.DataFrame:
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -472,7 +488,11 @@ class MoonshotML(Moonshot):
         signals = self.predictions_to_signals(predictions, prices)
         return signals
 
-    def trade(self, allocations, review_date=None):
+    def trade(
+        self,
+        allocations: dict[str, float],
+        review_date: str = None
+        ) -> pd.DataFrame:
         """
         Run the strategy and create orders.
 

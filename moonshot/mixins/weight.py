@@ -19,7 +19,11 @@ class WeightAllocationMixin(object):
     """
     Mixin class with utilities for turning signals into weights.
     """
-    def allocate_equal_weights(self, signals, cap=1.0):
+    def allocate_equal_weights(
+        self,
+        signals: pd.DataFrame,
+        cap: float = 1.0
+        ) -> pd.DataFrame:
         """
         For multi-security strategies. Given a dataframe of whole number
         signals (-1, 0, 1), reduces the position size so that the absolute
@@ -31,13 +35,22 @@ class WeightAllocationMixin(object):
         divisor = np.where(signals_count != 0, signals_count, 1)
         return signals.div(divisor, axis=0) * cap / 1.0
 
-    def allocate_fixed_weights(self, signals, weight):
+    def allocate_fixed_weights(
+        self,
+        signals: pd.DataFrame,
+        weight: float
+        ) -> pd.DataFrame:
         """
         Applies the specified fixed weight to the signals.
         """
         return signals * weight
 
-    def allocate_fixed_weights_capped(self, signals, weight, cap=1.0):
+    def allocate_fixed_weights_capped(
+        self,
+        signals: pd.DataFrame,
+        weight: float,
+        cap: float = 1.0
+        ) -> pd.DataFrame:
         """
         Applies fixed weights, but if the sum of the weights exceeds the cap,
         applies equal weights.
@@ -52,8 +65,13 @@ class WeightAllocationMixin(object):
             np.where(fixed_sum > cap, equal_weighted, fixed_weighted),
             index=signals.index, columns=signals.columns)
 
-    def allocate_market_neutral_fixed_weights_capped(self, signals, weight, cap=1.0,
-                                                  neutralize_weights=True):
+    def allocate_market_neutral_fixed_weights_capped(
+        self,
+        signals: pd.DataFrame,
+        weight: float,
+        cap: float = 1.0,
+        neutralize_weights: bool = True
+        ) -> pd.DataFrame:
         """
         Applies fixed capped weights to the long and short side separately to
         ensure the strategy is hedged.
@@ -68,7 +86,7 @@ class WeightAllocationMixin(object):
             weights = self.neutralize_weights(weights)
         return weights
 
-    def neutralize_weights(self, weights):
+    def neutralize_weights(self, weights: pd.DataFrame) -> pd.DataFrame:
         """
         If the long or short side has a greater total weight than the
         opposite side, proportionately reduces the overweight side.

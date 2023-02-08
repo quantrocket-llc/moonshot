@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from moonshot.commission.base import BaseCommission, PercentageCommission
 
 class FuturesCommission(BaseCommission):
@@ -48,7 +49,12 @@ class FuturesCommission(BaseCommission):
     CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
 
     @classmethod
-    def get_commissions(cls, contract_values, turnover, **kwargs):
+    def get_commissions(
+        cls,
+        contract_values: pd.DataFrame,
+        turnover: pd.DataFrame,
+        **kwargs
+        ) -> pd.DataFrame:
         """
         Return a DataFrame of commissions as percentages of account equity.
         """

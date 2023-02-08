@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pandas as pd
 
 class BaseCommission(object):
     """
@@ -19,7 +20,12 @@ class BaseCommission(object):
     MIN_COMMISSION = 0
 
     @classmethod
-    def get_commissions(cls, contract_values, turnover, nlvs=None):
+    def get_commissions(
+        cls,
+        contract_values: pd.DataFrame,
+        turnover: pd.DataFrame,
+        nlvs: pd.DataFrame = None
+        ) -> pd.DataFrame:
         """
         Returns a DataFrame of commissions.
 
@@ -106,7 +112,12 @@ class PercentageCommission(BaseCommission):
     MIN_COMMISSION = 0
 
     @classmethod
-    def get_commissions(cls, contract_values, turnover, nlvs=None):
+    def get_commissions(
+        cls,
+        contract_values: pd.DataFrame,
+        turnover: pd.DataFrame,
+        nlvs: pd.DataFrame = None
+        ) -> pd.DataFrame:
         """
         Returns a DataFrame of commissions.
 

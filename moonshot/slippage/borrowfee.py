@@ -27,7 +27,12 @@ class IBKRBorrowFees(object):
     >>>      SLIPPAGE_CLASSES = IBKRBorrowFees
     """
 
-    def get_slippage(self, turnover, positions, prices):
+    def get_slippage(
+        self,
+        turnover: pd.DataFrame,
+        positions: pd.DataFrame,
+        prices: pd.DataFrame
+        ) -> pd.DataFrame:
 
         borrow_fees = get_ibkr_borrow_fees_reindexed_like(positions)
 

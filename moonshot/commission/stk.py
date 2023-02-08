@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from moonshot.commission.base import BaseCommission, PercentageCommission
 
 class PerShareCommission(BaseCommission):
@@ -101,7 +102,12 @@ class PerShareCommission(BaseCommission):
     MIN_COMMISSION = 0
 
     @classmethod
-    def get_commissions(cls, contract_values, turnover, nlvs=None):
+    def get_commissions(
+        cls,
+        contract_values: pd.DataFrame,
+        turnover: pd.DataFrame,
+        nlvs: pd.DataFrame = None
+        ) -> pd.DataFrame:
         """
         Returns a DataFrame of commissions.
 

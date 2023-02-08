@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
+
 class FixedSlippage(object):
     """
     Applies a fixed pct slippage to each trade.
@@ -27,13 +29,18 @@ class FixedSlippage(object):
     """
     ONE_WAY_SLIPPAGE = 0.0005
 
-    def __init__(self, one_way_slippage=None):
+    def __init__(self, one_way_slippage: float =  None):
         if one_way_slippage is not None:
             self.one_way_slippage = one_way_slippage
         else:
             self.one_way_slippage = self.ONE_WAY_SLIPPAGE
 
-    def get_slippage(self, turnover, *args, **kwargs):
+    def get_slippage(
+        self,
+        turnover: pd.DataFrame,
+        *args,
+        **kwargs
+        ) -> pd.DataFrame:
         """
         Apply the fix pct slippage to each trade.
 

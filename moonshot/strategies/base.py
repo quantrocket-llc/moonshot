@@ -217,7 +217,7 @@ class Moonshot(
         self._signal_date = None # set by _weights_to_today_weights
         self._signal_time = None # set by _weights_to_today_weights
 
-    def prices_to_signals(self, prices):
+    def prices_to_signals(self, prices: pd.DataFrame) -> pd.DataFrame:
         """
         From a DataFrame of prices, return a DataFrame of signals. By convention,
         signals should be 1=long, 0=cash, -1=short.
@@ -247,7 +247,11 @@ class Moonshot(
         """
         raise NotImplementedError("strategies must implement prices_to_signals")
 
-    def signals_to_target_weights(self, signals, prices):
+    def signals_to_target_weights(
+        self,
+        signals: pd.DataFrame,
+        prices: pd.DataFrame
+        ) -> pd.DataFrame:
         """
         From a DataFrame of signals, return a DataFrame of target weights.
 
@@ -290,7 +294,11 @@ class Moonshot(
         weights = self.allocate_equal_weights(signals)
         return weights
 
-    def target_weights_to_positions(self, weights, prices):
+    def target_weights_to_positions(
+        self,
+        weights: pd.DataFrame,
+        prices: pd.DataFrame
+        ) -> pd.DataFrame:
         """
         From a DataFrame of target weights, return a DataFrame of simulated
         positions.
@@ -328,7 +336,11 @@ class Moonshot(
         positions = weights.shift()
         return positions
 
-    def positions_to_gross_returns(self, positions, prices):
+    def positions_to_gross_returns(
+        self,
+        positions: pd.DataFrame,
+        prices: pd.DataFrame
+        ) -> pd.DataFrame:
         """
         From a DataFrame of positions, return a DataFrame of returns before
         commissions and slippage.
@@ -364,7 +376,11 @@ class Moonshot(
         gross_returns = closes.pct_change() * positions.shift()
         return gross_returns
 
-    def order_stubs_to_orders(self, orders, prices):
+    def order_stubs_to_orders(
+        self,
+        orders: pd.DataFrame,
+        prices: pd.DataFrame
+        ) -> pd.DataFrame:
         """
         From a DataFrame of order stubs, creates a DataFrame of fully
         specified orders.
@@ -418,7 +434,11 @@ class Moonshot(
         orders["Tif"] = "DAY"
         return orders
 
-    def reindex_like_orders(self, df, orders):
+    def reindex_like_orders(
+        self,
+        df: pd.DataFrame,
+        orders: pd.DataFrame
+        ) -> pd.DataFrame:
         """
         Reindexes a DataFrame (having Sids as columns and dates as index)
         to match the shape of the orders DataFrame.
@@ -468,7 +488,7 @@ class Moonshot(
         df.name = None
         return df
 
-    def orders_to_child_orders(self, orders):
+    def orders_to_child_orders(self, orders: pd.DataFrame) -> pd.DataFrame:
         """
         From a DataFrame of orders, returns a DataFrame of child orders
         (bracket orders) to be submitted if the parent orders fill.
@@ -829,7 +849,10 @@ class Moonshot(
 
         return weights
 
-    def limit_position_sizes(self, prices):
+    def limit_position_sizes(
+        self,
+        prices: pd.DataFrame
+        ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         This method should return a tuple of DataFrames::
 
@@ -1029,10 +1052,39 @@ class Moonshot(
             days=math.ceil(lookback_window*days_per_year/trading_days_per_year) + buffer)
         return start_date.date().isoformat()
 
-    def get_prices(self, start_date, end_date=None, nlv=None, no_cache=False):
+    def get_prices(
+        self,
+        start_date: str = None,
+        end_date: str = None,
+        nlv: dict[str, float] = None,
+        no_cache: bool = False
+        ) -> pd.DataFrame:
         """
-        Downloads prices from a history db and/or real-time aggregate db.
-        Downloads security details from the master db.
+        Download prices from a history db and/or real-time aggregate db.
+
+        Parameters
+        ----------
+        start_date : str (YYYY-MM-DD), optional
+            download prices on or after this date (default is to include all
+            history in db)
+
+        end_date : str (YYYY-MM-DD), optional
+            download prices on or before this date (default is to include all
+            history in db)
+
+        nlv : dict
+            dict of currency:nlv. Should contain a currency:nlv pair for
+            each currency represented in the strategy
+
+        no_cache : bool
+            don't use cached files even if available. Using cached files speeds
+            up backtests but may be undesirable if underlying data has changed.
+            See http://qrok.it/h/mcache to learn more about caching in Moonshot.
+
+        Returns
+        -------
+        DataFrame
+            multiindex (Field, Date) or (Field, Date, Time) DataFrame of prices
         """
         if start_date:
             start_date = self._get_start_date_with_lookback(start_date)
@@ -1110,8 +1162,15 @@ class Moonshot(
         """
         return self.prices_to_signals(prices)
 
-    def backtest(self, start_date=None, end_date=None, nlv=None, allocation=1.0,
-                 label_sids=False, no_cache=False):
+    def backtest(
+        self,
+        start_date: str = None,
+        end_date: str = None,
+        nlv: dict[str, float] = None,
+        allocation: float = 1.0,
+        label_sids: bool = False,
+        no_cache: bool = False
+        ) -> pd.DataFrame:
         """
         Backtest a strategy and return a DataFrame of results.
 
@@ -1312,7 +1371,11 @@ class Moonshot(
 
         return pd.DataFrame(benchmark)
 
-    def save_to_results(self, name, df):
+    def save_to_results(
+        self,
+        name: str,
+        df: pd.DataFrame
+        ) -> None:
         """
         Saves the DataFrame to the backtest results output.
 
@@ -1372,7 +1435,11 @@ class Moonshot(
 
         self._backtest_results[name] = df
 
-    def trade(self, allocations, review_date=None):
+    def trade(
+        self,
+        allocations: dict[str, float],
+        review_date: str = None
+        ) -> pd.DataFrame:
         """
         Run the strategy and create orders.
 
