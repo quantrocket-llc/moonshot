@@ -19,3 +19,12 @@ from .fx import SpotFXCommission
 
 # alias
 SpotForexCommission = SpotFXCommission
+
+
+__all__ = [
+    'FuturesCommission',
+    'PercentageCommission',
+    'NoCommission'
+    'PerShareCommission',
+    'SpotFXCommission'
+]

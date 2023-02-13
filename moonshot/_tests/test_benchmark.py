@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To run: python3 -m unittest discover -s tests/ -p test_*.py -t . -v
+# To run: python3 -m unittest discover -s _tests/ -p test_*.py -t . -v
 
 import os
 import unittest
@@ -23,7 +23,7 @@ import pandas as pd
 from moonshot import Moonshot
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.exceptions import NoHistoricalData
-from moonshot.cache import TMP_DIR
+from moonshot._cache import TMP_DIR
 
 class BenchmarkTestCase(unittest.TestCase):
     """

@@ -17,3 +17,5 @@ __version__ = get_versions()['version']
 del get_versions
 
 from .strategies import Moonshot, MoonshotML
+
+__all__ = ['Moonshot', 'MoonshotML']

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To run: python3 -m unittest discover -s tests/ -p test_*.py -t . -v
+# To run: python3 -m unittest discover -s _tests/ -p test_*.py -t . -v
 
 import unittest
 from unittest.mock import patch

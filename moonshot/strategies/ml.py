@@ -22,7 +22,7 @@ import pandas as pd
 import numpy as np
 from moonshot.strategies.base import Moonshot
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
-from moonshot.cache import Cache
+from moonshot._cache import Cache
 
 class MoonshotML(Moonshot):
     """

@@ -35,7 +35,7 @@ class Cache:
     in backtests only, and don't use the cache if the file containing the strategy
     code was modified more recently than the DataFrame was cached.
 
-    >>> from moonshot.cache import Cache
+    >>> from moonshot._cache import Cache
     >>>
     >>> class MyStrategy(Moonshot):
     >>>

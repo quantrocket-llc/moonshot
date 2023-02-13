@@ -21,7 +21,7 @@ import json
 import math
 from moonshot.slippage import FixedSlippage
 from moonshot.mixins import WeightAllocationMixin
-from moonshot.cache import Cache
+from moonshot._cache import Cache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
 from quantrocket.price import get_prices
 from quantrocket.master import list_calendar_statuses, download_master_file

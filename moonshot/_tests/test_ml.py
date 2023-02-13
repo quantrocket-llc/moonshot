@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To run: python3 -m unittest discover -s tests/ -p test_*.py -t . -v
+# To run: python3 -m unittest discover -s _tests/ -p test_*.py -t . -v
 
 import os
 import unittest
@@ -25,7 +25,7 @@ import inspect
 import pandas as pd
 import numpy as np
 from moonshot import MoonshotML
-from moonshot.cache import TMP_DIR
+from moonshot._cache import TMP_DIR
 from moonshot.exceptions import MoonshotError
 from sklearn.tree import DecisionTreeClassifier
 

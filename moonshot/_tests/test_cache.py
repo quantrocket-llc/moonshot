@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# To run: python3 -m unittest discover -s tests/ -p test_*.py -t . -v
+# To run: python3 -m unittest discover -s _tests/ -p test_*.py -t . -v
 
 import os
 import unittest
@@ -24,7 +24,7 @@ import inspect
 import pandas as pd
 import numpy as np
 from moonshot import Moonshot, MoonshotML
-from moonshot.cache import TMP_DIR
+from moonshot._cache import TMP_DIR
 from quantrocket.exceptions import ImproperlyConfigured
 from sklearn.tree import DecisionTreeClassifier
 
@@ -613,7 +613,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                             'size_in_mb': 2.1},
                            ]}
 
-        with patch("moonshot.cache.list_databases", new=mock_list_databases):
+        with patch("moonshot._cache.list_databases", new=mock_list_databases):
             results = BuyBelow10().backtest(end_date="2018-05-04")
 
         self.assertSetEqual(
@@ -997,7 +997,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                             'size_in_mb': 2.1},
                            ]}
 
-        with patch("moonshot.cache.list_databases", new=mock_list_databases):
+        with patch("moonshot._cache.list_databases", new=mock_list_databases):
             results = BuyBelow10().backtest()
 
         self.assertSetEqual(
@@ -1106,7 +1106,7 @@ class HistoricalPricesCacheTestCase(unittest.TestCase):
                             'size_in_mb': 2.1},
                            ]}
 
-        with patch("moonshot.cache.list_databases", new=mock_list_databases):
+        with patch("moonshot._cache.list_databases", new=mock_list_databases):
             with self.assertRaises(ImproperlyConfigured) as cm:
 
                 BuyBelow10().backtest()

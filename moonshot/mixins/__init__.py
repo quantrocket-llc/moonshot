@@ -13,3 +13,5 @@
 # limitations under the License.
 
 from .weight import WeightAllocationMixin
+
+__all__ = ["WeightAllocationMixin"]

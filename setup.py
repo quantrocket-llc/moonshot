@@ -25,7 +25,10 @@ setup(name='quantrocket-moonshot',
     author_email='support@quantrocket.com',
     license='Apache-2.0',
     packages=find_packages(),
-    package_data={"moonshot.tests.fixtures": ['*.h5']},
+    package_data={
+        "moonshot._tests.fixtures": ['*.h5'],
+        "moonshot": ["py.typed"],
+    },
     install_requires=[
         "quantrocket-client",
         "pandas"
