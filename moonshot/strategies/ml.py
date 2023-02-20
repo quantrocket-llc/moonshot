@@ -191,7 +191,10 @@ class MoonshotML(Moonshot):
     >>>         return signals.astype(int)
     """
 
-    MODEL = None
+    MODEL: str = None
+    """path of machine learning model to load (for scikit-learn models, a joblib or
+    pickle file); alternatively model can be passed as a parameter to backtest
+    method, in which case the MODEL parameter is ignored"""
 
     def __init__(self, *args, **kwargs):
         super(MoonshotML, self).__init__(*args, **kwargs)
@@ -216,7 +219,7 @@ class MoonshotML(Moonshot):
     def prices_to_features(
         self,
         prices: pd.DataFrame
-        ) -> tuple[Union[pd.DataFrame, pd.Series], Union[pd.DataFrame, pd.Series]]:
+        ) -> tuple[Union[pd.DataFrame, 'pd.Series[Any]'], Union[pd.DataFrame, 'pd.Series[Any]']]:
         """
         From a DataFrame of prices, return a tuple of features and targets to be
         provided to the machine learning model.

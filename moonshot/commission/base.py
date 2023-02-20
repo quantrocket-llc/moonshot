@@ -13,11 +13,13 @@
 # limitations under the License.
 import pandas as pd
 
-class BaseCommission(object):
+class Commission(object):
     """
     Base class for all commission classes.
     """
-    MIN_COMMISSION = 0
+    MIN_COMMISSION: float = 0
+    """the minimum commission charged by the broker. Only enforced if NLVs are passed
+    by the backtest"""
 
     @classmethod
     def get_commissions(
@@ -63,7 +65,7 @@ class BaseCommission(object):
         commissions = commissions.where(must_pay_min_commissions == False, min_commissions)
         return commissions
 
-class PercentageCommission(BaseCommission):
+class PercentageCommission(Commission):
     """
     Base class for commissions which are a fixed percentage of the trade
     value. These commissions consist of a broker commission percentage rate
@@ -105,11 +107,18 @@ class PercentageCommission(BaseCommission):
     >>>  class MyJapanStrategy(Moonshot):
     >>>      COMMISSION_CLASS = JapanStockCommission
     """
-    BROKER_COMMISSION_RATE = 0
-    BROKER_COMMISSION_RATE_TIER_2 = None
-    TIER_2_RATIO = None
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 0
+    BROKER_COMMISSION_RATE: float = 0
+    """the commission rate (as a percentage of trade value) charged by the broker"""
+    BROKER_COMMISSION_RATE_TIER_2: float = None
+    """the commission rate (as a percentage of trade value) charged by the broker
+    at monthly volume tier 2"""
+    TIER_2_RATIO: float = None
+    """the ratio of monthly trades at volume tier 2 (default 0)"""
+    EXCHANGE_FEE_RATE: float = 0
+    """the exchange fee as a percentage of trade value"""
+    MIN_COMMISSION: float = 0
+    """the minimum commission charged by the broker. Only enforced if NLVs are passed
+    by the backtest."""
 
     @classmethod
     def get_commissions(
@@ -163,6 +172,9 @@ class PercentageCommission(BaseCommission):
 
 class NoCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 0
+    BROKER_COMMISSION_RATE: float = 0
+    """the commission rate (as a percentage of trade value) charged by the broker"""
+    EXCHANGE_FEE_RATE: float = 0
+    """the exchange fee as a percentage of trade value"""
+    MIN_COMMISSION: float = 0
+    """the minimum commission charged by the broker."""

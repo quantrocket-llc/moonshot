@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
 import pandas as pd
-from moonshot.commission.base import BaseCommission, PercentageCommission
+from moonshot.commission.base import Commission, PercentageCommission
 
-class FuturesCommission(BaseCommission):
+class FuturesCommission(Commission):
     """
     Base class for futures commissions.
 
@@ -44,16 +45,20 @@ class FuturesCommission(BaseCommission):
     >>>  class MyEminiStrategy(Moonshot):
     >>>      COMMISSION_CLASS = CMEEquityEMiniFixedCommission
     """
-    BROKER_COMMISSION_PER_CONTRACT = 0
-    EXCHANGE_FEE_PER_CONTRACT = 0
-    CARRYING_FEE_PER_CONTRACT = 0 # Depends on equity in excess of margin requirement
+    BROKER_COMMISSION_PER_CONTRACT: float = 0
+    """the commission per contract"""
+    EXCHANGE_FEE_PER_CONTRACT: float = 0
+    """the exchange and regulatory fees per contract"""
+    CARRYING_FEE_PER_CONTRACT: float = 0
+    """the overnight carrying fee per contract (depends on equity in excess of
+    margin requirement)"""
 
     @classmethod
     def get_commissions(
         cls,
         contract_values: pd.DataFrame,
         turnover: pd.DataFrame,
-        **kwargs
+        **kwargs: Any
         ) -> pd.DataFrame:
         """
         Return a DataFrame of commissions as percentages of account equity.
@@ -72,9 +77,9 @@ class DemoCMEEquityEMiniFixedCommission(FuturesCommission):
     """
     Fixed commission for CME Equity E-Minis.
     """
-    BROKER_COMMISSION_PER_CONTRACT = 0.85
-    EXCHANGE_FEE_PER_CONTRACT = 1.18
-    CARRYING_FEE_PER_CONTRACT = 0
+    BROKER_COMMISSION_PER_CONTRACT: float = 0.85
+    EXCHANGE_FEE_PER_CONTRACT: float = 1.18
+    CARRYING_FEE_PER_CONTRACT: float = 0
 
 class DemoCanadaCADFuturesTieredCommission(FuturesCommission):
     """
@@ -82,13 +87,13 @@ class DemoCanadaCADFuturesTieredCommission(FuturesCommission):
     customers.
     """
 
-    BROKER_COMMISSION_PER_CONTRACT = 0.85
-    EXCHANGE_FEE_PER_CONTRACT = (
+    BROKER_COMMISSION_PER_CONTRACT: float = 0.85
+    EXCHANGE_FEE_PER_CONTRACT: float = (
         1.12   # exchange fee
         + 0.03 # regulatory fee
         + 0.01 # NFA assessment fee
     )
-    CARRYING_FEE_PER_CONTRACT = 0
+    CARRYING_FEE_PER_CONTRACT: float = 0
 
 class DemoKoreaFuturesCommission(PercentageCommission):
     """
@@ -96,9 +101,9 @@ class DemoKoreaFuturesCommission(PercentageCommission):
     """
     # 0.4 bps fixed rate, excludes stock futures and KWY futures (US dollar)
 
-    BROKER_COMMISSION_RATE = 0.00004
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 0
+    BROKER_COMMISSION_RATE: float = 0.00004
+    EXCHANGE_FEE_RATE: float = 0
+    MIN_COMMISSION: float = 0
 
 class DemoKoreaStockFuturesCommission(PercentageCommission):
     """
@@ -106,6 +111,6 @@ class DemoKoreaStockFuturesCommission(PercentageCommission):
     """
     # 4 bps fixed rate for stock futures
 
-    BROKER_COMMISSION_RATE = 0.0004
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 0
+    BROKER_COMMISSION_RATE: float = 0.0004
+    EXCHANGE_FEE_RATE: float = 0
+    MIN_COMMISSION: float = 0

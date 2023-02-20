@@ -33,6 +33,13 @@ class SpotFXCommission(PercentageCommission):
 
     """
 
-    BROKER_COMMISSION_RATE = 0.00002 # 0.2 bps
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 0 # see NOTE in docstring
+    BROKER_COMMISSION_RATE: float = 0.00002 # 0.2 bps
+    """the commission rate (as a percentage of trade value) charged by the broker"""
+    EXCHANGE_FEE_RATE: float = 0
+    """the exchange fee as a percentage of trade value"""
+    MIN_COMMISSION: float = 0
+    """NOTE: min commissions are not modeled for spot FX. This is because min
+    commissions for spot FX are in USD ($2), regardless of the quote
+    currency. The Moonshot class passes NLVs in the quote currency (the
+    Currency field). To accurately model min commissions, these NLVs would need
+    to be converted to USD."""

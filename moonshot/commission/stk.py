@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import pandas as pd
-from moonshot.commission.base import BaseCommission, PercentageCommission
+from moonshot.commission.base import Commission, PercentageCommission
 
-class PerShareCommission(BaseCommission):
+class PerShareCommission(Commission):
     """
     Base class for commissions which are primarily based on the number of
     shares.
@@ -47,7 +47,7 @@ class PerShareCommission(BaseCommission):
 
     MAKER_RATIO : float, optional
         the ratio of trades that earn the maker fee (for example if 75% of trades add
-        liquidty and 25% remove liqudity, this value should be 0.75)
+        liquidity and 25% remove liquidity, this value should be 0.75)
 
     PERCENTAGE_FEE_RATE : float, optional
         the sum of all fees which are assessed as a percentage of trade value
@@ -90,16 +90,30 @@ class PerShareCommission(BaseCommission):
     >>>      COMMISSION_CLASS = CostPlusUSStockCommission
     """
 
-    BROKER_COMMISSION_PER_SHARE = None
-    BROKER_COMMISSION_PER_SHARE_TIER_2 = None
-    TIER_2_RATIO = 0
-    EXCHANGE_FEE_PER_SHARE = 0
-    MAKER_FEE_PER_SHARE = 0
-    TAKER_FEE_PER_SHARE = 0
-    MAKER_RATIO = 0 # ratio of maker trades, between 0 and 1
-    PERCENTAGE_FEE_RATE = 0
-    COMMISSION_PERCENTAGE_FEE_RATE = 0
-    MIN_COMMISSION = 0
+    BROKER_COMMISSION_PER_SHARE: float = None
+    """the broker commission per share at the lowest volume tier"""
+    BROKER_COMMISSION_PER_SHARE_TIER_2: float = None
+    """the broker commission per share at volume tier 2"""
+    TIER_2_RATIO: float = 0
+    """ratio of monthly trades at volume tier 2"""
+    EXCHANGE_FEE_PER_SHARE: float = 0
+    """the sum of all exchange fees which are assessed per share (excluding maker-taker
+    fees, if defined separately)"""
+    MAKER_FEE_PER_SHARE: float = 0
+    """the "maker" fee from the exchange for adding liquidity. Use a negative value
+    to indicate a rebate"""
+    TAKER_FEE_PER_SHARE: float = 0
+    """the "taker" fee paid to the exchange for removing liquidity"""
+    MAKER_RATIO: float = 0
+    """the ratio of trades that earn the maker fee (for example if 75% of trades add
+    liquidity and 25% remove liquidity, this value should be 0.75)"""
+    PERCENTAGE_FEE_RATE: float = 0
+    """the sum of all fees which are assessed as a percentage of trade value"""
+    COMMISSION_PERCENTAGE_FEE_RATE: float = 0
+    """the sum of all fees which are assessed as a percentage of the broker commission"""
+    MIN_COMMISSION: float = 0
+    """the minimum commission charged by the broker. Only enforced if NLVs are passed
+    by the backtest."""
 
     @classmethod
     def get_commissions(
@@ -169,85 +183,85 @@ class PerShareCommission(BaseCommission):
 
 class DemoUSStockCommission(PerShareCommission):
 
-    BROKER_COMMISSION_PER_SHARE = 0.005
-    MIN_COMMISSION = 1.00
+    BROKER_COMMISSION_PER_SHARE: float = 0.005
+    MIN_COMMISSION: float = 1.00
 
 class DemoCostPlusUSStockCommission(PerShareCommission):
 
-    BROKER_COMMISSION_PER_SHARE = 0.0035
-    EXCHANGE_FEE_PER_SHARE = (0.0002 # clearing fee per share
+    BROKER_COMMISSION_PER_SHARE: float = 0.0035
+    EXCHANGE_FEE_PER_SHARE: float = (0.0002 # clearing fee per share
                               + (0.000119/2)) # FINRA activity fee (per share sold)
-    MAKER_FEE_PER_SHARE = -0.002 # exchange rebate (varies)
-    TAKER_FEE_PER_SHARE = 0.00118 # exchange fee (varies)
-    MAKER_RATIO = 0
-    COMMISSION_PERCENTAGE_FEE_RATE = (0.000175 # NYSE pass-through (% of broker commission)
+    MAKER_FEE_PER_SHARE: float = -0.002 # exchange rebate (varies)
+    TAKER_FEE_PER_SHARE: float = 0.00118 # exchange fee (varies)
+    MAKER_RATIO: float = 0
+    COMMISSION_PERCENTAGE_FEE_RATE: float = (0.000175 # NYSE pass-through (% of broker commission)
                                       + 0.00056) # FINRA pass-through (% of broker commission)
-    PERCENTAGE_FEE_RATE = 0.0000231 # Transaction fees
-    MIN_COMMISSION = 0.35
+    PERCENTAGE_FEE_RATE: float = 0.0000231 # Transaction fees
+    MIN_COMMISSION: float = 0.35
 
 
 class DemoCostPlusCanadaStockCommission(PerShareCommission):
 
-    BROKER_COMMISSION_PER_SHARE = 0.008
-    EXCHANGE_FEE_PER_SHARE = (
+    BROKER_COMMISSION_PER_SHARE: float = 0.008
+    EXCHANGE_FEE_PER_SHARE: float = (
         0.00017 # clearing fee per share
         + 0.00011 # transaction fee per share
         )
-    MAKER_FEE_PER_SHARE = -0.0019 # varies
-    TAKER_FEE_PER_SHARE = 0.003 # varies
-    MAKER_RATIO = 0
-    MIN_COMMISSION = 1.00
-    TRANSACTION_FEE_RATE = 0
+    MAKER_FEE_PER_SHARE: float = -0.0019 # varies
+    TAKER_FEE_PER_SHARE: float = 0.003 # varies
+    MAKER_RATIO: float = 0
+    MIN_COMMISSION: float = 1.00
+    TRANSACTION_FEE_RATE: float = 0
 
 class DemoAustraliaStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 5.00
+    BROKER_COMMISSION_RATE: float = 0.0008
+    EXCHANGE_FEE_RATE: float = 0
+    MIN_COMMISSION: float = 5.00
 
 class DemoFranceStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = 0.000095 # 0.95 bps exchange fee
-    MIN_COMMISSION = 1.25 # EUR
+    BROKER_COMMISSION_RATE: float = 0.0008
+    EXCHANGE_FEE_RATE: float = 0.000095 # 0.95 bps exchange fee
+    MIN_COMMISSION: float = 1.25 # EUR
 
 class DemoGermanyStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = 0.000048 + 0.00001 # 0.48 bps exchange fee + 0.1 bps clearing fee
-    MIN_COMMISSION = 1.25 # EUR
+    BROKER_COMMISSION_RATE: float = 0.0008
+    EXCHANGE_FEE_RATE: float = 0.000048 + 0.00001 # 0.48 bps exchange fee + 0.1 bps clearing fee
+    MIN_COMMISSION: float = 1.25 # EUR
 
 class DemoHongKongStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = (
+    BROKER_COMMISSION_RATE: float = 0.0008
+    EXCHANGE_FEE_RATE: float = (
           0.00005 # exchange fee
         + 0.00002 # clearing fee (2 HKD min)
         + 0.001 # Stamp duty
         + 0.000027 # SFC Transaction Levy
     )
-    MIN_COMMISSION = 18.00 # HKD
+    MIN_COMMISSION: float = 18.00 # HKD
 
 class DemoJapanStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0005
-    EXCHANGE_FEE_RATE = 0.000004
-    MIN_COMMISSION = 80.00 # JPY
+    BROKER_COMMISSION_RATE: float = 0.0005
+    EXCHANGE_FEE_RATE: float = 0.000004
+    MIN_COMMISSION: float = 80.00 # JPY
 
 class DemoMexicoStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0010
-    EXCHANGE_FEE_RATE = 0
-    MIN_COMMISSION = 60.00 # MXN
+    BROKER_COMMISSION_RATE: float = 0.0010
+    EXCHANGE_FEE_RATE: float = 0
+    MIN_COMMISSION: float = 60.00 # MXN
 
 class DemoSingaporeStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = 0.00034775 + 0.00008025 # transaction fee + access fee
-    MIN_COMMISSION = 2.50 # SGD
+    BROKER_COMMISSION_RATE: float = 0.0008
+    EXCHANGE_FEE_RATE: float = 0.00034775 + 0.00008025 # transaction fee + access fee
+    MIN_COMMISSION: float = 2.50 # SGD
 
 class DemoUKStockCommission(PercentageCommission):
 
-    BROKER_COMMISSION_RATE = 0.0008
-    EXCHANGE_FEE_RATE = 0.000045 + 0.0025 # 0.45 bps + 0.5% stamp tax on purchases > 1000 GBP
-    MIN_COMMISSION = 1.00 # GBP
+    BROKER_COMMISSION_RATE: float = 0.0008
+    EXCHANGE_FEE_RATE: float = 0.000045 + 0.0025 # 0.45 bps + 0.5% stamp tax on purchases > 1000 GBP
+    MIN_COMMISSION: float = 1.00 # GBP

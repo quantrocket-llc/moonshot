@@ -12,47 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import Slippage
 import pandas as pd
 
-class FixedSlippage(Slippage):
+class Slippage:
     """
-    Applies a fixed pct slippage to each trade.
+    Base class for slippage classes.
 
-    This slippage class can be used on strategies indirectly (and more
-    easily) by simply specifying SLIPPAGE_BPS on the strategy.
-
-    Parameters
-    ----------
-    ONE_WAY_SLIPPAGE : float
-        the slippage to apply to each trade (default 0.0005 = 5 basis points);
-        overridden if `one_way_slippage` is passed to __init__
+    A slippage class must implement a method called `get_slippage` that
+    accepts a DataFrame of turnover, a DataFrame of positions, and a
+    DataFrame of prices, and returns a DataFrame of slippage.
     """
-    ONE_WAY_SLIPPAGE = 0.0005
-
-    def __init__(self, one_way_slippage: float =  None):
-        if one_way_slippage is not None:
-            self.one_way_slippage = one_way_slippage
-        else:
-            self.one_way_slippage = self.ONE_WAY_SLIPPAGE
-
     def get_slippage(
         self,
         turnover: pd.DataFrame,
-        *args,
-        **kwargs
+        positions: pd.DataFrame,
+        prices: pd.DataFrame
         ) -> pd.DataFrame:
         """
-        Apply the fix pct slippage to each trade.
+        Apply slippage to each trade.
 
         Parameters
         ----------
         turnover : DataFrame, required
             a DataFrame of turnover
 
+        positions : DataFrame, required
+            a DataFrame of positions
+
+        prices : DataFrame, required
+            a DataFrame of prices
+
         Returns
         -------
         DataFrame
-            slippages
+            a DataFrame of slippages
         """
-        return turnover * self.one_way_slippage
+        raise NotImplementedError()

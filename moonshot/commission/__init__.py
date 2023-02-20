@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .fut import FuturesCommission
-from .base import PercentageCommission, NoCommission
+from .base import Commission, PercentageCommission, NoCommission
 from .stk import PerShareCommission
 from .fx import SpotFXCommission
 
@@ -22,9 +22,10 @@ SpotForexCommission = SpotFXCommission
 
 
 __all__ = [
+    'Commission',
     'FuturesCommission',
     'PercentageCommission',
-    'NoCommission'
+    'NoCommission',
     'PerShareCommission',
-    'SpotFXCommission'
+    'SpotFXCommission',
 ]

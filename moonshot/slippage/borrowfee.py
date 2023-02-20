@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .base import Slippage
 import pandas as pd
 from quantrocket.fundamental import get_ibkr_borrow_fees_reindexed_like
 
-class IBKRBorrowFees(object):
+class IBKRBorrowFees(Slippage):
     """
     Applies borrow fees to each short position.
 

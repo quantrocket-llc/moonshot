@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union, Any
 import io
 import pandas as pd
 import numpy as np
@@ -19,7 +20,8 @@ import time
 import requests
 import json
 import math
-from moonshot.slippage import FixedSlippage
+from moonshot.slippage import Slippage, FixedSlippage
+from moonshot.commission import Commission
 from moonshot.mixins import WeightAllocationMixin
 from moonshot._cache import Cache
 from moonshot.exceptions import MoonshotError, MoonshotParameterError
@@ -55,8 +57,8 @@ class Moonshot(
     CODE : str, required
         the strategy code
 
-    DB : str, required
-        code of db to pull data from
+    DB : str or list of str, required
+        one or more database codes to pull data from
 
     DB_FIELDS : list of str, optional
         fields to retrieve from db (defaults to ["Open", "Close", "Volume"])
@@ -83,7 +85,8 @@ class Moonshot(
         exclude these universes from db query
 
     CONT_FUT : str, optional
-        pass this cont_fut option to db query (default None)
+        pass this cont_fut option to db query (default None). See quantrocket.get_prices
+        for more info.
 
     LOOKBACK_WINDOW : int, optional
         get this many days additional data prior to the backtest start date or
@@ -97,13 +100,13 @@ class Moonshot(
         dict of currency:NLV for each currency represented in the strategy. Can
         alternatively be passed directly to backtest method.
 
-    COMMISSION_CLASS : Class or dict of (sectype,exchange,currency):Class, optional
+    COMMISSION_CLASS : Commission class or dict of (sectype,exchange,currency): Commission class, optional
         the commission class to use. If strategy includes a mix of security types,
         exchanges, or currencies, you can pass a dict mapping tuples of
         (sectype,exchange,currency) to the different commission classes. By default
         no commission is applied.
 
-    SLIPPAGE_CLASSES : iterable of slippage classes, optional
+    SLIPPAGE_CLASSES : iterable of Slippage classes, optional
         one or more slippage classes. By default no slippage is applied.
 
     SLIPPAGE_BPS : float, optional
@@ -182,35 +185,102 @@ class Moonshot(
     >>>         signals = closes > mavgs.shift()
     >>>         return signals.astype(int)
     """
-    CODE = None
-    DB = None
-    DB_FIELDS = ["Open", "Close", "Volume"]
-    DB_TIMES = None
-    DB_DATA_FREQUENCY = None
-    SIDS = None
-    UNIVERSES = None
-    EXCLUDE_SIDS = None
-    EXCLUDE_UNIVERSES = None
-    CONT_FUT = None
-    LOOKBACK_WINDOW = None
-    NLV = None
-    COMMISSION_CLASS = None
-    SLIPPAGE_CLASSES = ()
-    SLIPPAGE_BPS = 0
-    BENCHMARK = None
-    BENCHMARK_DB = None
-    BENCHMARK_TIME = None
-    TIMEZONE = None
-    CALENDAR = None
-    POSITIONS_CLOSED_DAILY = False
-    ALLOW_REBALANCE = True
-    CONTRACT_VALUE_REFERENCE_FIELD = None
-    ACCOUNT_BALANCE_FIELD = None
+    CODE: str = None
+    """the strategy code"""
+    DB: Union[str, list[str]] = None
+    """one or more database codes to pull data from"""
+    DB_FIELDS: list[str] = ["Open", "Close", "Volume"]
+    """fields to retrieve from db (defaults to ["Open", "Close", "Volume"])"""
+    DB_TIMES: list[str] = None
+    """for intraday databases, only retrieve these times"""
+    DB_DATA_FREQUENCY: str = None
+    """Only applicable when DB specifies a Zipline bundle. Whether to query minute or
+    daily data.  If omitted, defaults to minute data for minute bundles and to daily
+    data for daily bundles. This parameter only needs to be set to request daily data
+    from a minute bundle. Possible choices: daily, minute (or aliases d, m)."""
+    SIDS: list[str] = None
+    """limit db query to these sids"""
+    UNIVERSES: list[str] = None
+    """limit db query to these universes"""
+    EXCLUDE_SIDS: list[str] = None
+    """exclude these sids from db query"""
+    EXCLUDE_UNIVERSES: list[str] = None
+    """exclude these universes from db query"""
+    CONT_FUT: str = None
+    """pass this cont_fut option to db query (default None). See quantrocket.get_prices
+    for more info."""
+    LOOKBACK_WINDOW: int = None
+    """get this many days additional data prior to the backtest start date or
+    trade date to account for rolling windows. If set to None (the default),
+    will use the largest value of any attributes ending with `*_WINDOW`, or
+    252 if no such attributes, and will further pad window based on any
+    `*_INTERVAL` attributes, which are interpreted as pandas offset aliases
+    (for example `REBALANCE_INTERVAL = 'Q'`). Set to 0 to disable."""
+    NLV: dict[str, float] = None
+    """dict of currency:NLV for each currency represented in the strategy. Can
+    alternatively be passed directly to backtest method."""
+    COMMISSION_CLASS: Union[Commission, dict[tuple[str, str, str], Commission]] = None
+    """Commission class or dict of (sectype,exchange,currency): Commission class, optional
+    the commission class to use. If strategy includes a mix of security types,
+    exchanges, or currencies, you can pass a dict mapping tuples of
+    (sectype,exchange,currency) to the different commission classes. By default
+    no commission is applied."""
+    SLIPPAGE_CLASSES: tuple[Slippage] = ()
+    """one or more slippage classes. By default no slippage is applied."""
+    SLIPPAGE_BPS: float = 0
+    """amount on one-slippage to apply to each trade in BPS (for example, enter 5 to deduct
+    5 BPS)"""
+    BENCHMARK: str = None
+    """the sid of a security in the historical data to use as the benchmark."""
+    BENCHMARK_DB: str = None
+    """the database containing the benchmark, if different from DB. BENCHMARK_DB
+    should contain end-of-day data, not intraday (but can be used with intraday
+    backtests)."""
+    BENCHMARK_TIME: str = None
+    """use prices from this time of day as benchmark prices. Only applicable if
+    benchmark prices originate in DB (not BENCHMARK_DB), DB contains intraday
+    data, and backtest results are daily."""
+    TIMEZONE: str = None
+    """convert timestamps to this timezone (if not provided, will be inferred
+    from securities universe if possible)"""
+    CALENDAR: str = None
+    """use this exchange's trading calendar to determine which date's signals
+    should be used for live trading. If the exchange is currently open,
+    today's signals will be used. If currently closed, the signals corresponding
+    to the last date the exchange was open will be used. If no calendar is specified,
+    today's signals will be used."""
+    POSITIONS_CLOSED_DAILY: bool = False
+    """if True, positions in backtests that fall on adjacent days are assumed to
+    be closed out and reopened each day rather than held continuously; this
+    impacts commission and slippage calculations (default is False, meaning
+    adjacent positions are assumed to be held continuously)"""
+    ALLOW_REBALANCE: Union[bool, float] = True
+    """in live trading, whether to allow rebalancing of existing positions that
+    are already on the correct side. If True (the default), allow rebalancing.
+    If False, no rebalancing. If set to a positive decimal, allow rebalancing
+    only when the existing position differs from the target position by at least
+    this percentage. For example 0.5 means don't rebalance a position unless
+    the position will change by +/-50%."""
+    CONTRACT_VALUE_REFERENCE_FIELD: str = None
+    """the price field to use for determining contract values for the purpose of
+    applying commissions and constraining weights in backtests and calculating
+    order quantities in trading. Defaults to the first available of Close, Open,
+    MinuteCloseClose, SecondCloseClose, LastPriceClose, BidPriceClose, AskPriceClose,
+    TimeSalesLastPriceClose, TimeSalesFilteredLastPriceClose, LastPriceMean,
+    BidPriceMean, AskPriceMean, TimeSalesLastPriceMean, TimeSalesFilteredLastPriceMean,
+    MinuteOpenOpen, SecondOpenOpen, LastPriceOpen, BidPriceOpen, AskPriceOpen,
+    TimeSalesLastPriceOpen, TimeSalesFilteredLastPriceOpen."""
+    ACCOUNT_BALANCE_FIELD: Union[str, list[str]] = None
+    """the account field to use for calculating order quantities as a percentage of
+    account equity. Applies to trading only, not backtesting. Default is
+    NetLiquidation. If a list of fields is provided, the minimum value is used.
+    For example, ['NetLiquidation', 'PreviousEquity'] means to use the lesser of
+    NetLiquidation or PreviousEquity to determine order quantities."""
 
     def __init__(self):
-        self.is_trade = False
-        self.review_date = None # see trade() docstring
-        self.is_backtest = False
+        self.is_trade: bool = False
+        self.review_date: str = None # see trade() docstring
+        self.is_backtest: bool = False
         self._securities_master = None
         self._backtest_results = {}
         self._inferred_timezone = None
@@ -438,7 +508,7 @@ class Moonshot(
         self,
         df: pd.DataFrame,
         orders: pd.DataFrame
-        ) -> pd.DataFrame:
+        ) -> 'pd.Series[Any]':
         """
         Reindexes a DataFrame (having Sids as columns and dates as index)
         to match the shape of the orders DataFrame.
