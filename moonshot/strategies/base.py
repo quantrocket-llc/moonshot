@@ -173,17 +173,19 @@ class Moonshot(
     Example of a minimal strategy that runs on a history db called "mexi-stk-1d" and buys when
     the securities are above their 200-day moving average:
 
-    >>> MexicoMovingAverage(Moonshot):
-    >>>
-    >>>     CODE = "mexi-ma"
-    >>>     DB = "mexi-stk-1d"
-    >>>     MAVG_WINDOW = 200
-    >>>
-    >>>     def prices_to_signals(self, prices):
-    >>>         closes = prices.loc["Close"]
-    >>>         mavgs = closes.rolling(self.MAVG_WINDOW).mean()
-    >>>         signals = closes > mavgs.shift()
-    >>>         return signals.astype(int)
+    >>> import pandas as pd
+    ...
+    ... MexicoMovingAverage(Moonshot):
+    ...
+    ...     CODE = "mexi-ma"
+    ...     DB = "mexi-stk-1d"
+    ...     MAVG_WINDOW = 200
+    ...
+    ...     def prices_to_signals(self, prices: pd.DataFrame):
+    ...         closes = prices.loc["Close"]
+    ...         mavgs = closes.rolling(self.MAVG_WINDOW).mean()
+    ...         signals = closes > mavgs.shift()
+    ...         return signals.astype(int)
     """
     CODE: str = None
     """the strategy code"""
@@ -308,12 +310,13 @@ class Moonshot(
         Examples
         --------
         Buy when the close is above yesterday's 50-day moving average:
-
-        >>> def prices_to_signals(self, prices):
-        >>>     closes = prices.loc["Close"]
-        >>>     mavgs = closes.rolling(50).mean()
-        >>>     signals = closes > mavgs.shift()
-        >>>     return signals.astype(int)
+        >>> import pandas as pd
+        ...
+        ... def prices_to_signals(self, prices: pd.DataFrame):
+        ...     closes = prices.loc["Close"]
+        ...     mavgs = closes.rolling(50).mean()
+        ...     signals = closes > mavgs.shift()
+        ...     return signals.astype(int)
         """
         raise NotImplementedError("strategies must implement prices_to_signals")
 
@@ -357,9 +360,9 @@ class Moonshot(
         --------
         The default implementation is shown below:
 
-        >>> def signals_to_target_weights(self, signals, prices):
-        >>>     weights = self.allocate_equal_weights(signals) # provided by moonshot.mixins.WeightAllocationMixin
-        >>>     return weights
+        >>> def signals_to_target_weights(self, signals: pd.DataFrame, prices: pd.DataFrame):
+        ...     weights = self.allocate_equal_weights(signals) # provided by moonshot.mixins.WeightAllocationMixin
+        ...     return weights
         """
         weights = self.allocate_equal_weights(signals)
         return weights
@@ -399,9 +402,9 @@ class Moonshot(
         The default implemention is shown below (enter position in the period after
         signal generation/weight allocation):
 
-        >>> def target_weights_to_positions(self, weights, prices):
-        >>>     positions = weights.shift()
-        >>>     return positions
+        >>> def target_weights_to_positions(self, weights: pd.DataFrame, prices: pd.DataFrame):
+        ...     positions = weights.shift()
+        ...     return positions
         """
         positions = weights.shift()
         return positions
@@ -437,10 +440,10 @@ class Moonshot(
         --------
         The default implementation is shown below:
 
-        >>> def positions_to_gross_returns(self, positions, prices):
-        >>>     closes = prices.loc["Close"]
-        >>>     gross_returns = closes.pct_change() * positions.shift()
-        >>>     return gross_returns
+        >>> def positions_to_gross_returns(self, positions: pd.DataFrame, prices: pd.DataFrame):
+        ...     closes = prices.loc["Close"]
+        ...     gross_returns = closes.pct_change() * positions.shift()
+        ...     return gross_returns
         """
         closes = prices.loc["Close"]
         gross_returns = closes.pct_change() * positions.shift()
@@ -487,10 +490,10 @@ class Moonshot(
         The default implemention creates MKT DAY orders and is
         shown below:
 
-        >>> def order_stubs_to_orders(self, orders, prices):
-        >>>     orders["OrderType"] = "MKT"
-        >>>     orders["Tif"] = "DAY"
-        >>>     return orders
+        >>> def order_stubs_to_orders(self, orders: pd.DataFrame, prices: pd.DataFrame):
+        ...     orders["OrderType"] = "MKT"
+        ...     orders["Tif"] = "DAY"
+        ...     return orders
 
         Set a limit price equal to the prior closing price:
 

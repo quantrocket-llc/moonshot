@@ -172,23 +172,25 @@ class MoonshotML(Moonshot):
     the model using the 1-day and 2-day returns, and buys when the machine learning
     model predicts a positive 1-day forward return:
 
-    >>> class DemoMLStrategy(MoonshotML):
-    >>>
-    >>>     CODE = "demo-ml"
-    >>>     DB = "usa-stk-1d"
-    >>>     MODEL = "my_ml_model.pkl"
-    >>>
-    >>>     def prices_to_features(self, prices):
-    >>>         closes = prices.loc["Close"]
-    >>>         features = {}
-    >>>         features["returns_1d"]= closes.pct_change()
-    >>>         features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
-    >>>         targets = closes.pct_change().shift(-1)
-    >>>         return features, targets
-    >>>
-    >>>     def predictions_to_signals(self, predictions, prices):
-    >>>         signals = predictions > 0
-    >>>         return signals.astype(int)
+    >>> import pandas as pd
+    ...
+    ... class DemoMLStrategy(MoonshotML):
+    ...
+    ...     CODE = "demo-ml"
+    ...     DB = "usa-stk-1d"
+    ...     MODEL = "my_ml_model.pkl"
+    ...
+    ...     def prices_to_features(self, prices: pd.DataFrame):
+    ...         closes = prices.loc["Close"]
+    ...         features = {}
+    ...         features["returns_1d"]= closes.pct_change()
+    ...         features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
+    ...         targets = closes.pct_change().shift(-1)
+    ...         return features, targets
+    ...
+    ...     def predictions_to_signals(self, predictions: pd.DataFrame, prices: pd.DataFrame):
+    ...         signals = predictions > 0
+    ...         return signals.astype(int)
     """
 
     MODEL: str = None
@@ -219,7 +221,12 @@ class MoonshotML(Moonshot):
     def prices_to_features(
         self,
         prices: pd.DataFrame
-        ) -> tuple[Union[pd.DataFrame, 'pd.Series[Any]'], Union[pd.DataFrame, 'pd.Series[Any]']]:
+        ) -> tuple[
+            Union[
+                list[Union[pd.DataFrame, 'pd.Series[float]']],
+                dict[str, Union[pd.DataFrame, 'pd.Series[float]']]
+            ],
+            Union[pd.DataFrame, 'pd.Series[float]']]:
         """
         From a DataFrame of prices, return a tuple of features and targets to be
         provided to the machine learning model.
@@ -249,39 +256,39 @@ class MoonshotML(Moonshot):
 
         Returns
         -------
-        dict or list of DataFrames or Series
-            features
+        tuple of (dict or list of DataFrames or Series, and DataFrame or Series)
+            features and targets
 
         Examples
         --------
         Predict next-day returns based on 1-day and 2-day returns:
 
-        >>> def prices_to_features(self, prices):
-        >>>     closes = prices.loc["Close"]
-        >>>     features = {}
-        >>>     features["returns_1d"]= closes.pct_change()
-        >>>     features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
-        >>>     targets = closes.pct_change().shift(-1)
-        >>>     return features, targets
+        >>> def prices_to_features(self, prices: pd.DataFrame):
+        ...     closes = prices.loc["Close"]
+        ...     features = {}
+        ...     features["returns_1d"]= closes.pct_change()
+        ...     features["returns_2d"] = (closes - closes.shift(2)) / closes.shift(2)
+        ...     targets = closes.pct_change().shift(-1)
+        ...     return features, targets
 
         Predict next-day returns for a single security in the prices
         DataFrame using another security's returns:
 
-        >>> def prices_to_features(self, prices):
-        >>>     closes = prices.loc["Close"]
-        >>>     closes_to_predict = closes[12345]
-        >>>     closes_to_predict_with = closes[23456]
-        >>>     features = {}
-        >>>     features["returns_1d"]= closes_to_predict_with.pct_change()
-        >>>     features["returns_2d"] = (closes_to_predict_with - closes_to_predict_with.shift(2)) / closes_to_predict_with.shift(2)
-        >>>     targets = closes_to_predict.pct_change().shift(-1)
-        >>>     return features, targets
+        >>> def prices_to_features(self, prices: pd.DataFrame):
+        ...     closes = prices.loc["Close"]
+        ...     closes_to_predict = closes[12345]
+        ...     closes_to_predict_with = closes[23456]
+        ...     features = {}
+        ...     features["returns_1d"]= closes_to_predict_with.pct_change()
+        ...     features["returns_2d"] = (closes_to_predict_with - closes_to_predict_with.shift(2)) / closes_to_predict_with.shift(2)
+        ...     targets = closes_to_predict.pct_change().shift(-1)
+        ...     return features, targets
         """
         raise NotImplementedError("strategies must implement prices_to_features")
 
     def predictions_to_signals(
         self,
-        predictions: pd.DataFrame,
+        predictions: Union[pd.DataFrame, 'pd.Series[float]'],
         prices: pd.DataFrame
         ) -> pd.DataFrame:
         """
@@ -296,7 +303,7 @@ class MoonshotML(Moonshot):
 
         Parameters
         ----------
-        predictions : DataFrame, required
+        predictions : DataFrame or Series, required
             DataFrame of machine learning predictions
 
         prices : DataFrame, required
@@ -312,17 +319,17 @@ class MoonshotML(Moonshot):
         --------
         Buy when prediction (a DataFrame) is above zero.
 
-        >>> def predictions_to_signals(self, predictions, prices):
-        >>>     signals = predictions > 0
-        >>>     return signals.astype(int)
+        >>> def predictions_to_signals(self, predictions: pd.DataFrame, prices: pd.DataFrame):
+        ...     signals = predictions > 0
+        ...     return signals.astype(int)
 
         Buy a single security when the predictions (a Series) is above zero.
 
-        >>> def predictions_to_signals(self, predictions, prices):
-        >>>     closes = prices.loc["Close"]
-        >>>     signals = pd.DataFrame(False, index=closes.index, columns=closes.columns)
-        >>>     signals.loc[:, 12345] = predictions > 0
-        >>>     return signals.astype(int)
+        >>> def predictions_to_signals(self, predictions: pd.Series, prices: pd.DataFrame):
+        ...     closes = prices.loc["Close"]
+        ...     signals = pd.DataFrame(False, index=closes.index, columns=closes.columns)
+        ...     signals.loc[:, 12345] = predictions > 0
+        ...     return signals.astype(int)
         """
         raise NotImplementedError("strategies must implement predictions_to_signals")
 
