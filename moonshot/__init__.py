@@ -11,11 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Vectorized backtesting and trading engine.
 
+Classes
+-------
+Moonshot
+    Base class for Moonshot strategies.
+
+MoonshotML
+    Base class for Moonshot machine learning strategies.
+
+Modules
+-------
+commission
+    Moonshot commission classes.
+
+slippage
+    Moonshot slippage classes.
+"""
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
 from .strategies import Moonshot, MoonshotML
+from . import slippage
+from . import commission
 
-__all__ = ['Moonshot', 'MoonshotML']
+__all__ = [
+    'Moonshot',
+    'MoonshotML',
+    'slippage',
+    'commission'
+]

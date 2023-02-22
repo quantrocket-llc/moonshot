@@ -17,7 +17,7 @@ import pandas as pd
 
 class FixedSlippage(Slippage):
     """
-    Applies a fixed pct slippage to each trade.
+    Apply a fixed pct slippage to each trade.
 
     This slippage class can be used on strategies indirectly (and more
     easily) by simply specifying SLIPPAGE_BPS on the strategy.

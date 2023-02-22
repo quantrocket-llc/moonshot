@@ -171,6 +171,9 @@ class PercentageCommission(Commission):
         return commissions
 
 class NoCommission(PercentageCommission):
+    """
+    Commission class for strategies that don't pay commissions.
+    """
 
     BROKER_COMMISSION_RATE: float = 0
     """the commission rate (as a percentage of trade value) charged by the broker"""

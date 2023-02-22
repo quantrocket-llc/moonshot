@@ -1,3 +1,19 @@
+"""
+Moonshot slippage classes.
+
+Classes
+-------
+Slippage
+    Base class for slippage classes. This class must be subclassed
+    to be used.
+
+FixedSlippage
+    Apply a fixed pct slippage to each trade.
+
+IBKRBorrowFees
+    Apply borrow fees to each short position.
+"""
+
 from .base import Slippage
 from .fixed import FixedSlippage
 from .borrowfee import IBKRBorrowFees

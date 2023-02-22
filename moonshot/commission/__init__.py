@@ -11,7 +11,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Moonshot commission classes. Except as noted below, all commission classes
+must be subclassed to be used, filling in specific parameters for your
+commission structure.
 
+Classes
+-------
+Commission
+    Base class for all commission classes.
+
+FuturesCommission
+    Base class for futures commissions.
+
+PercentageCommission
+    Base class for commissions which are a fixed percentage of the trade
+    value.
+
+NoCommission
+    Commission class for strategies that don't pay commissions.
+    This class can be used as-is.
+
+PerShareCommission
+    Base class for commissions which are primarily based on the number of
+    shares.
+
+SpotFXCommission
+    Commission class for spot FX. This class can be used as-is.
+"""
 from .fut import FuturesCommission
 from .base import Commission, PercentageCommission, NoCommission
 from .stk import PerShareCommission

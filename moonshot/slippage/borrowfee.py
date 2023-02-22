@@ -18,7 +18,7 @@ from quantrocket.fundamental import get_ibkr_borrow_fees_reindexed_like
 
 class IBKRBorrowFees(Slippage):
     """
-    Applies borrow fees to each short position.
+    Apply borrow fees to each short position.
 
     Examples
     --------
