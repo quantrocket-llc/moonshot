@@ -27,6 +27,12 @@ class FixedSlippage(Slippage):
     ONE_WAY_SLIPPAGE : float
         the slippage to apply to each trade (default 0.0005 = 5 basis points);
         overridden if `one_way_slippage` is passed to __init__
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot commissions and slippage: https://qrok.it/dl/ms/moonshot-commissions-slippage
     """
     ONE_WAY_SLIPPAGE = 0.0005
 

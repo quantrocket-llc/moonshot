@@ -168,6 +168,12 @@ class Moonshot(
         For example, ['NetLiquidation', 'PreviousEquity'] means to use the lesser of
         NetLiquidation or PreviousEquity to determine order quantities.
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot: https://qrok.it/dl/ms/moonshot
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "mexi-stk-1d" and buys when
@@ -307,6 +313,12 @@ class Moonshot(
         DataFrame
             signals
 
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot: https://qrok.it/dl/ms/moonshot
+
         Examples
         --------
         Buy when the close is above yesterday's 50-day moving average::
@@ -357,6 +369,12 @@ class Moonshot(
         DataFrame
             weights
 
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot: https://qrok.it/dl/ms/moonshot
+
         Examples
         --------
         The default implementation is shown below::
@@ -398,6 +416,12 @@ class Moonshot(
         DataFrame
             positions
 
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot: https://qrok.it/dl/ms/moonshot
+
         Examples
         --------
         The default implemention is shown below (enter position in the period after
@@ -437,6 +461,12 @@ class Moonshot(
         DataFrame
             gross returns
 
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot: https://qrok.it/dl/ms/moonshot
+
         Examples
         --------
         The default implementation is shown below::
@@ -474,6 +504,12 @@ class Moonshot(
         DataFrame
             a DataFrame of fully specified orders, with (at minimum) columns
             Exchange, Tif, OrderType added
+
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot live trading: https://qrok.it/dl/ms/moonshot-trade
 
         Examples
         --------
@@ -531,6 +567,12 @@ class Moonshot(
         Series
             a Series with an index matching orders
 
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot live trading: https://qrok.it/dl/ms/moonshot-trade
+
         Examples
         --------
         Calculate prior closes (assuming daily bars) and reindex like
@@ -581,6 +623,12 @@ class Moonshot(
         -------
         DataFrame
             a DataFrame of child orders
+
+        Notes
+        -----
+        Usage Guide:
+
+        * Moonshot live trading: https://qrok.it/dl/ms/moonshot-trade
 
         Examples
         --------
@@ -975,6 +1023,12 @@ class Moonshot(
         -------
         tuple of (DataFrame, DataFrame)
             max quantities for long, max quantities for shorts
+
+        Notes
+        -----
+        Usage Guide:
+
+        * Position size constraints: https://qrok.it/dl/ms/moonshot-limit-positions
 
         Examples
         --------
@@ -1467,6 +1521,12 @@ class Moonshot(
         Returns
         -------
         None
+
+        Notes
+        -----
+        Usage Guide:
+
+        * Save custom DataFrames to backtest results: https://qrok.it/dl/ms/moonshot-save
 
         Examples
         --------

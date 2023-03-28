@@ -20,6 +20,12 @@ class IBKRBorrowFees(Slippage):
     """
     Apply borrow fees to each short position.
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot borrow fees: https://qrok.it/dl/ms/moonshot-borrow-fees
+
     Examples
     --------
     Use this on your strategy:

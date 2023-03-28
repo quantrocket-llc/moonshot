@@ -12,6 +12,13 @@ FixedSlippage
 
 IBKRBorrowFees
     Apply borrow fees to each short position.
+
+Notes
+-----
+Usage Guide:
+
+* Moonshot commissions and slippage: https://qrok.it/dl/ms/moonshot-commissions-slippage
+
 """
 
 from .base import Slippage

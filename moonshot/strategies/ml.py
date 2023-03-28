@@ -166,6 +166,12 @@ class MoonshotML(Moonshot):
         For example, ['NetLiquidation', 'PreviousEquity'] means to use the lesser of
         NetLiquidation or PreviousEquity to determine order quantities.
 
+    Notes
+    -----
+    Usage Guide:
+
+    * MoonshotML: https://qrok.it/dl/ms/moonshot-ml
+
     Examples
     --------
     Example of a minimal strategy that runs on a history db called "usa-stk-1d", trains
@@ -259,6 +265,12 @@ class MoonshotML(Moonshot):
         tuple of (dict or list of DataFrames or Series, and DataFrame or Series)
             features and targets
 
+        Notes
+        -----
+        Usage Guide:
+
+        * MoonshotML: https://qrok.it/dl/ms/moonshot-ml
+
         Examples
         --------
         Predict next-day returns based on 1-day and 2-day returns::
@@ -314,6 +326,12 @@ class MoonshotML(Moonshot):
         -------
         DataFrame
             signals
+
+        Notes
+        -----
+        Usage Guide:
+
+        * MoonshotML: https://qrok.it/dl/ms/moonshot-ml
 
         Examples
         --------

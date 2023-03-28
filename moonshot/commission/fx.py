@@ -18,11 +18,17 @@ class SpotFXCommission(PercentageCommission):
     """
     Commission class for spot FX. This class can be used as-is.
 
-    NOTE: min commissions are not modeled for spot FX. This is because min
+    Notes
+    -----
+    Min commissions are not modeled for spot FX. This is because min
     commissions for spot FX are in USD ($2), regardless of the quote
     currency. The Moonshot class passes NLVs in the quote currency (the
     Currency field). To accurately model min commissions, these NLVs would need
     to be converted to USD.
+
+    Usage Guide:
+
+    * Moonshot commissions and slippage: https://qrok.it/dl/ms/moonshot-commissions-slippage
 
     Examples
     --------

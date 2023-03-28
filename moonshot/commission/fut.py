@@ -32,6 +32,12 @@ class FuturesCommission(Commission):
         the overnight carrying fee per contract (depends on equity in excess of
         margin requirement)
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot commissions and slippage: https://qrok.it/dl/ms/moonshot-commissions-slippage
+
     Examples
     --------
     Example subclass for CME E-Mini commissions:

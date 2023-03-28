@@ -59,6 +59,12 @@ class PerShareCommission(Commission):
         the minimum commission charged by the broker. Only enforced if NLVs are passed
         by the backtest.
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot commissions and slippage: https://qrok.it/dl/ms/moonshot-commissions-slippage
+
     Examples
     --------
     Example subclass for US stock comission with fixed pricing:

@@ -38,6 +38,12 @@ PerShareCommission
 
 SpotFXCommission
     Commission class for spot FX. This class can be used as-is.
+
+Notes
+-----
+Usage Guide:
+
+* Moonshot commissions and slippage: https://qrok.it/dl/ms/moonshot-commissions-slippage
 """
 from .fut import FuturesCommission
 from .base import Commission, PercentageCommission, NoCommission
