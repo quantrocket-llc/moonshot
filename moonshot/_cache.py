@@ -20,6 +20,7 @@ import six
 import inspect
 import itertools
 import pandas as pd
+from filelock import FileLock
 from quantrocket.db import list_databases
 
 TMP_DIR = os.environ.get("MOONSHOT_CACHE_DIR", "/tmp")
@@ -143,8 +144,10 @@ class Cache:
                     if db_last_modified > cache_last_modified:
                         return None
 
-        with open(filepath, "rb") as f:
-            obj = pickle.load(f)
+        lock = FileLock(filepath + ".lock")
+        with lock.acquire(timeout=10):
+            with open(filepath, "rb") as f:
+                obj = pickle.load(f)
 
         return obj
 
@@ -175,5 +178,7 @@ class Cache:
         See class docstring for typical usage.
         """
         filepath = cls._get_filepath(key_obj, prefix=prefix)
-        with open(filepath, "wb") as f:
-            pickle.dump(obj_to_cache, f)
+        lock = FileLock(filepath + ".lock")
+        with lock.acquire(timeout=10):
+            with open(filepath, "wb") as f:
+                pickle.dump(obj_to_cache, f)

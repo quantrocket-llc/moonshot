@@ -31,6 +31,7 @@ setup(name='quantrocket-moonshot',
     },
     install_requires=[
         "quantrocket-client",
-        "pandas"
+        "pandas",
+        "filelock",
     ]
 )
