@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Any
+from typing import Union, Any, Type
 import io
 import pandas as pd
 import numpy as np
@@ -227,7 +227,7 @@ class Moonshot(
     NLV: dict[str, float] = None
     """dict of currency:NLV for each currency represented in the strategy. Can
     alternatively be passed directly to backtest method."""
-    COMMISSION_CLASS: Union[Commission, dict[tuple[str, str, str], Commission]] = None
+    COMMISSION_CLASS: Union[Type[Commission], dict[tuple[str, str, str], Type[Commission]]] = None
     """Commission class or dict of (sectype,exchange,currency): Commission class, optional
     the commission class to use. If strategy includes a mix of security types,
     exchanges, or currencies, you can pass a dict mapping tuples of
