@@ -590,7 +590,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
         )
 
         dollar_volumes = results.loc["DollarVolume"].reset_index()
-        dollar_volumes.loc[:, "Date"] = dollar_volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        dollar_volumes["Date"] = dollar_volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             dollar_volumes.to_dict(orient="list"),
             {'Date': [
@@ -705,7 +705,7 @@ class SaveCustomDataFrameTestCase(unittest.TestCase):
         )
 
         closes = results.loc["TheClose"].reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             closes.to_dict(orient="list"),
             {'Date': [

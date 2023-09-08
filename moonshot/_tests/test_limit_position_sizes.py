@@ -213,7 +213,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -229,7 +229,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -347,7 +347,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -363,7 +363,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -508,7 +508,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -524,7 +524,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -656,7 +656,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -790,7 +790,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -806,7 +806,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -944,7 +944,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -960,7 +960,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1105,7 +1105,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1121,7 +1121,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1259,7 +1259,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1275,7 +1275,7 @@ class LimitPositionSizesBacktestTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [

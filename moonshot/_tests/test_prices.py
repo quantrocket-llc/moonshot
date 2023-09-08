@@ -958,7 +958,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
 
         nlvs = results.loc["Nlv"].reset_index()
-        nlvs.loc[:, "Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        nlvs["Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [
@@ -1073,7 +1073,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
 
         nlvs = results.loc["Nlv"].reset_index()
-        nlvs.loc[:, "Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        nlvs["Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [
@@ -1186,7 +1186,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
 
         nlvs = results.loc["Nlv"].reset_index()
-        nlvs.loc[:, "Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        nlvs["Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [

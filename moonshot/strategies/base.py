@@ -932,7 +932,7 @@ class Moonshot(
             raise MoonshotParameterError("must provide NLVs if using limit_position_sizes")
 
         contract_values = self._get_contract_values(prices)
-        contract_values = contract_values.fillna(method="ffill")
+        contract_values = contract_values.ffill()
         nlvs_in_trade_currency = contract_values.apply(lambda x: self._securities_master.Nlv, axis=1)
 
         prices_is_intraday = "Time" in prices.index.names
@@ -1612,21 +1612,22 @@ class Moonshot(
         # U55555    0.50
 
         # Multiply weights times allocations
-        weights = weights.apply(lambda x: x * allocations)
-
+        weights = pd.DataFrame(index=weights.index, columns=allocations.index)\
+            .apply(lambda x: weights).multiply(allocations)
         # Out:
         #        U12345  U55555
         # 12345  -0.050   -0.10
         # 23456   0.000    0.00
         # 34567   0.025    0.05
         contract_values = self._get_contract_values(prices)
-        contract_values = contract_values.fillna(method="ffill").loc[self._signal_date]
+        contract_values = contract_values.ffill().loc[self._signal_date]
         if prices_is_intraday:
             if self._signal_time:
                 contract_values = contract_values.loc[self._signal_time]
             else:
                 contract_values = contract_values.iloc[-1]
-        contract_values = allocations.apply(lambda x: contract_values).T
+        contract_values = pd.DataFrame(index=contract_values.index, columns=allocations.index)\
+            .apply(lambda x: contract_values)
         # Out:
         #          U12345    U55555
         # 12345     95.68     95.68
@@ -1691,7 +1692,8 @@ class Moonshot(
         # 23456     USD    EUR
         # 34567     USD    EUR
 
-        trade_currencies = allocations.apply(lambda x: currencies).T
+        trade_currencies = pd.DataFrame(index=currencies.index, columns=allocations.index)\
+            .apply(lambda x: currencies)
         # Out:
         #        U12345 U55555
         # 12345     USD    USD
@@ -1740,7 +1742,8 @@ class Moonshot(
             max_quantities_for_longs = max_quantities_for_longs.loc[self._signal_date]
             if max_quantities_for_longs_is_intraday:
                 max_quantities_for_longs = max_quantities_for_longs.loc[self._signal_time]
-            max_quantities_for_longs = allocations.apply(lambda x: max_quantities_for_longs.abs()).T
+            max_quantities_for_longs = pd.DataFrame(index=max_quantities_for_longs.index, columns=allocations.index)\
+                .apply(lambda x: max_quantities_for_longs.abs())
             target_quantities = max_quantities_for_longs.where(
                 target_quantities > max_quantities_for_longs, target_quantities)
 
@@ -1749,7 +1752,8 @@ class Moonshot(
             max_quantities_for_shorts = max_quantities_for_shorts.loc[self._signal_date]
             if max_quantities_for_shorts_is_intraday:
                 max_quantities_for_shorts = max_quantities_for_shorts.loc[self._signal_time]
-            max_quantities_for_shorts = allocations.apply(lambda x: -max_quantities_for_shorts.abs()).T
+            max_quantities_for_shorts = pd.DataFrame(index=max_quantities_for_shorts.index, columns=allocations.index)\
+                .apply(lambda x: -max_quantities_for_shorts.abs())
             target_quantities = max_quantities_for_shorts.where(
                 target_quantities < max_quantities_for_shorts, target_quantities)
 

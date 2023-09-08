@@ -319,7 +319,7 @@ class BenchmarkTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         benchmarks = results.loc["Benchmark"].reset_index()
-        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -719,7 +719,7 @@ class BenchmarkTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         benchmarks = results.loc["Benchmark"].reset_index()
-        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -1373,7 +1373,7 @@ class BenchmarkTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         benchmarks = results.loc["Benchmark"].reset_index()
-        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -1530,7 +1530,7 @@ class BenchmarkTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         benchmarks = results.loc["Benchmark"].reset_index()
-        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -1741,7 +1741,7 @@ class BenchmarkTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         benchmarks = results.loc["Benchmark"].reset_index()
-        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -1882,7 +1882,7 @@ class BenchmarkTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         benchmarks = results.loc["Benchmark"].reset_index()
-        benchmarks.loc[:, "Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [

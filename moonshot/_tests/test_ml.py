@@ -358,7 +358,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -377,7 +377,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -396,7 +396,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -415,7 +415,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -434,7 +434,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -453,7 +453,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -472,7 +472,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -491,7 +491,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -510,7 +510,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -530,7 +530,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -652,7 +652,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -671,7 +671,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -690,7 +690,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -709,7 +709,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -728,7 +728,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -747,7 +747,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -766,7 +766,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -785,7 +785,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -804,7 +804,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -824,7 +824,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -950,7 +950,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -969,7 +969,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -988,7 +988,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -1007,7 +1007,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1026,7 +1026,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -1045,7 +1045,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -1064,7 +1064,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1083,7 +1083,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1102,7 +1102,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -1122,7 +1122,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -1241,7 +1241,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1260,7 +1260,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1279,7 +1279,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -1298,7 +1298,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1317,7 +1317,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -1336,7 +1336,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -1355,7 +1355,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1374,7 +1374,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1393,7 +1393,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -1413,7 +1413,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -1536,7 +1536,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1555,7 +1555,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1574,7 +1574,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -1593,7 +1593,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1612,7 +1612,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -1631,7 +1631,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -1650,7 +1650,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1670,7 +1670,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -1798,7 +1798,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         self.maxDiff = None
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1817,7 +1817,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1836,7 +1836,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -1855,7 +1855,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1874,7 +1874,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -1893,7 +1893,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -1912,7 +1912,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1931,7 +1931,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1950,7 +1950,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -1970,7 +1970,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -2097,7 +2097,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -2116,7 +2116,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -2135,7 +2135,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -2154,7 +2154,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -2173,7 +2173,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -2192,7 +2192,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -2211,7 +2211,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -2231,7 +2231,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -2518,7 +2518,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -2537,7 +2537,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -2556,7 +2556,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_weights = results.loc["AbsWeight"].reset_index()
-        abs_weights.loc[:, "Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_weights["Date"] = abs_weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_weights.to_dict(orient="list"),
             {'Date': [
@@ -2575,7 +2575,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -2594,7 +2594,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         abs_positions = results.loc["AbsExposure"].reset_index()
-        abs_positions.loc[:, "Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        abs_positions["Date"] = abs_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             abs_positions.to_dict(orient="list"),
             {'Date': [
@@ -2613,7 +2613,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         total_holdings = results.loc["TotalHoldings"].reset_index()
-        total_holdings.loc[:, "Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        total_holdings["Date"] = total_holdings.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             total_holdings.to_dict(orient="list"),
             {'Date': [
@@ -2632,7 +2632,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -2651,7 +2651,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -2670,7 +2670,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -2690,7 +2690,7 @@ class KerasMachineLearningTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [

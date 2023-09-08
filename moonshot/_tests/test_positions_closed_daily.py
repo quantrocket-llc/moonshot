@@ -166,7 +166,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -182,7 +182,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -198,7 +198,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -214,7 +214,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -230,7 +230,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [
@@ -380,7 +380,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -396,7 +396,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -412,7 +412,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -428,7 +428,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -444,7 +444,7 @@ class PositionsClosedDailyTestCase(unittest.TestCase):
         )
 
         slippage = results.loc["Slippage"].reset_index()
-        slippage.loc[:, "Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        slippage["Date"] = slippage.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             slippage.to_dict(orient="list"),
             {'Date': [

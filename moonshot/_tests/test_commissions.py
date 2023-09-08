@@ -23,6 +23,7 @@ from moonshot import Moonshot
 from moonshot._cache import TMP_DIR
 from moonshot.commission import PercentageCommission, FuturesCommission
 from moonshot.exceptions import MoonshotParameterError
+from .utils import round_results
 
 class MoonshotCommissionsTestCase(unittest.TestCase):
     """
@@ -142,7 +143,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -161,7 +162,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -180,7 +181,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -199,7 +200,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -218,7 +219,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -238,7 +239,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -368,7 +369,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -387,7 +388,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -406,7 +407,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -425,7 +426,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -444,7 +445,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -464,7 +465,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -596,7 +597,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -615,7 +616,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -634,7 +635,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -653,7 +654,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -672,7 +673,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         nlvs = results.loc["Nlv"].reset_index()
-        nlvs.loc[:, "Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        nlvs["Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [
@@ -685,7 +686,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -705,7 +706,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -924,7 +925,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -943,7 +944,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -962,7 +963,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -981,7 +982,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1000,7 +1001,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1020,9 +1021,9 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            returns.to_dict(orient="list"),
+            round_results(returns.to_dict(orient="list")),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
@@ -1030,12 +1031,12 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                 '2018-05-04T00:00:00'],
              "FI12345": ["nan",
                      -0.00005,
-                     -0.022827272727272706, # (10.50 - 11)/11 * 0.5 - 0.0001
-                     0.0242857142857143], # (9.99 - 10.50)/10.50 * -0.5
+                     -0.022827, # (10.50 - 11)/11 * 0.5 - 0.0001
+                     0.024286], # (9.99 - 10.50)/10.50 * -0.5
              "FI23456": ["nan",
                      -0.0001,
-                     -0.11383636363636365, # (8.50 - 11)/11 * 0.5
-                     -0.11784705882352944] # (10.50 - 8.50)/8.50 * -0.5
+                     -0.113836, # (8.50 - 11)/11 * 0.5
+                     -0.117847] # (10.50 - 8.50)/8.50 * -0.5
              }
         )
     def test_apply_commissions_once_a_day_intraday_no_nlv(self):
@@ -1175,7 +1176,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1191,7 +1192,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1207,7 +1208,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1223,7 +1224,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1239,7 +1240,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1256,7 +1257,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -1412,7 +1413,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1428,7 +1429,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1444,7 +1445,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1460,7 +1461,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1476,7 +1477,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         nlvs = results.loc["Nlv"].reset_index()
-        nlvs.loc[:, "Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        nlvs["Date"] = nlvs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             nlvs.to_dict(orient="list"),
             {'Date': [
@@ -1488,7 +1489,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1505,7 +1506,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -1666,7 +1667,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1682,7 +1683,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1698,7 +1699,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1714,7 +1715,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1730,7 +1731,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -1747,19 +1748,19 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
 
         returns = results.loc["Return"]
         returns = returns.reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
-            returns.to_dict(orient="list"),
+            round_results(returns.to_dict(orient="list")),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
              "FI12345": [0.0,
-                     -0.1317199604743083, # (15.45 - 10.12)/10.12 * -0.25 - 0.00005
+                     -0.131720, # (15.45 - 10.12)/10.12 * -0.25 - 0.00005
                      0.0],
              "FI23456": [0.0,
                      0.0,
-                     -0.020622388059701485] # (14.50 - 13.40)/13.40 * 0.25 - 0.0001
+                     -0.020622] # (14.50 - 13.40)/13.40 * 0.25 - 0.0001
              }
         )
 
@@ -1870,7 +1871,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -1901,7 +1902,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -1932,7 +1933,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -1963,7 +1964,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -1994,7 +1995,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -2025,7 +2026,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         returns = results.loc["Return"].reset_index()
-        returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             returns.to_dict(orient="list"),
             {'Date': [
@@ -2164,7 +2165,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             results = results.where(results.notnull(), "nan")
 
             signals = results.loc["Signal"].reset_index()
-            signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 signals.to_dict(orient="list"),
                 {'Date': [
@@ -2195,7 +2196,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             weights = results.loc["Weight"].reset_index()
-            weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 weights.to_dict(orient="list"),
                 {'Date': [
@@ -2226,7 +2227,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             net_positions = results.loc["NetExposure"].reset_index()
-            net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 net_positions.to_dict(orient="list"),
                 {'Date': [
@@ -2257,7 +2258,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             turnover = results.loc["Turnover"].reset_index()
-            turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 turnover.to_dict(orient="list"),
                 {'Date': [
@@ -2288,7 +2289,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             commissions = results.loc["Commission"].reset_index()
-            commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 commissions.to_dict(orient="list"),
                 {'Date': [
@@ -2319,7 +2320,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             returns = results.loc["Return"].reset_index()
-            returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 returns.to_dict(orient="list"),
                 {'Date': [
@@ -2357,6 +2358,8 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         applied per sec type/exchange/currency for a continuous intraday
         strategy.
         """
+        self.maxDiff = None
+
         class TsejTestCommission(PercentageCommission):
             BROKER_COMMISSION_RATE = 0.0001 # 1 BPS
 
@@ -2464,7 +2467,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             results = results.where(results.notnull(), "nan")
 
             signals = results.loc["Signal"].reset_index()
-            signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 signals.to_dict(orient="list"),
                 {'Date': [
@@ -2495,7 +2498,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             weights = results.loc["Weight"].reset_index()
-            weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 weights.to_dict(orient="list"),
                 {'Date': [
@@ -2526,7 +2529,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             net_positions = results.loc["NetExposure"].reset_index()
-            net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 net_positions.to_dict(orient="list"),
                 {'Date': [
@@ -2557,7 +2560,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             turnover = results.loc["Turnover"].reset_index()
-            turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 turnover.to_dict(orient="list"),
                 {'Date': [
@@ -2588,7 +2591,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             commissions = results.loc["Commission"].reset_index()
-            commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
                 commissions.to_dict(orient="list"),
                 {'Date': [
@@ -2619,9 +2622,9 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
             )
 
             returns = results.loc["Return"].reset_index()
-            returns.loc[:, "Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            returns["Date"] = returns.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertDictEqual(
-                returns.to_dict(orient="list"),
+                round_results(returns.to_dict(orient="list"), 5),
                 {'Date': [
                     '2018-05-01T00:00:00',
                     '2018-05-01T00:00:00',
@@ -2637,17 +2640,17 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
                           '12:00:00'],
                  "FI12345": ['nan',
                          -0.00005,
-                         -0.01588947368421052, # (10.12-10.45)/10.45 * 0.5 - 0.0001
-                         -0.2633399209486166, # (15.45-10.12)/10.12 * -0.5
-                         0.21941747572815534,  # (8.67-15.45)/15.45 * -0.5
-                         -0.2094425605536333  # (12.30-8.67)/8.67 * -0.5 - 0.0001
+                         -0.01589, # (10.12-10.45)/10.45 * 0.5 - 0.0001
+                         -0.26334, # (15.45-10.12)/10.12 * -0.5
+                         0.21942,  # (8.67-15.45)/15.45 * -0.5
+                         -0.20944  # (12.30-8.67)/8.67 * -0.5 - 0.0001
                          ],
                  "FI23456": ['nan',
                          -0.0001,
-                         0.06286427976686093, # (10.50-12.01)/12.01 * -0.5
-                         0.033333333333333326, # (9.80-10.50)/10.50 * -0.5
-                         -0.1838734693877551, # (13.40-9.80)/9.80 * -0.5 - 0.0002
-                         -0.22034925373134331 # (7.50-13.40)/13.40 * 0.5 - 0.0002
+                         0.06286, # (10.50-12.01)/12.01 * -0.5
+                         0.03333, # (9.80-10.50)/10.50 * -0.5
+                         -0.18387, # (13.40-9.80)/9.80 * -0.5 - 0.0002
+                         -0.22035 # (7.50-13.40)/13.40 * 0.5 - 0.0002
                          ]}
             )
 
@@ -2749,7 +2752,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -2768,7 +2771,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -2787,7 +2790,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -2806,7 +2809,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -2825,7 +2828,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
@@ -2948,7 +2951,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         results = results.where(results.notnull(), "nan")
 
         signals = results.loc["Signal"].reset_index()
-        signals.loc[:, "Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        signals["Date"] = signals.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             signals.to_dict(orient="list"),
             {'Date': [
@@ -2967,7 +2970,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         weights = results.loc["Weight"].reset_index()
-        weights.loc[:, "Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        weights["Date"] = weights.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             weights.to_dict(orient="list"),
             {'Date': [
@@ -2986,7 +2989,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         net_positions = results.loc["NetExposure"].reset_index()
-        net_positions.loc[:, "Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        net_positions["Date"] = net_positions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             net_positions.to_dict(orient="list"),
             {'Date': [
@@ -3005,7 +3008,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         turnover = results.loc["Turnover"].reset_index()
-        turnover.loc[:, "Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        turnover["Date"] = turnover.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             turnover.to_dict(orient="list"),
             {'Date': [
@@ -3024,7 +3027,7 @@ class MoonshotCommissionsTestCase(unittest.TestCase):
         )
 
         commissions = results.loc["Commission"].reset_index()
-        commissions.loc[:, "Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        commissions["Date"] = commissions.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertDictEqual(
             commissions.to_dict(orient="list"),
             {'Date': [
