@@ -2013,7 +2013,7 @@ class SKLearnMachineLearningTestCase(unittest.TestCase):
             def predictions_to_signals(self, predictions, prices):
                 # Go long on FI12345 when price is predicted to be below 10
                 signals = pd.DataFrame(0, index=prices.loc["Close"].index, columns=prices.columns)
-                signals.loc[:, "FI12345"] = (predictions == 0).astype(int)
+                signals["FI12345"] = (predictions == 0).astype(int)
                 return signals
 
         def mock_get_prices(*args, **kwargs):

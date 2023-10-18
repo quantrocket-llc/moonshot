@@ -346,7 +346,7 @@ class MoonshotML(Moonshot):
             def predictions_to_signals(self, predictions: pd.Series, prices: pd.DataFrame):
                 closes = prices.loc["Close"]
                 signals = pd.DataFrame(False, index=closes.index, columns=closes.columns)
-                signals.loc[:, 12345] = predictions > 0
+                signals[12345] = predictions > 0
                 return signals.astype(int)
         """
         raise NotImplementedError("strategies must implement predictions_to_signals")

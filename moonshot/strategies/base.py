@@ -637,7 +637,7 @@ class Moonshot(
         0   12345      BUY            200    SMART       MKT  Day
         1   23456      BUY            400    SMART       MKT  Day
         >>> child_orders = self.orders_to_child_orders(orders)
-        >>> child_orders.loc[:, "OrderType"] = "MOC"
+        >>> child_orders["OrderType"] = "MOC"
         >>> orders = pd.concat([orders,child_orders])
         >>> orders.head()
               Sid   Action  TotalQuantity Exchange OrderType  Tif  OrderId  ParentId
@@ -1846,7 +1846,7 @@ class Moonshot(
             orders = pd.DataFrame(columns=["Sid","Account","Remaining"])
 
         positions_and_orders = pd.merge(positions, orders, how="outer", on=["Sid","Account"])
-        positions_and_orders.loc[:, "Quantity"] = positions_and_orders.Quantity.fillna(0) + positions_and_orders.Remaining.fillna(0)
+        positions_and_orders["Quantity"] = positions_and_orders.Quantity.fillna(0) + positions_and_orders.Remaining.fillna(0)
 
         positions_and_orders = positions_and_orders[["Sid","Account","Quantity"]]
 

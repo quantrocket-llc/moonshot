@@ -52,7 +52,7 @@ class OrdersTestCase(unittest.TestCase):
                 orders["Tif"] = "Day"
 
                 child_orders = self.orders_to_child_orders(orders)
-                child_orders.loc[:, "OrderType"] = "MOC"
+                child_orders["OrderType"] = "MOC"
 
                 orders = pd.concat([orders,child_orders])
                 return orders
