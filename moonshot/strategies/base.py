@@ -1401,17 +1401,17 @@ class Moonshot(
 
     def _get_benchmark(self, prices, daily=True):
         """
-        Returns a 1-column DataFrame of benchmark prices, either extracted
+        Returns a 1-column DataFrame of benchmark returns, either extracted
         from prices or queried from BENCHMARK_DB if defined.
 
         BENCHMARK_DB, if used, must contain end-of-day prices.
 
-        If prices are intraday and daily=True, the returned benchmark prices
+        If prices are intraday and daily=True, the returned benchmark returns
         will be daily; if this is the case and benchmark prices are extracted
         from the prices DataFrame, BENCHMARK_TIME will be used to extract
         daily prices.
 
-        If prices are intraday and daily=False, intraday benchmark prices
+        If prices are intraday and daily=False, intraday benchmark returns
         will be returned; if this is the case and BENCHMARK_DB is used, the
         daily benchmark prices will be broadcast across the entire intraday
         timeframe.
@@ -1497,7 +1497,7 @@ class Moonshot(
                 raise MoonshotError("BENCHMARK_TIME {0} is not in {1} data".format(
                     self.BENCHMARK_TIME, benchmark_db))
 
-        return pd.DataFrame(benchmark)
+        return pd.DataFrame(benchmark).ffill().pct_change().fillna(0)
 
     def save_to_results(
         self,

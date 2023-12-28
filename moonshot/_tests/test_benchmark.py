@@ -320,6 +320,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
         benchmarks = results.loc["Benchmark"].reset_index()
         benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["FI23456"] = benchmarks["FI23456"].astype(float).round(7)
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -331,10 +332,10 @@ class BenchmarkTestCase(unittest.TestCase):
                      "nan",
                      "nan",
                      "nan"],
-             "FI23456": [9.89,
-                     11.0,
-                     8.5,
-                     10.5]}
+             "FI23456": [0.0,
+                         0.1122346,
+                         -0.2272727,
+                         0.2352941]}
         )
 
     @patch("moonshot.strategies.base.get_prices")
@@ -720,6 +721,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
         benchmarks = results.loc["Benchmark"].reset_index()
         benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["FI12345"] = benchmarks["FI12345"].astype(float).round(7)
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -728,10 +730,10 @@ class BenchmarkTestCase(unittest.TestCase):
                 '2018-05-03T00:00:00',
                 '2018-05-04T00:00:00'],
              # with BENCHMARK_DB, benchmark prices are stored under the first sid
-             "FI12345": [199.6,
-                     210.45,
-                     210.12,
-                     'nan'],
+             "FI12345": [0.0,
+                         0.0543587,
+                         -0.0015681,
+                         0.0],
              "FI23456": ["nan",
                      "nan",
                      "nan",
@@ -1374,15 +1376,16 @@ class BenchmarkTestCase(unittest.TestCase):
 
         benchmarks = results.loc["Benchmark"].reset_index()
         benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["FI12345"] = benchmarks["FI12345"].astype(float).round(7)
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             "FI12345": [10.45,
-                     15.45,
-                     12.30],
+             "FI12345": [0.0,
+                         0.4784689,
+                         -0.2038835],
              "FI23456": ["nan",
                      "nan",
                      "nan"]}
@@ -1531,15 +1534,16 @@ class BenchmarkTestCase(unittest.TestCase):
 
         benchmarks = results.loc["Benchmark"].reset_index()
         benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["FI12345"] = benchmarks["FI12345"].astype(float).round(7)
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
                 '2018-05-01T00:00:00',
                 '2018-05-02T00:00:00',
                 '2018-05-03T00:00:00'],
-             "FI12345": [199.6,
-                     210.45,
-                     210.12],
+             "FI12345": [0.0,
+                         0.0543587,
+                         -0.0015681],
              "FI23456": ["nan",
                      "nan",
                      "nan"]}
@@ -1742,6 +1746,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
         benchmarks = results.loc["Benchmark"].reset_index()
         benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["FI23456"] = benchmarks["FI23456"].astype(float).round(7)
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -1763,12 +1768,14 @@ class BenchmarkTestCase(unittest.TestCase):
                      'nan',
                      'nan',
                      'nan'],
-             "FI23456": [10.56,
-                     12.01,
-                     10.50,
-                     9.80,
-                     13.40,
-                     7.50,]}
+             "FI23456": [
+                0.0,
+                0.1373106,
+                -0.1257286,
+                -0.0666667,
+                0.3673469,
+                -0.4402985,
+                ]}
         )
 
     def test_benchmark_continuous_intraday_with_benchmark_db(self):
@@ -1883,6 +1890,7 @@ class BenchmarkTestCase(unittest.TestCase):
 
         benchmarks = results.loc["Benchmark"].reset_index()
         benchmarks["Date"] = benchmarks.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        benchmarks["FI12345"] = benchmarks["FI12345"].astype(float).round(7)
         self.assertDictEqual(
             benchmarks.to_dict(orient="list"),
             {'Date': [
@@ -1898,12 +1906,12 @@ class BenchmarkTestCase(unittest.TestCase):
                       '10:00:00',
                       '11:00:00',
                       '12:00:00'],
-             "FI12345": [199.6,
-                     199.6,
-                     199.6,
-                     210.45,
-                     210.45,
-                     210.45],
+             "FI12345": [0.0,
+                         0.0,
+                         0.0,
+                         0.0543587,
+                         0.0,
+                         0.0],
              "FI23456": ["nan",
                      "nan",
                      "nan",
