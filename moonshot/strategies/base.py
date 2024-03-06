@@ -60,10 +60,10 @@ class Moonshot(
     DB : str or list of str, required
         one or more database codes to pull data from
 
-    DB_FIELDS : list of str, optional
+    DB_FIELDS : str or list of str, optional
         fields to retrieve from db (defaults to ["Open", "Close", "Volume"])
 
-    DB_TIMES : list of str (HH:MM:SS), optional
+    DB_TIMES : str or list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
     DB_DATA_FREQUENCY : str, optional
@@ -72,16 +72,16 @@ class Moonshot(
         data for daily bundles. This parameter only needs to be set to request daily data
         from a minute bundle. Possible choices: daily, minute (or aliases d, m).
 
-    SIDS : list of str, optional
+    SIDS : str or list of str, optional
         limit db query to these sids
 
-    UNIVERSES : list of str, optional
+    UNIVERSES : str or list of str, optional
         limit db query to these universes
 
-    EXCLUDE_SIDS : list of str, optional
+    EXCLUDE_SIDS : str or list of str, optional
         exclude these sids from db query
 
-    EXCLUDE_UNIVERSES : list of str, optional
+    EXCLUDE_UNIVERSES : str or list of str, optional
         exclude these universes from db query
 
     CONT_FUT : str, optional
@@ -197,22 +197,22 @@ class Moonshot(
     """the strategy code"""
     DB: Union[str, list[str]] = None
     """one or more database codes to pull data from"""
-    DB_FIELDS: list[str] = ["Open", "Close", "Volume"]
+    DB_FIELDS: Union[str, list[str]] = ["Open", "Close", "Volume"]
     """fields to retrieve from db (defaults to ["Open", "Close", "Volume"])"""
-    DB_TIMES: list[str] = None
+    DB_TIMES: Union[str, list[str]] = None
     """for intraday databases, only retrieve these times"""
     DB_DATA_FREQUENCY: str = None
     """Only applicable when DB specifies a Zipline bundle. Whether to query minute or
     daily data.  If omitted, defaults to minute data for minute bundles and to daily
     data for daily bundles. This parameter only needs to be set to request daily data
     from a minute bundle. Possible choices: daily, minute (or aliases d, m)."""
-    SIDS: list[str] = None
+    SIDS: Union[str, list[str]] = None
     """limit db query to these sids"""
-    UNIVERSES: list[str] = None
+    UNIVERSES: Union[str, list[str]] = None
     """limit db query to these universes"""
-    EXCLUDE_SIDS: list[str] = None
+    EXCLUDE_SIDS: Union[str, list[str]] = None
     """exclude these sids from db query"""
-    EXCLUDE_UNIVERSES: list[str] = None
+    EXCLUDE_UNIVERSES: Union[str, list[str]] = None
     """exclude these universes from db query"""
     CONT_FUT: str = None
     """pass this cont_fut option to db query (default None). See quantrocket.get_prices

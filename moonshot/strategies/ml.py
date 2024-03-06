@@ -59,10 +59,10 @@ class MoonshotML(Moonshot):
     DB : str, required
         code of db to pull data from
 
-    DB_FIELDS : list of str, optional
+    DB_FIELDS : str or list of str, optional
         fields to retrieve from db (defaults to ["Open", "Close", "Volume"])
 
-    DB_TIMES : list of str (HH:MM:SS), optional
+    DB_TIMES : str or list of str (HH:MM:SS), optional
         for intraday databases, only retrieve these times
 
     DB_DATA_FREQUENCY : str, optional
@@ -71,16 +71,16 @@ class MoonshotML(Moonshot):
         data for daily bundles. This parameter only needs to be set to request daily data
         from a minute bundle. Possible choices: daily, minute (or aliases d, m).
 
-    SIDS : list of str, optional
+    SIDS : str or list of str, optional
         limit db query to these sids
 
-    UNIVERSES : list of str, optional
+    UNIVERSES : str or list of str, optional
         limit db query to these universes
 
-    EXCLUDE_SIDS : list of str, optional
+    EXCLUDE_SIDS : str or list of str, optional
         exclude these sids from db query
 
-    EXCLUDE_UNIVERSES : list of str, optional
+    EXCLUDE_UNIVERSES : str or list of str, optional
         exclude these universes from db query
 
     CONT_FUT : str, optional
