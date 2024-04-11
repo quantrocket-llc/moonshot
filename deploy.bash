@@ -1,17 +1,17 @@
 #!/bin/bash -e
 
-# PYPI_USERNAME - (Requried) Username for the publisher's account on PyPI
-# PYPI_PASSWORD - (Required, Secret) Password for the publisher's account on PyPI
+# TWINE_USERNAME - (Requried) Username for the publisher's account on PyPI
+# TWINE_PASSWORD - (Required, Secret) API Token for the publisher's account on PyPI
 
 cat <<EOF >> ~/.pypirc
 [distutils]
 index-servers=pypi
 
 [pypi]
-username=$PYPI_USERNAME
-password=$PYPI_PASSWORD
+username=$TWINE_USERNAME
+password=$TWINE_PASSWORD
 EOF
 
 # Deploy to pip
 python -m build
-twine upload dist/*
+twine upload dist/* --verbose
