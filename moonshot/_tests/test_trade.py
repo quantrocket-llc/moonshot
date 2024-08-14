@@ -416,6 +416,7 @@ class TradeTestCase(unittest.TestCase):
         self.assertListEqual(kwargs["order_refs"], ["buy-below-10"])
         self.assertListEqual(kwargs["accounts"], ["U123"])
         self.assertListEqual(kwargs["sids"], ["FI12345", "FI23456"])
+        self.assertTrue(kwargs["map_cfd_to_underlying"])
 
         download_order_statuses_call = mock_download_order_statuses.mock_calls[0]
         _, args, kwargs = download_order_statuses_call
@@ -424,6 +425,7 @@ class TradeTestCase(unittest.TestCase):
         self.assertListEqual(kwargs["order_refs"], ["buy-below-10"])
         self.assertListEqual(kwargs["accounts"], ["U123"])
         self.assertListEqual(kwargs["sids"], ["FI12345", "FI23456"])
+        self.assertTrue(kwargs["map_cfd_to_underlying"])
 
     def test_long_short_strategy_override_methods(self):
         """

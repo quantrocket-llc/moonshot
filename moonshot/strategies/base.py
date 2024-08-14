@@ -1814,7 +1814,8 @@ class Moonshot(
         positions = list_positions(
             order_refs=[self.CODE],
             accounts=accounts,
-            sids=sids
+            sids=sids,
+            map_cfd_to_underlying=True,
         )
 
         if positions:
@@ -1833,6 +1834,7 @@ class Moonshot(
             sids=sids,
             open_orders=True,
             fields=["Sid","Account","OrderRef","Remaining","Action"],
+            map_cfd_to_underlying=True,
             output="json")
 
         if f.getvalue():
