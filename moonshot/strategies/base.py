@@ -853,7 +853,6 @@ class Moonshot(
             contract_values = contract_values.groupby(
                 contract_values.index.get_level_values("Date")).first()
 
-        fields = prices.index.get_level_values("Field").unique()
         if "Nlv" in self._securities_master.columns:
             nlvs = contract_values.apply(lambda x: self._securities_master.Nlv, axis=1)
         else:
@@ -1810,6 +1809,9 @@ class Moonshot(
         Returns a DataFrame of current positions and open orders, for the
         purpose of generating an order diff in live trading.
         """
+        if self.review_date:
+            return pd.DataFrame(columns=["Sid","Account","Quantity"])
+
         # query positions
         positions = list_positions(
             order_refs=[self.CODE],

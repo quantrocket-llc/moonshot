@@ -164,8 +164,6 @@ class PerShareCommission(Commission):
         else:
             broker_commission_per_share = cls.BROKER_COMMISSION_PER_SHARE
 
-        commission_per_share_with_fees = broker_commission_per_share * (1 + cls.COMMISSION_PERCENTAGE_FEE_RATE)
-
         # Note: we take abs() of contract_values because combos can have
         # negative prices which would cause a negative commission rate
         broker_commission_rates = float(broker_commission_per_share)/contract_values.where(contract_values != 0).abs()
