@@ -2,3 +2,5 @@
 /.tox/
 __pycache__
 /build/
+versioneer.py
+moonshot/_version.py

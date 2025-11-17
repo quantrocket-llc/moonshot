@@ -30,8 +30,7 @@ commission
 slippage
     Moonshot slippage classes.
 """
-from . import _version
-__version__ = _version.get_versions()['version']
+from ._version import version as __version__
 
 from .strategies import Moonshot, MoonshotML
 from . import slippage

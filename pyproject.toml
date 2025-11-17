@@ -1,0 +1,37 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "wheel",
+    "setuptools_scm[toml]>=6.2",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantrocket-moonshot"
+description = "Vectorized backtesting and trading engine"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+dynamic = ["version"]
+
+authors = [
+    { name = "QuantRocket LLC" },
+]
+
+dependencies = [
+    "quantrocket-client",
+    "pandas",
+    "filelock",
+]
+
+[tool.setuptools]
+packages = ["moonshot"]
+
+[tool.setuptools.package-data]
+"moonshot" = ["py.typed"]
+"moonshot._tests.fixtures" = ["*.h5"]
+
+[tool.setuptools_scm]
+write_to = "moonshot/_version.py"
+version_scheme = "guess-next-dev"
+local_scheme = "dirty-tag"
