@@ -29,6 +29,7 @@ from quantrocket.price import get_prices
 from quantrocket.master import list_calendar_statuses, download_master_file
 from quantrocket.account import download_account_balances, download_exchange_rates
 from quantrocket.blotter import list_positions, download_order_statuses
+from quantrocket.utils.dt import normalize_pandas_alias
 
 class Moonshot(
     WeightAllocationMixin):
@@ -1069,6 +1070,7 @@ class Moonshot(
         for freq in offset_aliases:
             if not freq:
                 continue
+            freq = normalize_pandas_alias(freq)
             try:
                 periods = pd.date_range(start=pd.to_datetime('today'),
                                         freq=freq, periods=2)
@@ -1809,7 +1811,7 @@ class Moonshot(
         Returns a DataFrame of current positions and open orders, for the
         purpose of generating an order diff in live trading.
         """
-        if self.review_date:
+        if self.review_date and not getattr(self, "_FORCE_POSITIONS_AND_ORDERS", False):
             return pd.DataFrame(columns=["Sid","Account","Quantity"])
 
         # query positions
@@ -1850,7 +1852,10 @@ class Moonshot(
             orders = pd.DataFrame(columns=["Sid","Account","Remaining"])
 
         positions_and_orders = pd.merge(positions, orders, how="outer", on=["Sid","Account"])
-        positions_and_orders["Quantity"] = positions_and_orders.Quantity.fillna(0) + positions_and_orders.Remaining.fillna(0)
+        positions_and_orders["Quantity"] = (
+            positions_and_orders.Quantity.infer_objects(copy=False).fillna(0)
+            + positions_and_orders.Remaining.infer_objects(copy=False).fillna(0)
+        )
 
         positions_and_orders = positions_and_orders[["Sid","Account","Quantity"]]
 

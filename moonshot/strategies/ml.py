@@ -471,7 +471,7 @@ class MoonshotML(Moonshot):
                     if has_series:
                         raise MoonshotError("features should be either all DataFrames or all Series, not a mix of both")
                     # stack DataFrame to Series
-                    feature = feature.stack(dropna=False)
+                    feature = feature.stack(future_stack=True)
                 else:
                     has_series = True
                     if has_df:

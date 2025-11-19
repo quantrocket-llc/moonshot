@@ -272,6 +272,7 @@ class TradeTestCase(unittest.TestCase):
             EXCLUDE_SIDS = "FI34567"
             EXCLUDE_UNIVERSES = ["usa-stk-pharm", "usa-stk-biotech"]
             CONT_FUT = False
+            _FORCE_POSITIONS_AND_ORDERS = True # using review_date normally skips querying positions/orders; don't do that here
 
             def prices_to_signals(self, prices):
                 signals = prices.loc["Wap"] < 10
