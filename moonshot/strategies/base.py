@@ -1769,7 +1769,8 @@ class Moonshot(
             positions_and_orders = positions_and_orders.set_index(["Sid","Account"]).Quantity
             target_quantities = target_quantities.stack()
             target_quantities.index.set_names(["Sid","Account"], inplace=True)
-            positions_and_orders = positions_and_orders.reindex(target_quantities.index).fillna(0)
+            with pd.option_context("future.no_silent_downcasting", True):
+                positions_and_orders = positions_and_orders.reindex(target_quantities.index).fillna(0).infer_objects(copy=False)
             net_quantities = target_quantities - positions_and_orders
 
             # disable rebalancing as per ALLOW_REBALANCE
